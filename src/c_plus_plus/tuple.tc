@@ -1,0 +1,23 @@
+/*
+ * vector.th
+ *
+ *  Created on: 4 lut 2018
+ *      Author: Kamil Cukrowski
+ *     License: Jointly under MIT License and Beerware License 
+ */
+#include "tuple.th"
+
+#define OP(z,i,data) \
+	BOOST_PP_VARIADIC_ELEM(i, TUPLE_T) NAMESPACE(get_##i)(struct NAMESPACE(tuple_s) *this) \
+	{ \
+		return this->elem_##i; \
+	}
+
+BOOST_PP_REPEAT(BOOST_PP_VARIADIC_SIZE(TUPLE_T), OP, 0)
+
+#undef OP
+
+size_t NAMESPACE(tuple_size) (struct NAMESPACE(tuple_s) *this)
+{
+	return BOOST_PP_VARIADIC_SIZE(TUPLE_T);
+}
