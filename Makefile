@@ -1,6 +1,6 @@
 
 all:
-	$(MAKE) -C src Makefile.m4
+	$(MAKE) m4.Makefile
 	$(MAKE) test
 
 ./test/test.out:
