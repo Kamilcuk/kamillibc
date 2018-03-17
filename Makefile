@@ -1,16 +1,24 @@
+proj:=klibs
+BUILD_TYPE:=RELEASE
 
-all:
-	$(MAKE) m4.Makefile
-	$(MAKE) test
+all: release
 
-./test/test.out:
-	$(MAKE) -C ./test
+release: %: Build/%/$(proj)
+release: BUILD_TYPE:=RELEASE
+debug:   %: Build/%/$(proj)
+debug:   BUILD_TYPE:=DEBUG
 
-test: ./test/test.out
-	./test/test.out
+.SECONDARY:
 
+PHONY: FORCE
+FORCE:
+Build/%/$(proj): FORCE
+	mkdir -p $(dir $@)
+	cmake -H. -B$(dir $@) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
+	$(MAKE) -C $(dir $@)
+
+.PHONY: clean
 clean:
-	$(MAKE) -C ./test clean
+	rm -rf Build
 
-.PHONY: test ./test/test.out
 

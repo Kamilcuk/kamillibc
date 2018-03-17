@@ -7,11 +7,12 @@
 
 #include "minmax.h"
 
+#include <Unity/unity.h>
 #include <assert.h>
 
-void _MAX_TEST()
+void minmax_test()
 {
-	assert(MAX3(1,2,3)==3);
-	assert(MAX3(1,3,2)==3);
-	assert(MAX3(3,1,2)==3);
+	TEST_ASSERT_EQUAL(1, MINMAX(1,0,3));
+	TEST_ASSERT_EQUAL(0, MINMAX(-1,0,3));
+	TEST_ASSERT_EQUAL(3, MINMAX(4,0,3));
 }

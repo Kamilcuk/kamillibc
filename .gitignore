@@ -1,3 +1,8 @@
+# Build directory
+Build
+# eclipse settings dir
+.settings
+
 # Prerequisites
 *.d
 

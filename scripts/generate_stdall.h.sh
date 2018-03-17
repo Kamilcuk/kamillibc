@@ -2,21 +2,18 @@
 
 # curl -sS http://en.cppreference.com/w/c/header + copy and save the file
 
-file=stdall.h
+file=${1:-stdall.h}
 
 C95='199409L'
 C99='199901L'
 C11='201112L'
-cmp="__STDC_VERSION__ == "
-C95="$cmp$C95"
-C99="$cmp$C99"
-C11="$cmp$C11"
-C95="#if $C95 || $C99 || $C11"
-C99="#if $C99 || $C11"
-C11="#if $C11"
+cmp="__STDC_VERSION__ >="
+C95="#if $cmp $C95"
+C99="#if $cmp $C99"
+C11="#if $cmp $C11"
 
-echo
-cat "$file" | while read -r file r1 r2 r3; do 
+curl -sS http://en.cppreference.com/w/c/header | xmllint -html -xpath '//table[@class="t-dsc-begin"]' - | w3m -dump -cols 9999 -T text/html | grep -v 'C++ documentation for C++ Standard Library header files' \
+| while read -r file r1 r2 r3; do 
 	if [ -z "$file" ]; then continue; fi
 	file="#include $file"
 	if [ "$r1" = "(since" ]; then
