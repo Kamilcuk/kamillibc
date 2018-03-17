@@ -10,7 +10,7 @@
 
 void clocktimeout_init(clock_t *start, clock_t *timeout)
 {
-	assert(start!=NULL);
+	assert(start != NULL);
 	if (timeout != NULL) {
 		*start = clock();
 	}

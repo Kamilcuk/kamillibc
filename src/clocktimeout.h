@@ -12,8 +12,12 @@
 #include <stdbool.h>
 
 /**
+ * timeout is measured since fixed point in time called "start"
+ * start is filled in clocktimeout_init
  * timeout == NULL -> endless timeout
- * *timeout is decremented after every _expired function call
+ * *timeout == 0 -> timeout expired
+ * value of timeout is decremented in every _expired function call
+ * value of start changes in every _expired function call
  * maximum timeout is equal to MAX_OF(clock_t)
  */
 

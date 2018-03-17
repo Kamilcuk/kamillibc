@@ -19,7 +19,7 @@
 #endif
 
 #if RB_SIZE_MUST_BE_A_POWER_OF_2
-#define RB_ISPOWEROF2(x)  (!( ((x < 2) || (x & (x - 1))) ))
+#define RB_ISPOWEROF2(x)  (!( (((x) < 2) || ((x) & ((x) - 1))) ))
 #else
 #define RB_ISPOWEROF2(x)  (1)
 #endif
