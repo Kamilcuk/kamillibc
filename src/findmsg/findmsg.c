@@ -8,6 +8,7 @@
 
 #include <minmax.h>
 #include <clocktimeout.h>
+#include <cdefs.h>
 
 #include <poll.h>
 #include <sys/cdefs.h>
@@ -19,14 +20,6 @@
 #include <string.h>
 
 /* Macros ----------------------------------------------------------- */
-
-#ifndef __arraycount
-#define __arraycount(x) (sizeof(x)/sizeof(x[0]))
-#endif
-
-#ifndef __weak_symbol
-#define __weak_symbol __attribute__((__weak__))
-#endif
 
 #define PRINTERR(str, ...)  fprintf(stderr, str, ##__VA_ARGS__)
 

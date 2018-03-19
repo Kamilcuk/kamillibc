@@ -1,14 +1,48 @@
-# c-libs
-C libraries written out of frustration
+# kamillibs
 
+C libraries written out of frustration  
+Compile using CMake for Build/release/libkamil.so  
+
+# Convention
+
+- Naming:
+     - Every structure declaration ends with '_s'
+     - Every typedef declaration ends with '_t'
+     - Every enum type ends with '_e'
+     - Enum members, if enum type exists, are named like <enum_typename>_...
+     - Every library has it's namespace, either lower or upper case
+- Library namespace shouldn't change between lower and upper case
+- Integer expression constants should be declared as enums
+- Library names should be named:
+     - ... namespace_function(struct namspace_s *this, ...);
+     - or ... namespace_function(namespace_t *this, ...);
+- If a library needs one, it should follow the naming of:
+     - data structure, preferred as structure, as typedefs should be discouraged<br>
+       struct namespace_s;<br>
+       typedef ... namespace_t;
+     - allocation function<br>
+       struct namespace_s * namespace_new(...);
+     - deallocation function<br>
+       void_or_int namespace_free(struct namespace_s **this);
+     - init functions<br>
+       void_or_int namespace_init(struct namespace_s *this, ...)
+     - deinitialization function<br>
+       void_or_int namespace_fini(struct namespace_s *this, ...)
+     - unittest<br>
+       int namespace_unittest(...);
+     - integrationtest<br>
+       int nemspace_integrationtest(...);
+- The mean value of asserts per function should be 2
+- Overloading macro on variable number of arguments should look like:
+
+     _MACRO_1(arg1)              /* do smth with args */
+     _MACRO_2(arg1, arg2)        /* do smth with args */
+     _MACRO_3(arg1, arg2, arg3)  /* do smth with args */
+     _MACRO_N(_1, _2, _3, N, ...)    _MACRO_##N
+     MACRO(arg, ...)             _MACRO_N(arg, ##__VA_ARGS__, 3, 2, 1)(arg, ##__VA_ARGS__)
+     
 # Frustration
 
-C is an amazing and simple language, fully powerfull and K&R did a great job.      
-C commitee not always does a great job.    
-What i think about C:  
-- memcpy and memcmp should return void, not void *
-- Most of the reasons why C sucks is because there are so many architectures to choose from.
- I think the newest C standards should choose which architectires to support, which will drop the count undefined behaviours. 
 - error handing sucks. errno is a global variable. errno should be completly removed from existence. error value should be returned by return value by functions. POSIX does that implementing ssize_t and returning negative value for errors. However, functions return only -1 on error, and still set errno variable.
 The best would be to look at the bests (Rust? C#?) implement something like Result<error_value_t,ok_value_t> and let C functions be implemented like Result<errno_t,size_t> write(int fd, const void *ptr, size_t s)
 See result.h for my best shot on how to implement Result template and handle errors with assert 
@@ -20,7 +54,11 @@ See contract.h for my best shot of how to implement it.
 - All *_s() functions suck and shouldn't exists. And they are not security enhancements of any kind.
 - What to choose? strnlen or strnlen_s? I mean really, what to choose between size_t strnlen(const char *s, size_t maxlen); and size_t strnlen_s( const char *str, size_t strsz ); ?
 - just returning the error value whould make all math functions simpler, so they wouldn't have to have exceptions
-- We miss some kind of templates. However templates will be not possible in C. Sadly
 - rsize_t is ok
 - errno_t is ok
-- I would vote for assert and assert_debug. assert() is always defined and results in exit() , assert_debug() is switched off with NDEBUG
+
+# Author&License
+
+Written by Kamil Cukrowski 2018   
+Copyright jointly under MIT License and Beerware License  
+See LICENSE file  

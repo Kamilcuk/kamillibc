@@ -25,18 +25,18 @@ static inline const size_t LIMIT(size_t val, size_t size)
 #endif
 }
 
-static inline void advance_tail(RingBuffer_t *this, size_t bytes)
+static inline void rb_advance_tail(RingBuffer_t *this, size_t bytes)
 {
-    this->fill += bytes;
+	this->fill += bytes;
 }
 
-static inline void advance_head(RingBuffer_t *this, size_t bytes)
+static inline void rb_advance_head(RingBuffer_t *this, size_t bytes)
 {
-    this->head = LIMIT(this->head + bytes, this->size);
-    this->fill -= bytes;
+	this->head = LIMIT(this->head + bytes, this->size);
+	this->fill -= bytes;
 }
 
-static inline size_t get_tail(RingBuffer_t *this, size_t offset)
+static inline size_t rb_get_tail(RingBuffer_t *this, size_t offset)
 {
 	return LIMIT(this->head + this->fill + offset, this->size);
 }
@@ -54,9 +54,9 @@ RingBuffer_t *rb_new(size_t size)
 	rb_init(this, data, size);
 
 	return this;
-ERROR_DATA_MALLOC:
+	ERROR_DATA_MALLOC:
 	free(this);
-ERROR_THIS_MALLOC:
+	ERROR_THIS_MALLOC:
 	return NULL;
 }
 
@@ -84,137 +84,131 @@ void rb_write(RingBuffer_t *this, const char from[restrict], size_t bytes)
 {
 	rb_write_memcpy(this, from, bytes);
 
-    rb_write_commit(this, bytes);
+	rb_write_commit(this, bytes);
 }
 
 char *rb_write_pointer(RingBuffer_t *this, size_t *writable)
 {
+	assert(writable != NULL);
+
 	if(rb_is_full(this)) {
-        *writable = 0;
-        return NULL;
-    }
+		return NULL;
+	}
 
-    const size_t head = this->head;
-    const size_t tail = get_tail(this, 0);
-    const size_t end = this->size;
+	const size_t head = this->head;
+	const size_t tail = rb_get_tail(this, 0);
+	const size_t end = this->size;
 
-    if(tail < head) {
-        *writable = head - tail;
-    } else {
-        *writable = end - tail;
-    }
+	*writable = tail < head ? head - tail : end - tail;
 
-    return &this->data[tail];
+	return &this->data[tail];
 }
 
 void rb_write_memcpy(RingBuffer_t *this, const char from[restrict], size_t bytes)
 {
-    assert(bytes <= rb_remain(this));
+	assert(bytes <= rb_remain(this));
 
-    const size_t tail = get_tail(this, 0);
-    const size_t end = this->size;
-    const size_t write_end = tail + bytes;
+	const size_t tail = rb_get_tail(this, 0);
+	const size_t end = this->size;
+	const size_t write_end = tail + bytes;
 
-    if (write_end <= end) {
-        memcpy(&this->data[tail], from, bytes);
-    } else {
-        const size_t first_write = end - tail;
-        memcpy(&this->data[tail], from, first_write);
+	if (write_end <= end) {
+		memcpy(&this->data[tail], from, bytes);
+	} else {
+		const size_t first_write = end - tail;
+		memcpy(&this->data[tail], from, first_write);
 
-        const size_t second_write = bytes - first_write;
-        memcpy(&this->data[0], &from[first_write], second_write);
-    }
+		const size_t second_write = bytes - first_write;
+		memcpy(&this->data[0], &from[first_write], second_write);
+	}
 }
 
 void rb_write_commit(RingBuffer_t *this, size_t bytes)
 {
-    assert(bytes <= rb_remain(this));
-    advance_tail(this, bytes);
+	assert(bytes <= rb_remain(this));
+	rb_advance_tail(this, bytes);
 }
 
 void rb_read(RingBuffer_t *this, char to[restrict], size_t bytes)
 {
 	rb_read_memcpy(this, to, bytes);
 
-    rb_read_commit(this, bytes);
+	rb_read_commit(this, bytes);
 }
 
 const char *rb_read_pointer(RingBuffer_t *this, size_t offset, size_t *readable)
 {
-	assert(this);
-	assert(readable);
+	assert(readable != NULL);
 
-    if(rb_is_empty(this)) {
-        *readable = 0;
-        return NULL;
-    }
-    const size_t head = this->head + offset;
-    const size_t tail = get_tail(this, offset);
-    const size_t end = this->size;
+	if(rb_is_empty(this)) {
+		return NULL;
+	}
 
-    if(tail <= head) {
-        *readable = end - head;
-    } else {
-        *readable = tail - head;
-    }
+	const size_t head = this->head + offset;
+	const size_t tail = rb_get_tail(this, offset);
+	const size_t end = this->size;
 
-    return &this->data[head];
+	*readable = tail <= head ? end - head : tail - head;
+
+	return &this->data[head];
 }
 
 void rb_read_memcpy(RingBuffer_t *this, char to[restrict], size_t bytes)
 {
-    assert(rb_used(this) >= bytes);
+	assert(this != NULL);
+	assert(rb_used(this) >= bytes);
 
-    const size_t head = this->head;
-    const size_t end = this->size;
-    const size_t read_end = LIMIT(head + bytes, this->size);
+	const size_t head = this->head;
+	const size_t end = this->size;
+	const size_t read_end = LIMIT(head + bytes, this->size);
 
-    if(read_end < head) {
-    	const size_t first_read = end - head;
-        memcpy(&to[0], &this->data[head], first_read);
+	if(read_end < head) {
+		const size_t first_read = end - head;
+		memcpy(&to[0], &this->data[head], first_read);
 
-        const size_t second_read = bytes - first_read;
-        memcpy(&to[first_read], &this->data[0], second_read);
-    } else {
-        memcpy(&to[0], &this->data[head], bytes);
-    }
+		const size_t second_read = bytes - first_read;
+		memcpy(&to[first_read], &this->data[0], second_read);
+	} else {
+		memcpy(&to[0], &this->data[head], bytes);
+	}
 }
 
 void rb_read_commit(RingBuffer_t *this, size_t bytes)
 {
-    assert(rb_used(this) >= bytes);
-    advance_head(this, bytes);
+	assert(rb_used(this) >= bytes);
+	rb_advance_head(this, bytes);
 }
 
 void rb_stream(RingBuffer_t *from, RingBuffer_t *to, size_t bytes)
 {
-    assert(rb_used(from) <= bytes);
-    assert(rb_remain(to) >= bytes);
+	assert(from != to);
+	assert(rb_used(from) <= bytes);
+	assert(rb_remain(to) >= bytes);
 
-    size_t copied = 0;
-    while(copied < bytes) {
-        size_t can_read;
-        const char * const from_ptr = rb_read_pointer(from, copied, &can_read);
+	size_t copied = 0;
+	while(copied < bytes) {
+		size_t can_read;
+		const char * const from_ptr = rb_read_pointer(from, copied, &can_read);
 
-        size_t copied_rb_read = 0;
+		size_t copied_rb_read = 0;
 
-        while(copied_rb_read < can_read) {
-            size_t can_write;
-            char * to_ptr = rb_write_pointer(to, &can_write);
+		while(copied_rb_read < can_read) {
+			size_t can_write;
+			char * to_ptr = rb_write_pointer(to, &can_write);
 
-            size_t write = (can_read > can_write) ? can_write : can_read;
-            memcpy(to_ptr, from_ptr, write);
+			size_t write = (can_read > can_write) ? can_write : can_read;
+			memcpy(to_ptr, from_ptr, write);
 
-            copied_rb_read += write;
-        }
+			copied_rb_read += write;
+		}
 
-        copied += copied_rb_read;
-    }
+		copied += copied_rb_read;
+	}
 
-    advance_tail(to, copied);
+	rb_advance_tail(to, copied);
 }
 
-int rb_UnitTest()
+int rb_unittest()
 {
 	RingBuffer_t rb_mem = RB_INIT_ONSTACK(16);
 	RingBuffer_t * const rb = &rb_mem;

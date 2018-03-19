@@ -58,41 +58,42 @@ void rb_read_commit(RingBuffer_t *this, size_t bytes);
 
 void rb_stream(RingBuffer_t *from, RingBuffer_t *to, size_t bytes);
 
+int rb_unittest();
+
 static inline void rb_flush(RingBuffer_t *this)
 {
-	this->fill = 0;
+	assert(this != NULL);
+	this->head = this->fill = 0;
 }
 
 static inline bool rb_is_empty(RingBuffer_t *this)
 {
+	assert(this != NULL);
     return this->fill == 0;
 }
 
 static inline bool rb_is_full(RingBuffer_t *this)
 {
+	assert(this != NULL);
     return this->fill == this->size;
 }
 
 static inline size_t rb_size(RingBuffer_t *this)
 {
+	assert(this != NULL);
     return this->size;
 }
 
 static inline size_t rb_used(RingBuffer_t *this)
 {
+	assert(this != NULL);
     return this->fill;
 }
 
 static inline size_t rb_remain(RingBuffer_t *this)
 {
+	assert(this != NULL);
     return this->size - this->fill;
 }
-
-static inline void rb_empty(RingBuffer_t *this)
-{
-    this->head = this->fill = 0;
-}
-
-int rb_UnitTest();
 
 #endif

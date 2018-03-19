@@ -11,7 +11,7 @@
 
 static void rb_test()
 {
-	TEST_ASSERT_EQUAL(0, rb_UnitTest());
+	TEST_ASSERT_EQUAL(0, rb_unittest());
 }
 void minmax_test();
 
