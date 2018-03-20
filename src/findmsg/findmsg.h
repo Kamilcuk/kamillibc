@@ -13,13 +13,14 @@
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <time.h>
 
 /* Exported constants -------------------------------------------- */
 
-enum {
-	findmsg_MSG_INVALID    = -1,
-	findmsg_MSG_TOO_SHORT  =  0,
-	findmsg_MSG_VALID      =  1,
+enum findmsg_MSG_e {
+	findmsg_MSG_TOO_SHORT  =      0,
+	findmsg_MSG_VALID      =      1,
+	findmsg_MSG_INVALID    =      2,
 };
 
 /* Exported types --------------------------------------------------- */
@@ -31,7 +32,7 @@ struct findmsg_s
 	char * buf;
 	size_t size;
 	size_t pos;
-	bool msgReceivedSize;
+	size_t msgReceivedSize;
 };
 
 struct findmsg_conf_s
@@ -48,19 +49,20 @@ ssize_t findmsg_readtimeout(int fd, char buf[], size_t size, clock_t *timeout);
 
 /* Exported Functions ----------------------------------------------------- */
 
-int findmsg_new(struct findmsg_s *t, int fd, size_t bufsize);
-void findmsg_free(struct findmsg_s *t);
+struct findmsg_s * findmsg_new(int fd, size_t bufsize);
+void findmsg_free(struct findmsg_s **t);
 
-#define findmsg_INIT(_fd, _buf, _size)  {.fd = (_fd), .buf = (_buf), .size = (_size)}
+#define findmsg_INIT(_fd, _buf, _size)     {.fd = (_fd), .buf = (_buf), .size = (_size)}
+#define findmsg_INIT_ON_STACK(_fd, _size)  findmsg_INIT(_fd, ((char[_size]){}), _size)
 void findmsg_init(struct findmsg_s *t, int fd, char buf[], size_t size);
 
 void findmsg_next(struct findmsg_s *t);
 
-ssize_t findmsg_beginning(struct findmsg_s *t, size_t minlength,
-		ssize_t (*checkBeginning)(const char buf[], size_t minlength, void *arg), void *arg,
+ssize_t findmsg_beginning(struct findmsg_s *t, size_t minlen,
+		ssize_t (*checkBeginning)(const char buf[], size_t minlen, void *arg), void *arg,
 		clock_t *timeout);
 
-ssize_t findmsg_ending(struct findmsg_s *t, size_t startlen, size_t maxlength,
+ssize_t findmsg_ending(struct findmsg_s *t, size_t startlen, size_t maxlen,
 		int (*checkEnding)(const char buf[], size_t len, void *arg), void *arg,
 		clock_t *timeout);
 

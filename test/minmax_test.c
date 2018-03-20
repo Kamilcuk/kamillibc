@@ -7,8 +7,8 @@
 
 #include "minmax.h"
 
-#include <Unity/unity.h>
 #include <assert.h>
+#include <unity/unity.h>
 
 void minmax_test()
 {

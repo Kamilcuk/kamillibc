@@ -23,3 +23,7 @@ add_library(${PROJECT_NAME} SHARED ${csrc})
 file(GLOB_RECURSE ctest FOLLOW_SYMLINKS test/*.c)
 add_executable(${PROJECT_NAME}test ${ctest})
 target_link_libraries(${PROJECT_NAME}test ${PROJECT_NAME})
+
+enable_testing()
+add_test(testname ${PROJECT_NAME}test)
+# add_custom_command(TARGET ${PROJECT_NAME}test POST_BUILD COMMAND ${PROJECT_NAME}test)

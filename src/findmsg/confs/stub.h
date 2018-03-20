@@ -10,10 +10,10 @@
 
 #include <findmsg/findmsg.h>
 
-extern const struct findmsg_conf_s FINDMSG_conf_stub;
+extern const struct findmsg_conf_s findmsg_conf_stub;
 
-ssize_t findmsg_conf_stub_checkBeginning(const char buf[], size_t bufsize, void *arg);
-int findmsg_conf_stub_checkEnding(const char buf[], size_t bufsize, void *arg);
+ssize_t findmsg_stub_checkBeginning(const char buf[], size_t bufsize, void *arg);
+int findmsg_stub_checkEnding(const char buf[], size_t bufsize, void *arg);
 
 int findmsg_conf_memcmp_checkBeginning(const char buf[], size_t bufsize, void *arg);
 int findmsg_conf_memcmp_checkEnding(const char buf[], size_t bufsize, void *arg);

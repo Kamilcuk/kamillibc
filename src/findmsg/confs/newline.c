@@ -12,7 +12,7 @@
 const struct findmsg_conf_s findmsg_conf_newline = {
 		.minlength = 1,
 		.maxlength = SIZE_MAX,
-		.checkBeginning = &findmsg_conf_stub_checkBeginning,
+		.checkBeginning = &findmsg_stub_checkBeginning,
 		.checkEnding = &findmsg_conf_newline_checkEnding,
 };
 

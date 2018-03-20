@@ -39,16 +39,11 @@ void constraint_abort_handler(const char *msg, int error,
 	if (errno != 0)
 		errnostr = strerror(errno);
 #endif
-	(void)fprintf(stderr,
-			"%s:%u: %s%sConstraint `%s' failed.\n"
-			"%s%s"
-			,
+	(void)fprintf(stderr, "%s:%u: %s%sConstraint `%s' failed.\n",
 			file, line,
 			function != NULL ? function : "", function != NULL ? ": " : "",
-			assertion,
-			msg != NULL ? msg : "", msg != NULL ? "\n" : "");
-	if (errno)
-		perror(errno);
+			assertion);
+	perror(msg);
 	abort();
 }
 

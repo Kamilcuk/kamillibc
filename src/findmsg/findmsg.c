@@ -28,31 +28,31 @@
 __weak_symbol
 ssize_t findmsg_readtimeout(int fd, char buf[], size_t size, clock_t *timeout)
 {
+	// try to read from fd
+	const ssize_t readret = read(fd, buf, size);
+	if (readret != 0) return readret;
+	// read returned 0 chars - fd is empty, poll for new characters
 	struct pollfd pollfd = {
 			.fd = fd,
 			.events = POLLIN,
 	};
-	int timeout_poll_int;
-	if (timeout == NULL) {
-		timeout_poll_int = -1;
-	} else {
-		const clock_t timeout_poll = *timeout * 1000 / CLOCKS_PER_SEC;
-		timeout_poll_int = MIN(timeout_poll, INT_MAX);
-	}
-	const int pollret = poll(&pollfd, 1, timeout_poll_int);
-	assert(pollfd.revents&POLLIN);
+	const int poll_timeout = clocktimeout_timeout_to_polltimeout(timeout);
+	const int pollret = poll(&pollfd, 1, poll_timeout);
 	if(pollret <= 0) return pollret;
+	assert(pollfd.revents&POLLIN);
 	assert(pollret == 1);
+	// there are new characters in fd, read them
 	return read(fd, buf, size);
 }
 
 /* Private functions ----------------------------------------------------------- */
 
-static ssize_t findmsg_readAtLeastChars(struct findmsg_s *t, size_t N, clock_t *timeout)
+static ssize_t findmsg_readAtLeastChars(struct findmsg_s *t, size_t N, clock_t *start, clock_t *timeout)
 {
-	if (t->pos <= N) return 0;
+	if (t->pos >= N) return 0;
 	const size_t toread = N - t->pos;
 	const ssize_t ret = findmsg_readtimeout(t->fd, &t->buf[t->pos], toread, timeout);
+	clocktimeout_update(start, timeout);
 	if (ret <= 0) return ret;
 	assert(ret <= toread);
 #if 0
@@ -72,22 +72,85 @@ static void findmsg_flushN(struct findmsg_s *t, size_t N)
 	t->msgReceivedSize = 0;
 }
 
-/* Exported Functions --------------------------------------------------------- */
-
-int findmsg_new(struct findmsg_s *t, int fd, size_t size)
+static ssize_t findmsg_beginning_started(struct findmsg_s *t, size_t minlength,
+		ssize_t (*checkBeginning)(const char buf[], size_t minlength, void *arg), void *arg,
+		clock_t *start, clock_t *timeout)
 {
-	assert(t);
-	char *buf = malloc(size);
-	if (buf == NULL) return errno;
-	findmsg_init(t, fd, buf, size);
-	return 0;
+	assert(t != NULL);
+	if (minlength == 0) {
+		minlength = 1;
+	}
+	assert(minlength < t->size);
+	assert(checkBeginning != NULL);
+	int ret;
+	while( (ret = findmsg_readAtLeastChars(t, minlength, start, timeout)) >= 0 && t->pos >= minlength ) {
+		// check every minlength characters starting from t->buf[minlength ... t->pos-1] for beginning
+		const size_t maxidx = t->pos - minlength;
+		for(size_t i = 0; i <= maxidx; ++i) {
+			const ssize_t retcheckBeginning = checkBeginning(&t->buf[i], minlength, arg);
+			if ( retcheckBeginning != 0 ) { // error in checkBeginning or beggining found
+				if ( retcheckBeginning > 0 && i > 0 ) {
+					findmsg_flushN(t, i);
+				}
+				return retcheckBeginning;
+			}
+		}
+		findmsg_flushN(t, maxidx + 1);
+	}
+	return ret;
 }
 
-void findmsg_free(struct findmsg_s *t)
+ssize_t findmsg_ending_started(struct findmsg_s *t, size_t startlen, size_t maxlength,
+		int (*checkEnding)(const char buf[], size_t len, void *arg), void *arg,
+		clock_t *start, clock_t *timeout)
+{
+	assert(t != NULL);
+	assert(checkEnding != NULL);
+	if (startlen == 0) {
+		startlen = 1;
+	}
+	if (maxlength == 0 || maxlength > t->size ) {
+		maxlength = t->size;
+	}
+	assert(startlen < maxlength);
+	int ret;
+	for(; (ret = findmsg_readAtLeastChars(t, startlen, start, timeout)) >= 0 && t->pos >= startlen; ++startlen ) {
+		const int retcheckEnding = checkEnding(t->buf, startlen, arg);
+		if ( retcheckEnding < 0 ) { // error in checkEnding
+			return retcheckEnding;
+		}
+		if ( retcheckEnding > 0 ) { // ending found!
+			return startlen;
+		}
+		if ( startlen >= maxlength ) { // buffer too short
+			return -ENOBUFS;
+		}
+	}
+	return ret;
+}
+
+/* Exported Functions --------------------------------------------------------- */
+
+struct findmsg_s * findmsg_new(int fd, size_t size)
+{
+	struct findmsg_s * t = malloc(sizeof(*t));
+	if (t == NULL) goto ERROR_MALLOC_T;
+	char * const buf = malloc(size);
+	if (buf == NULL) goto ERROR_MALLOC_BUF;
+	findmsg_init(t, fd, buf, size);
+	return t;
+ERROR_MALLOC_BUF:
+	free(t);
+ERROR_MALLOC_T:
+	return NULL;
+}
+
+void findmsg_free(struct findmsg_s **t)
 {
 	assert(t);
-	free(t->buf);
-	*t = (struct findmsg_s){0};
+	free((*t)->buf);
+	free(*t);
+	*t = NULL;
 }
 
 void findmsg_init(struct findmsg_s *t, int fd, char buf[], size_t size)
@@ -105,6 +168,7 @@ void findmsg_init(struct findmsg_s *t, int fd, char buf[], size_t size)
  */
 void findmsg_next(struct findmsg_s *t)
 {
+	assert(t != NULL);
 	if(t->msgReceivedSize > 0) {
 		findmsg_flushN(t, t->msgReceivedSize);
 	}
@@ -117,38 +181,16 @@ void findmsg_next(struct findmsg_s *t)
  * @param checkBeginning  same function as described in (uartbufrx_findmsgconf_s)
  * @param arg
  * @param timeout
- * @return checkBeginning returned value
- *         -ETIMEDOUT - on timeout
+ * @return negative value on error, zero on timeout or message length
+ *
  */
-ssize_t findmsg_beginning(struct findmsg_s *t, size_t minlength,
-		ssize_t (*checkBeginning)(const char buf[], size_t minlength, void *arg), void *arg,
+ssize_t findmsg_beginning(struct findmsg_s *t, size_t minlen,
+		ssize_t (*checkBeginning)(const char buf[], size_t minlen, void *arg), void *arg,
 		clock_t *timeout)
 {
-	assert(t);
-	assert(minlength);
-	assert(checkBeginning);
-	assert(minlength < t->size);
 	clock_t start;
 	clocktimeout_init(&start, timeout);
-	while( findmsg_readAtLeastChars(t, minlength, timeout) >= 0 && t->pos >= minlength ) {
-		// check every minlength characters starting from t->buf[minlength ... t->pos-1] for beginning
-		const size_t maxidx = t->pos - minlength;
-		for(size_t i = 0; i <= maxidx; ++i) {
-			const ssize_t retcheckBeginning = checkBeginning(&t->buf[i], minlength, arg);
-			if ( retcheckBeginning != 0 ) { // error in checkEnding or beggining found
-				if ( retcheckBeginning > 0 && i > 0 ) {
-					findmsg_flushN(t, i);
-				}
-				return retcheckBeginning;
-			}
-		}
-		findmsg_flushN(t, maxidx + 1);
-
-		if (clocktimeout_expired(&start, timeout)) { // timeout
-			break;
-		}
-	}
-	return -ETIMEDOUT;
+	return findmsg_beginning_started(t, minlen, checkBeginning, arg, &start, timeout);
 }
 
 
@@ -160,37 +202,15 @@ ssize_t findmsg_beginning(struct findmsg_s *t, size_t minlength,
  * @param checkEnding same function as described in (uartbufrx_findmsgconf_s)->checkEnding
  * @param arg
  * @param Timeout
- * @return checkEnding returned value
- *         -ENOBUFS - no more space in buffer
- *         -ENOTIMEOUT - on timeout
+ * @return negative value on error, zero on timeout or message length
  */
-ssize_t findmsg_ending(struct findmsg_s *t, size_t startlen, size_t maxlength,
+ssize_t findmsg_ending(struct findmsg_s *t, size_t startlen, size_t maxlen,
 		int (*checkEnding)(const char buf[], size_t len, void *arg), void *arg,
 		clock_t *timeout)
 {
-	assert(t);
-	assert(checkEnding);
 	clock_t start;
 	clocktimeout_init(&start, timeout);
-	if (maxlength == 0 || maxlength > t->size ) {
-		maxlength = t->size;
-	}
-	for(; findmsg_readAtLeastChars(t, startlen, timeout) >= 0 && t->pos >= startlen; ++startlen ) {
-		const int retcheckEnding = checkEnding(t->buf, startlen, arg);
-		if ( retcheckEnding < 0 ) { // error in checkEnding
-			return retcheckEnding;
-		}
-		if ( retcheckEnding > 0 ) { // ending found!
-			return startlen;
-		}
-		if ( startlen >= maxlength ) { // buffer too short
-			return -ENOBUFS;
-		}
-		if(clocktimeout_expired(&start, timeout)) { // timeout
-			break;
-		}
-	}
-	return -ETIMEDOUT;
+	return findmsg_ending_started(t, startlen, maxlen, checkEnding, arg, &start, timeout);
 }
 
 /**
@@ -200,43 +220,45 @@ ssize_t findmsg_ending(struct findmsg_s *t, size_t startlen, size_t maxlength,
  * @param conf specifies functions for message finding
  * @param arg argument passed to conf-> functions
  * @param Timeout
- * @return < 0 on error, otherwise message length
+ * @return negative value on error, zero on timeout or message length
  */
 ssize_t findmsg(struct findmsg_s *t,
 		const struct findmsg_conf_s *conf, void *arg,
 		clock_t *timeout,
 		const char *msg[])
 {
+	assert(conf != NULL);
 	clock_t start;
 	clocktimeout_init(&start, timeout);
 	findmsg_next(t);
 	do {
 
 		const ssize_t expectedMsgLen =
-				findmsg_beginning(t, conf->minlength, conf->checkBeginning, arg, timeout);
+				findmsg_beginning_started(t, conf->minlength, conf->checkBeginning, arg, &start, timeout);
 		if ( expectedMsgLen <= 0 ) {
-			continue;
+			return expectedMsgLen;
 		}
-		// message beggining found
-
-		// expectedMsgLen is longer then our buffer can hold
 		if ( expectedMsgLen > t->size ) {
-			// try again
+			findmsg_flushN(t, 1);
 			PRINTERR("expected %zu rxbufsize %zu\n", expectedMsgLen, t->size);
 			continue;
 		}
 
 		const int ret =
-				findmsg_ending(t, expectedMsgLen, conf->maxlength, conf->checkEnding, arg, timeout);
-		if ( ret < 0 ) {
+				findmsg_ending_started(t, expectedMsgLen, conf->maxlength, conf->checkEnding, arg, &start, timeout);
+		if ( ret == findmsg_MSG_INVALID || ret == -ENOBUFS ) {
+			findmsg_flushN(t, 1);
 			continue;
 		}
+		if ( ret <= 0 ) {
+			return ret;
+		}
+		assert(ret != 0);
 
 		if ( msg != NULL ) *msg = t->buf;
-		return t->msgReceivedSize = ret;
-
-	} while( findmsg_flushN(t, 1), !clocktimeout_expired(&start, timeout) );
-	return -ETIMEDOUT;
+		t->msgReceivedSize = ret;
+	} while( t->msgReceivedSize == 0 );
+	return t->msgReceivedSize;
 }
 
 ssize_t findmsg_get(struct findmsg_s *t,
