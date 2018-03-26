@@ -13,10 +13,13 @@
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
+#if 0 && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
+#include <threads.h>
+#endif
 
 /* Private Variables ---------------------------------------------------------- */
 
-#if __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
+#if 0 && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
 thread_local
 #endif
 constraint_handler_t constraint_handler;
@@ -63,6 +66,6 @@ void constraint_failed(const char *msg, int error,
 		const char *assertion, const char *file, unsigned int line, const char *function)
 {
 	(
-		constraint_handler != NULL ? constraint_handler : constraint_ignore_handler
+		constraint_handler != NULL ? constraint_handler : constraint_abort_handler
 	)(msg, error, assertion, file, line, function);
 }

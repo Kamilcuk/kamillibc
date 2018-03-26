@@ -14,11 +14,11 @@
 #ifndef _TRY_FAILED
 #include <stdlib.h>
 #include <assert.h>
-#ifndef NDEBUG
-#define _TRY_FAILED(expr)  ( assert(expr), abort() )
-#else
-#define _TRY_FAILED(expr)  ( fprintf(stderr, "Try %s failed\n", #expr), abort() )
-#endif
+#define _TRY_FAILED(expr)  ( \
+		(void)fprintf(stderr, "Try %s failed\n", #expr), \
+		assert(expr), \
+		abort() \
+		)
 #endif
 
 #define try(expr)                ((expr)?((void)0):_TRY_FAILED(expr))
