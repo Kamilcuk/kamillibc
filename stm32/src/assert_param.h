@@ -8,7 +8,7 @@
 #ifndef STM32_ASSERT_PARAM_H_
 #define STM32_ASSERT_PARAM_H_
 
-#include "stm32hal.h"
+#include "hal_stm32.h"
 
 #ifdef  USE_FULL_ASSERT
 #ifndef assert_param

@@ -83,6 +83,12 @@
 	.tv_usec = TIMEVAL_FROM_INT_RATIO_NSEC(value, numerator, denominator), \
 	}
 
+/* Exported Types ------------------------------------------------------------------- */
+
+typedef time_t time_ms_t;
+typedef time_t time_us_t;
+typedef unsigned long long time_ns_t;
+
 /* Exported static inline functions ------------------------------------------------- */
 
 static inline void tm_normalize(struct tm *tm)

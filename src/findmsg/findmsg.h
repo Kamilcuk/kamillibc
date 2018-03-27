@@ -8,8 +8,8 @@
 #ifndef SRC_findmsg_H_
 #define SRC_findmsg_H_
 
-#include <unistd.h>
 #include <sys/types.h>
+#include <unistd.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>

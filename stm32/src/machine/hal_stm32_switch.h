@@ -5,8 +5,8 @@
  *      Author: kamil
  */
 
-#ifndef STM32_SRC_STM32HAL_SWITCH_H_
-#define STM32_SRC_STM32HAL_SWITCH_H_
+#ifndef STM32_SRC_HAL_STM32_SWITCH_H_
+#define STM32_SRC_HAL_STM32_SWITCH_H_
 
 
 #if defined(STM32F0) || defined(STM32F0) || defined(STM32F0)
@@ -108,5 +108,5 @@
 #endif
 
 
-#endif /* STM32_SRC_STM32HAL_SWITCH_H_ */
+#endif /* STM32_SRC_HAL_STM32_SWITCH_H_ */
 

@@ -10,8 +10,8 @@
 #include <clocktimeout.h>
 #include <cdefs.h>
 
-#include <poll.h>
 #include <sys/cdefs.h>
+#include <poll.h>
 #include <time.h>
 #include <limits.h>
 #include <stdlib.h>

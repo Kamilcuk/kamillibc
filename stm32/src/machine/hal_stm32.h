@@ -16,7 +16,7 @@
 # define USE_FULL_ASSERT 1
 #endif
 
-#include "stm32hal-switch.h"
+#include "hal_stm32_switch.h"
 
 #include <stdbool.h>
 #include <assert.h>

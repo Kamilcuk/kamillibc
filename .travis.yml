@@ -9,7 +9,7 @@ addons:
       - gcc-6 
 script:
    - export CC=gcc-6
-   - $(CC) --version
+   - $CC --version
    - make
-   - make -BBuild/release test
+   - make -CBuild/release test
 
