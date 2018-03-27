@@ -6,10 +6,11 @@
  */
 #include <time_ex.h>
 
+#include <cdefs.h>
+
 #include <assert.h>
 
-#if 0
-
+__weak_symbol
 uint64_t timer_gettime_ns(timer_t timerid, uint64_t *interval)
 {
 	struct itimerspec value;
@@ -18,6 +19,7 @@ uint64_t timer_gettime_ns(timer_t timerid, uint64_t *interval)
 	return timespec_to_ns(value.it_value);
 }
 
+__weak_symbol
 int timer_settime_ns(timer_t timerid, uint64_t value, uint64_t interval)
 {
 	struct itimerspec it = {
@@ -27,14 +29,16 @@ int timer_settime_ns(timer_t timerid, uint64_t value, uint64_t interval)
 	return timer_settime(timerid, 0, &it, NULL);
 }
 
+__weak_symbol
 uint32_t timer_gettime_ms(timer_t timerid, uint32_t *interval)
 {
 	struct itimerspec value;
-	if ( timer_gettime(timerid, &value) != 0) { assert(0); }
+	if (timer_gettime(timerid, &value) != 0) { assert(0); }
 	if (interval != NULL ) *interval  = timespec_to_ms(value.it_interval);
 	return timespec_to_ms(value.it_value);
 }
 
+__weak_symbol
 int timer_settime_ms(timer_t timerid, uint32_t value, uint32_t interval)
 {
 	struct itimerspec it = {
@@ -43,8 +47,6 @@ int timer_settime_ms(timer_t timerid, uint32_t value, uint32_t interval)
 	};
 	return timer_settime(timerid, 0, &it, NULL);
 }
-
-#endif
 
 int _time_ex_unittest()
 {

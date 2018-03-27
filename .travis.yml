@@ -1,0 +1,7 @@
+install: gcc cmake make get-deps
+language: c
+compiler:
+   - clang
+   - gcc
+script: make && make -BBuild/release test
+

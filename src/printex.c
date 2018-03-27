@@ -33,7 +33,7 @@ static char *printbinary_r_in(int width, const char *v, char result[width+1])
     return result;
 }
 
-char *printbinary_r(int width, unsigned long long v, char result[width+1])
+char *printbinary_r(int width, uintmax_t v, char result[width+1])
 {
 	assert(result != NULL);
 	return printbinary_r_in(width, (const char *)&v, result);
@@ -78,7 +78,7 @@ char *printint64(int64_t v)
 	return printint64_r(v, result);
 }
 
-int print_unittest()
+int printex_unittest()
 {
 #define TEST(expr) do{ if(!(expr)) { assert(0); return -__LINE__; } }while(0)
 	char *tmp, buf[65];

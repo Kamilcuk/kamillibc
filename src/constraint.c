@@ -22,12 +22,16 @@
 #if 0 && __STDC_VERSION__ >= 201112L && !defined(__STDC_NO_THREADS__)
 thread_local
 #endif
+#if __GNUC__
+__thread
+#endif
 constraint_handler_t constraint_handler;
 
 /* Exported Functions --------------------------------------------------------- */
 
-void constraint_abort_handler(const char *msg, int error,
-		const char *assertion, const char *file, unsigned int line, const char *function)
+void constraint_printf_handler(const char * restrict msg, int error,
+		const char * restrict assertion, const char * restrict file,
+		unsigned int line, const char * restrict function)
 {
 #ifdef __GNUC__
 	char errnostr[128];
@@ -42,16 +46,30 @@ void constraint_abort_handler(const char *msg, int error,
 	if (errno != 0)
 		errnostr = strerror(errno);
 #endif
-	(void)fprintf(stderr, "%s:%u: %s%sConstraint `%s' failed.\n",
+	(void)fprintf(stderr,
+			"%s:%u: %s%sConstraint `%s' failed.\n"
+			"%s%s%s\n"
+			,
 			file, line,
 			function != NULL ? function : "", function != NULL ? ": " : "",
-			assertion);
-	perror(msg);
+			assertion,
+			msg != NULL ? msg : "",
+			msg != NULL && error != 0 ? ". " : "",
+			error != 0 ? errnostr : ""
+	);
+}
+
+void constraint_abort_handler(const char * restrict msg, int error,
+		const char * restrict assertion, const char * restrict file,
+		unsigned int line, const char * restrict function)
+{
+	constraint_printf_handler(msg, error, assertion, file, line, function);
 	abort();
 }
 
-void constraint_ignore_handler(const char *msg, int error,
-		const char *assertion, const char *file, unsigned int line, const char *function)
+void constraint_ignore_handler(const char * restrict msg, int error,
+		const char * restrict assertion, const char * restrict file,
+		unsigned int line, const char * restrict function)
 {
 
 }
@@ -61,9 +79,15 @@ void constraint_set_handler(constraint_handler_t handler)
 	constraint_handler = handler;
 }
 
+constraint_handler_t contraint_get_handler()
+{
+	return constraint_handler;
+}
 
-void constraint_failed(const char *msg, int error,
-		const char *assertion, const char *file, unsigned int line, const char *function)
+
+void _constraint_failed(const char * restrict msg, int error,
+		const char * restrict assertion, const char * restrict file,
+		unsigned int line, const char * restrict function)
 {
 	(
 		constraint_handler != NULL ? constraint_handler : constraint_abort_handler

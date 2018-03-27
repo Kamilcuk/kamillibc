@@ -8,6 +8,8 @@
 #ifndef SRC_TIME_EX_H_
 #define SRC_TIME_EX_H_
 
+#include <sys/time.h>
+
 #include <time.h>
 #include <stdint.h>
 #include <assert.h>
@@ -157,12 +159,10 @@ static inline struct timeval timeval_from_clock(clock_t v) {
 
 /* Exported Functions ------------------------------------------------------ */
 
-#ifdef _POSIX_TIMERS
 uint64_t timer_gettime_ns(timer_t timerid, uint64_t *interval);
 int timer_settime_ns(timer_t timerid, uint64_t value, uint64_t interval);
 uint32_t timer_gettime_ms(timer_t timerid, uint32_t *interval);
 int timer_settime_ms(timer_t timerid, uint32_t value, uint32_t interval);
-#endif
 
 int _time_ex_unittest();
 
