@@ -1,6 +1,15 @@
+install: 
+sudo: false
 language: c
-compiler:
-   - clang
-   - gcc
-script: make && make -BBuild/release test
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-6 
+script:
+   - export CC=gcc-6
+   - $(CC) --version
+   - make
+   - make -BBuild/release test
 
