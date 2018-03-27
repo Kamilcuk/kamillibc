@@ -11,7 +11,10 @@
 #include <minmax.h>
 #include <time_ex.h>
 #include <filename.h>
+#include <printmacro.h>
 #include <unity/unity.h>
+
+PRINTMACRO(__VERSION__)
 
 static void rb_test() {
 	TEST_ASSERT_EQUAL(0, rb_unittest());

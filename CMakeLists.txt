@@ -16,6 +16,16 @@ set(CMAKE_ASM_FLAGS_RELEASE        "${COMMON_FLAGS_RELEASE}")
 set(CMAKE_C_FLAGS_RELEASE          "${COMMON_FLAGS_RELEASE}")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${COMMON_FLAGS_RELEASE}")
 
+file(GLOB_RECURSE m4src FOLLOW_SYMLINKS src/*.m4)
+foreach(m4 ${m4src})
+	string(REGEX REPLACE "\\.[^.]*$" "" m4noext ${m4src})
+	add_custom_command(
+		OUTPUT ${m4}
+		COMMAND m4 -P -s ${m4} > ${m4noext}
+		VERBATIM
+	)
+endforeach()
+
 include_directories(src)
 file(GLOB_RECURSE csrc FOLLOW_SYMLINKS src/*.c)
 add_library(${PROJECT_NAME} SHARED ${csrc})

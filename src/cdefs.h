@@ -41,6 +41,10 @@
 
 #include <sys/cdefs.h>
 
+#ifndef __XSTRING
+#define __XSTRING(x) __STRING(x)
+#endif
+
 #ifndef __arraycount
 #define __arraycount(x) (sizeof(x)/sizeof(x[0]))
 #endif
