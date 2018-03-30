@@ -8,7 +8,7 @@
 #ifndef SRC_STM32CLIBS_OSAL_RTC_H_
 #define SRC_STM32CLIBS_OSAL_RTC_H_
 
-#include <osal/types.h>
+#include <uni/types.h>
 
 #include <time.h>
 

@@ -8,7 +8,7 @@
 #ifndef STM32_SRC_SYS_GPIO_H_
 #define STM32_SRC_SYS_GPIO_H_
 
-#include <osal/types.h>
+#include <uni/types.h>
 
 #include <stdbool.h>
 

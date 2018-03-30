@@ -8,7 +8,7 @@
 #ifndef SRC_STM32CLIBS_OSAL_POWER_H_
 #define SRC_STM32CLIBS_OSAL_POWER_H_
 
-#include <osal/types.h>
+#include <uni/types.h>
 
 #define pwr_CRITICALSECTION() \
 	for(int _tOdO = (UNI_CriticalSectionEnter(), 1); _tOdO; _tOdO = (UNI_CriticalSectionExit(), 0) )

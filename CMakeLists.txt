@@ -2,16 +2,16 @@ cmake_minimum_required (VERSION 3.4)
 
 project(kamil ASM C)
 
-set(COMMON_FLAGS    "-Wall -O3 -std=gnu11")
+set(COMMON_FLAGS    "-Wall -O3 -std=gnu11 -flto")
 set(CMAKE_ASM_FLAGS "${COMMON_FLAGS}")
 set(CMAKE_C_FLAGS   "${COMMON_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${COMMON_FLAGS}")
 
-set(COMMON_FLAGS_DEBUG             "-DDEBUG -g -flto")
+set(COMMON_FLAGS_DEBUG             "-DDEBUG -g")
 set(CMAKE_ASM_FLAGS_DEBUG          "${COMMON_FLAGS_DEBUG}")
 set(CMAKE_C_FLAGS_DEBUG            "${COMMON_FLAGS_DEBUG}")
 set(CMAKE_EXE_LINKER_FLAGS_DEBUG   "${COMMON_FLAGS_DEBUG}")
-set(COMMON_FLAGS_RELEASE           "-DNDEBUG -flto")
+set(COMMON_FLAGS_RELEASE           "-DNDEBUG ")
 set(CMAKE_ASM_FLAGS_RELEASE        "${COMMON_FLAGS_RELEASE}")
 set(CMAKE_C_FLAGS_RELEASE          "${COMMON_FLAGS_RELEASE}")
 set(CMAKE_EXE_LINKER_FLAGS_RELEASE "${COMMON_FLAGS_RELEASE}")
@@ -26,9 +26,16 @@ foreach(m4 ${m4src})
 	)
 endforeach()
 
-include_directories(src)
-file(GLOB_RECURSE csrc FOLLOW_SYMLINKS src/*.c)
+add_custom_command(
+	OUTPUT third_party/Unity
+	COMMAND git submodule update --init --recursive third_party/Unity
+	VERBATIM
+)
+
+include_directories(src/lib)
+file(GLOB_RECURSE csrc FOLLOW_SYMLINKS src/lib/*.c src/linux/*.c)
 add_library(${PROJECT_NAME} SHARED ${csrc})
+add_library(${PROJECT_NAME}_static STATIC ${csrc})
 
 file(GLOB_RECURSE ctest FOLLOW_SYMLINKS test/*.c)
 add_executable(${PROJECT_NAME}test ${ctest})

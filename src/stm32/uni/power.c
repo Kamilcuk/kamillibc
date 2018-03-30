@@ -4,7 +4,7 @@
  *  Created on: 28 mar 2018
  *      Author: kamil
  */
-#include <osal/power.h>
+#include "power.h"
 
 #include <unistd.h>
 #include <sys/cdefs.h>

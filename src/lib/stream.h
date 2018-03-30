@@ -24,14 +24,14 @@ struct stream_s {
 
 static inline ssize_t _stream_write_call(struct stream_s *t, void *arg, const void *pnt, size_t nchunks)
 {
-	t->write(arg, pnt, nchunks);
+	return t->write(arg, pnt, nchunks);
 }
 
 #define stream_read(stream, memb, pnt, nchunks)   _stream_read_call(&(stream)->(memb), (stream), (pnt), (nchunks))
 
 static inline ssize_t _stream_read_call(struct stream_s *t, void *arg, void *pnt, size_t nchunks)
 {
-	t->read(arg, pnt, nchunks);
+	return t->read(arg, pnt, nchunks);
 }
 
 ssize_t _stream_ex(stream_const_func f, void *arg, void (*idle)(),
