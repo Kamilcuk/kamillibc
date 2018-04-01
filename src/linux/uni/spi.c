@@ -11,17 +11,20 @@
 
 #include <stddef.h>
 #include <stropts.h>
+#include <linux/ioctl.h>
 #include <linux/spi/spidev.h>
 
 void spi_select(spi_t fd)
 {
 	struct spi_ioc_transfer transfer = { .cs_change = 1, };
-	try( ioctl(fd, SPI_IOC_MESSAGE(1), &transfer) != 0 );
+	const int ret = ioctl(fd, SPI_IOC_MESSAGE(1), &transfer);
+	try( ret != 0 );
 }
 void spi_unselect(spi_t fd)
 {
 	struct spi_ioc_transfer transfer = { .cs_change = 1, };
-	try( ioctl(fd, SPI_IOC_MESSAGE(1), &transfer) != 0 );
+	const int ret = ioctl(fd, SPI_IOC_MESSAGE(1), &transfer);
+	try( ret != 0 );
 }
 void spi_send(spi_t fd, const void *tx_buf, size_t len)
 {
@@ -38,5 +41,6 @@ void spi_exchange(spi_t fd, const void *tx_buf, void *rx_buf, size_t len)
 			.rx_buf = (__u64)rx_buf,
 			.len = len,
 	};
-	try( ioctl(fd, SPI_IOC_MESSAGE(1), &transfer) != 0 );
+	const int ret = ioctl(fd, SPI_IOC_MESSAGE(1), &transfer);
+	try( ret != 0 );
 }

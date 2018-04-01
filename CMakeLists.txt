@@ -38,8 +38,8 @@ add_library(${PROJECT_NAME} SHARED ${csrc})
 add_library(${PROJECT_NAME}_static STATIC ${csrc})
 
 file(GLOB_RECURSE ctest FOLLOW_SYMLINKS test/*.c)
-add_executable(${PROJECT_NAME}test ${ctest})
-target_link_libraries(${PROJECT_NAME}test ${PROJECT_NAME} rt)
+add_executable(${PROJECT_NAME}test ${ctest} ${csrc})
+target_link_libraries(${PROJECT_NAME}test rt)
 
 enable_testing()
 add_test(${PROJECT_NAME}test /bin/sh -c "tty=$(tty); ./${PROJECT_NAME}test 2>&1 | tee $tty")

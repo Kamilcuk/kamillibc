@@ -14,6 +14,11 @@
 #define _PRINTMACRO_STRING(x...)    #x
 #define PRINTMACRO(VAR)             _PRINTMACRO_DO_PRAGMA(message ("\n"#VAR"="_PRINTMACRO_STRING(VAR)""))
 
+#else
+
+#error PRINTMACRO is not defined for this compiler!
+#define PRINTMACRO(VAR) /* */
+
 #endif
 
 #endif /* SRC_PRINTMACRO_H_M4_ */

@@ -53,6 +53,10 @@
 #define __weak_symbol __attribute__((__weak__))
 #endif
 
+#ifndef __unused
+#define __unused __attribute__((__unused__))
+#endif
+
 /*
  * Compile Time Assertion.
  */
