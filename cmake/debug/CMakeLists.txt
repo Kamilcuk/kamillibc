@@ -1,0 +1,5 @@
+set(PROJECT_NAME "${PROJECT_NAME}_debug")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DDEBUG -g3")
+add_subdirectories(GLOB ./*)
+add_executable(${PROJECT_NAME}_test ${testsrc})
+target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME}_static)

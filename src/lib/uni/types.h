@@ -5,16 +5,9 @@
  *      Author: kamil
  */
 
-#ifndef STM32_SRC_SYS_TYPES_H_
-#define STM32_SRC_SYS_TYPES_H_
+#ifndef SRC_SYS_TYPES_H_
+#define SRC_SYS_TYPES_H_
 
-typedef enum {
-	PWR_SLEEP,
-	PWR_SLEEP_NOSYSTICK,
-	PWR_STOP,
-	PWR_STOP_NOSYSTICK,
-	PWR_STANDBY,
-} pwrmode_t;
-#define __pwrmode_t_declared
+#include <uni/_types.h>
 
-#endif /* STM32_SRC_SYS_TYPES_H_ */
+#endif /* SRC_SYS_TYPES_H_ */

@@ -1,21 +1,20 @@
-proj:=klibs
 BUILD_TYPE:=RELEASE
 
 all: release
 
-release: %: Build/%/$(proj)
 release: BUILD_TYPE:=RELEASE
-debug:   %: Build/%/$(proj)
-debug:   BUILD_TYPE:=DEBUG
 
 .SECONDARY:
-
-PHONY: FORCE
 FORCE:
-Build/%/$(proj): FORCE
-	mkdir -p $(dir $@)
-	cmake -H. -B$(dir $@) -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
-	$(MAKE) -C $(dir $@)
+.PHONY: Build
+Build: CMakeLists.txt $(shell find cmake) FORCE
+	cmake -H. -BBuild -DCMAKE_BUILD_TYPE=$(BUILD_TYPE)
+	
+.PHONY: debug
+debug: BUILD_TYPE:=DEBUG
+debug: Build FORCE
+	$(MAKE) -CBuild kamil_debug_test
+	$(MAKE) -CBuild test
 
 .PHONY: clean
 clean:

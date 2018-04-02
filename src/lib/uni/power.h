@@ -28,9 +28,9 @@
 	} \
 }while(0)
 
-#define pwr_CRITICAL_SECTION_while(condition)  POWER_STATE_for(0, condition, 0, 0);
+#define pwr_CRITICALSECTION_while(condition)  POWER_STATE_for(0, condition, 0, 0);
 
-#define pwr_mode_enter_on_cond(mode, condition) \
+#define pwr_mode_enter_while(mode, condition) \
 		pwr_CRITICALSECTION_for( \
 				pwr_mode_enter_pre(mode), \
 				pwr_mode_enter(mode), \
