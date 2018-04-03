@@ -9,6 +9,7 @@
 #define QQ_STD_H_
 
 #include "require.h"
+#include <sys/types.h>
 #include <stddef.h>
 #include <stdarg.h>
 #include <stdio.h>

@@ -39,7 +39,7 @@ typedef struct {
 	.data = sizeof(char[RB_ISPOWEROF2(_size)?1:-1]) ? (_data) : NULL, \
 	.size = (_size) \
 	}
-#define RB_INIT_ONSTACK(_size)  RB_INIT( ((char[(_size)]){}), (_size) )
+#define RB_INIT_ONSTACK(_size)  RB_INIT( ((char[(_size)]){0}), (_size) )
 
 RingBuffer_t *rb_new(size_t size);
 void rb_free(RingBuffer_t **this);

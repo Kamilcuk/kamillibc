@@ -1,8 +1,8 @@
 cmake_minimum_required (VERSION 3.4)
 
-project(kamil ASM C)
+project(kamil C)
 
-set(COMMON_FLAGS    "-Wall -O3 -std=gnu11 -flto")
+set(COMMON_FLAGS    "-std=gnu11 -O3 -fPIC -flto -pedantic -Wall")
 set(CMAKE_ASM_FLAGS "${COMMON_FLAGS}")
 set(CMAKE_C_FLAGS   "${COMMON_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${COMMON_FLAGS}")
@@ -31,14 +31,9 @@ file(GLOB_RECURSE testsrc FOLLOW_SYMLINKS
 	
 add_subdirectory(cmake)
 
+set(CTEST_OUTPUT_ON_FAILURE TRUE)
 enable_testing()
-macro(add_test_h name)
-	add_test(${PROJECT_NAME}_${name}_test 
-	/bin/sh -xc "tty=$(tty); ./cmake/${name}/${PROJECT_NAME}_${name}_test 2>&1 | tee $tty"
-	)
-endmacro()
-add_test_h(debug)
-add_test_h(default)
-add_test_h(release)
-
+add_test(${PROJECT_NAME}_debug_test   ./cmake/debug/${PROJECT_NAME}_debug_test)
+add_test(${PROJECT_NAME}_test         ./cmake/default/${PROJECT_NAME}_test)
+add_test(${PROJECT_NAME}_release_test ./cmake/release/${PROJECT_NAME}_release_test)
 

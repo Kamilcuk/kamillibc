@@ -11,7 +11,7 @@
 #if defined(__GNUC__)
 
 #define _PRINTMACRO_DO_PRAGMA(x)    _Pragma(#x)
-#define _PRINTMACRO_STRING(x...)    #x
+#define _PRINTMACRO_STRING(...)     __VA_ARGS__
 #define PRINTMACRO(VAR)             _PRINTMACRO_DO_PRAGMA(message ("\n"#VAR"="_PRINTMACRO_STRING(VAR)""))
 
 #else

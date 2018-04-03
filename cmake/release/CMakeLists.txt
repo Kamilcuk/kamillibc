@@ -1,5 +1,4 @@
+
 set(PROJECT_NAME "${PROJECT_NAME}_release")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -DNDEBUG")
-add_subdirectories(GLOB ./*)
-add_executable(${PROJECT_NAME}_test ${testsrc})
-target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME}_static)
+include(../default/CMakeLists.txt)

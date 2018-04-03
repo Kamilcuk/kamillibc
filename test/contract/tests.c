@@ -19,9 +19,9 @@ void test1() {
 
 	result_a_s_t result;
 
-	result = (typeof(result))RESULT_init_ok((struct a_s){1,2} );
+	result = (result_a_s_t)RESULT_init_ok((struct a_s){1,2} );
 
-	result = (typeof(result))RESULT_init_err(EINVAL);
+	result = (result_a_s_t)RESULT_init_err(EINVAL);
 
 	RESULT_set_ok(result, (struct a_s){1,2});
 

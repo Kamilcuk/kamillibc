@@ -75,6 +75,8 @@ result_size_t_errno_t_t QQ_vfprintf(FILE *stream, const char *format, va_list ap
 			(result_size_t_errno_t_t)RESULT_init_err(errno) :
 			(result_size_t_errno_t_t)RESULT_init_ok(ret);
 }
+
+#if _POSIX_C_SOURCE >= 200809L
 result_size_t_errno_t_t QQ_vdprintf(int fd, const char *format, va_list ap)
 {
 	CONTRACT_assert(format!=NULL);
@@ -84,6 +86,7 @@ result_size_t_errno_t_t QQ_vdprintf(int fd, const char *format, va_list ap)
 			(result_size_t_errno_t_t)RESULT_init_err(errno) :
 			(result_size_t_errno_t_t)RESULT_init_ok(ret);
 }
+#endif
 
 result_size_t_errno_t_t QQ_vsprintf(char *str, const char *format, va_list ap)
 {
@@ -153,6 +156,7 @@ result_size_t_errno_t_t QQ_snprintf(char *str, size_t size, const char *format, 
 	return ret;
 }
 
+#if _XOPEN_SOURCE >= 500 || _POSIX_C_SOURCE >= 200809L
 result_size_t_errno_t_t QQ_pwrite(int fildes, const void *buf, size_t nbyte, off_t offset)
 {
 	CONTRACT_assert_nonnull(buf);
@@ -162,6 +166,7 @@ result_size_t_errno_t_t QQ_pwrite(int fildes, const void *buf, size_t nbyte, off
 			(result_size_t_errno_t_t)RESULT_init_err(errno) :
 			(result_size_t_errno_t_t)RESULT_init_ok(ret);
 }
+#endif
 
 result_size_t_errno_t_t QQ_write(int fildes, const void *buf, size_t nbyte)
 {
@@ -173,6 +178,7 @@ result_size_t_errno_t_t QQ_write(int fildes, const void *buf, size_t nbyte)
 			(result_size_t_errno_t_t)RESULT_init_ok(ret);
 }
 
+#if _XOPEN_SOURCE >= 500 || _POSIX_C_SOURCE >= 200809L
 result_size_t_errno_t_t QQ_pread(int fildes, void *buf, size_t nbyte, off_t offset)
 {
 	CONTRACT_assert_nonnull(buf);
@@ -182,6 +188,7 @@ result_size_t_errno_t_t QQ_pread(int fildes, void *buf, size_t nbyte, off_t offs
 			(result_size_t_errno_t_t)RESULT_init_err(errno) :
 			(result_size_t_errno_t_t)RESULT_init_ok(ret);
 }
+#endif
 
 result_size_t_errno_t_t QQ_read(int fildes, void *buf, size_t nbyte)
 {

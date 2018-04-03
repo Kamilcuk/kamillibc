@@ -11,7 +11,7 @@
 // -pedantic: warning: ISO C forbids braced-groups within expressions
 
 #ifdef __GNUC__
-# define MIN(a,b)  ({ \
+# define MIN(a,b)  __extension__({ \
 	__typeof__ (a) _a = (a); \
 	__typeof__ (b) _b = (b);\
 	_a < _b ? _a : _b; })
@@ -20,7 +20,7 @@
 #endif
 
 #ifdef __GNUC__
-# define MAX(a,b)  ({ \
+# define MAX(a,b)  __extension__({ \
 	__typeof__ (a) _a = (a); \
 	__typeof__ (b) _b = (b); \
 	_a > _b ? _a : _b; })

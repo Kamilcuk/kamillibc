@@ -33,7 +33,7 @@ void constraint_printf_handler(const char * restrict msg, int error,
 		const char * restrict assertion, const char * restrict file,
 		unsigned int line, const char * restrict function)
 {
-#ifdef __GNUC__
+#if defined(__GNUC__) && _POSIX_C_SOURCE >= 200112L
 	char errnostr[128];
 	if (errno != 0)
 		(void)strerror_r(errno, errnostr, sizeof(errnostr));

@@ -7,14 +7,15 @@
 
 #include <printex.h>
 
+#include <limits.h>
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
-#include <limits.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <assert.h>
 
-static inline void printbinary_r_in_less8(int width, const char *v, char *result[width])
+static inline void printbinary_r_in_char(int width, const char *v, char *result[-width])
 {
 	for(unsigned int i = 0; i < width; ++i) {
 		const char res = ( ( *v >> i ) & 1 ) + '0';
@@ -26,10 +27,10 @@ static char *printbinary_r_in(int width, const char *v, char result[width+1])
 {
 	result = &result[width];
 	result[0] = '\0';
-    for(; width >= 8; width -= 8, ++v) {
-    	printbinary_r_in_less8(CHAR_BIT, v, &result);
+    for(; width >= CHAR_BIT; width -= CHAR_BIT, ++v) {
+    	printbinary_r_in_char(CHAR_BIT, v, &result);
     }
-    printbinary_r_in_less8(width, v, &result);
+    printbinary_r_in_char(width, v, &result);
     return result;
 }
 
@@ -63,9 +64,9 @@ char *printuint64(uint64_t v) {
 	return printuint64_r(v, bfr);
 }
 
-char *printint64_r(int64_t v, char result[22])
+char *printint64_r(int64_t v, char result[21])
 {
-	result = printuint64_r(v < 0 ? -v : v, &result[1]);
+	result = printuint64_r(llabs(v), &result[1]);
 	if ( v < 0 ) {
 		(--result)[0] = '-';
 	}
@@ -74,7 +75,7 @@ char *printint64_r(int64_t v, char result[22])
 
 char *printint64(int64_t v)
 {
-	static char result[22];
+	static char result[21];
 	return printint64_r(v, result);
 }
 
@@ -95,21 +96,21 @@ int printex_unittest()
 	TEST(tmp >= &buf[0] && tmp < &buf[21]);
 	TEST(!strcmp(tmp, "-1234567654321"));
 
-	tmp = printbinary_r(2, 0b10, buf);
+	tmp = printbinary_r(2, 0x2, buf);
 	TEST(tmp == buf);
 	TEST(!strcmp(buf, "10"));
 
-	tmp = printbinary_r(64, 0b0100000001000010111001011100101000111111011110101111111110100010, buf);
+	tmp = printbinary_r(64, 0xcd0aa5f8cc389648, buf);
 	TEST(tmp == buf);
-	TEST(!strcmp(tmp,        "0100000001000010111001011100101000111111011110101111111110100010"));
+	TEST(!strcmp(tmp, "1100110100001010101001011111100011001100001110001001011001001000"));
 
-	TEST(!strcmp(PRINTUINT64(1234567654321), "1234567654321"));
+	TEST(!strcmp(PRINTUINT64(18446744073709551615ull), "18446744073709551615"));
 
-	TEST(!strcmp(PRINTINT64(-1234567654321), "-1234567654321"));
+	TEST(!strcmp(PRINTINT64( 9223372036854775807ll),  "9223372036854775807"));
+	TEST(!strcmp(PRINTINT64(-9223372036854775807ll), "-9223372036854775807"));
 
-	TEST(!strcmp(
-			PRINTBINARY(64, 0b0100000001000010111001011100101000111111011110101111111110100010),
-			"0100000001000010111001011100101000111111011110101111111110100010")
+	TEST(!strcmp(PRINTBINARY(64, 0xcd0aa5f8cc389648),
+			"1100110100001010101001011111100011001100001110001001011001001000")
 	);
 
 	return 0;

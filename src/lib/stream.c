@@ -26,7 +26,7 @@ ssize_t _stream_ex(stream_const_func f, void *arg, void (*idle)(),
 			}
 		} else {
 			nchunks -= ret;
-			pnt += ret*chunksize;
+			pnt = (char*)pnt + (ret*chunksize);
 			if (timeout != (clock_t)-1 && start+timeout > clock()) {
 				return -ETIMEDOUT;
 			}

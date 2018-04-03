@@ -11,6 +11,7 @@
 #include <signal.h>
 #include <stddef.h>
 #include <assert.h>
+#if _XOPEN_SOURCE >= 500
 
 static long CriticalSectionCnt = 0;
 static sigset_t CriticalSectionMask = {0};
@@ -31,3 +32,5 @@ void pwr_CriticalSectionExit()
 		sigprocmask(SIG_SETMASK, &CriticalSectionMask, NULL);
 	}
 }
+
+#endif

@@ -10,6 +10,8 @@
 
 #include <assert.h>
 
+#if _POSIX_C_SOURCE >= 199309L
+
 __weak_symbol
 uint64_t timer_gettime_ns(timer_t timerid, uint64_t *interval)
 {
@@ -47,6 +49,8 @@ int timer_settime_ms(timer_t timerid, uint32_t value, uint32_t interval)
 	};
 	return timer_settime(timerid, 0, &it, NULL);
 }
+
+#endif
 
 int _time_ex_unittest()
 {

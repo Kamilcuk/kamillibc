@@ -10,9 +10,10 @@
 
 #include <sys/time.h>
 
+#include <assert.h>
 #include <time.h>
 #include <stdint.h>
-#include <assert.h>
+#include <string.h>
 
 /* Private Macro Functions --------------------------------------------------------------- */
 
@@ -110,7 +111,11 @@ static inline void tm_add_tm(struct tm *tm, struct tm tm2)
 static inline void tm_add_time_t(struct tm *tm, time_t t)
 {
 	struct tm tm2;
+#ifdef __USE_POSIX
 	(void)gmtime_r(&t, &tm2);
+#else
+	(void)memcpy(&tm2, gmtime(&t), sizeof(tm2));
+#endif
 	tm_add_tm(tm, tm2);
 }
 
@@ -165,10 +170,12 @@ static inline struct timeval timeval_from_clock(clock_t v) {
 
 /* Exported Functions ------------------------------------------------------ */
 
+#if _POSIX_C_SOURCE >= 199309L
 uint64_t timer_gettime_ns(timer_t timerid, uint64_t *interval);
 int timer_settime_ns(timer_t timerid, uint64_t value, uint64_t interval);
 uint32_t timer_gettime_ms(timer_t timerid, uint32_t *interval);
 int timer_settime_ms(timer_t timerid, uint32_t value, uint32_t interval);
+#endif
 
 int _time_ex_unittest();
 

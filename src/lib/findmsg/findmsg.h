@@ -53,7 +53,7 @@ struct findmsg_s * findmsg_new(int fd, size_t bufsize);
 void findmsg_free(struct findmsg_s **t);
 
 #define findmsg_INIT(_fd, _buf, _size)     {.fd = (_fd), .buf = (_buf), .size = (_size)}
-#define findmsg_INIT_ON_STACK(_fd, _size)  findmsg_INIT(_fd, ((char[_size]){}), _size)
+#define findmsg_INIT_ON_STACK(_fd, _size)  findmsg_INIT(_fd, ((char[_size]){0}), _size)
 void findmsg_init(struct findmsg_s *t, int fd, char buf[], size_t size);
 
 void findmsg_next(struct findmsg_s *t);
