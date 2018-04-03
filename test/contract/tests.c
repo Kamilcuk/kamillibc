@@ -32,7 +32,12 @@ void test1() {
 		(void)value;
 	}
 	{
-		struct a_s value = RESULT_tryOkElse(result, ({ assert(0), (struct a_s){0,0}; }) );
+		struct a_s value = RESULT_tryOkElse(result, (struct a_s){0,0} );
+		(void)value;
+	}
+	{
+		struct a_s goodvalue = {0,0};
+		struct a_s value = RESULT_tryOkElse(result, goodvalue);
 		(void)value;
 	}
 	{
@@ -41,7 +46,7 @@ void test1() {
 	}
 	{
 		int value = RESULT_tryErrElse( result , 5 );
-		value = RESULT_tryErrElse( result , ({ assert(0); 5; }) );
+		value = RESULT_tryErrElse( result , ( assert(0), 5 ) );
 		(void)value;
 	}
 	{

@@ -40,45 +40,55 @@ static inline void RESULT___assert(const char * restrict assertion) {
 #define RESULT_set_ok(Var, ...)         ( (Var).isErr = false, (Var).ok = __VA_ARGS__ )
 #define RESULT_set_err(Var, ...)        ( (Var).isErr = true, (Var).err = __VA_ARGS__ )
 
-#ifndef __GNUC__
-
-#define RESULT_tryOk(Var)               ( RESULT_assert( (Var).isErr == false ), (Var).ok )
-#define RESULT_tryErr(Var)              ( RESULT_assert( (Var).isErr == true ), (Var).err )
-
-#define RESULT_tryOkElse(Var,...)       ( (!(Var).isErr)?((Var).ok ):( __VA_ARGS__ ) )
-#define RESULT_tryErrElse(Var,...)      ( ( (Var).isErr)?((Var).err):( __VA_ARGS__ ) )
-
-#else // __GNUC__
-
+#ifdef __GNUC__
 #define RESULT_tryOk(Var) __extension__({ \
 	__typeof__(Var) _RESULT_var = (Var); \
 	RESULT_assert( _RESULT_var.isErr == false ); \
 	_RESULT_var.ok; \
 })
+#else
+#define RESULT_tryOk(Var)               ( RESULT_assert( (Var).isErr == false ), (Var).ok )
+#endif
+
+#ifdef __GNUC__
 #define RESULT_tryErr(Var) __extension__({ \
 	__typeof__(Var) _RESULT_var = (Var); \
 	RESULT_assert( _RESULT_var.isErr == true ); \
 	_RESULT_var.err; \
 })
+#else
+#define RESULT_tryErr(Var)              ( RESULT_assert( (Var).isErr == true ), (Var).err )
+#endif
 
+#ifdef __GNUC__
 #define RESULT_tryOkElse(Var, ...) __extension__({ \
 	__typeof__((Var).ok) _RESULT_var_ok; \
 	if (!(Var).isErr) { \
 		_RESULT_var_ok = (Var).ok; \
 	} else { \
-		_RESULT_var_ok = __VA_ARGS__ ; \
+		_RESULT_var_ok = ( __VA_ARGS__ ); \
 	} \
 	_RESULT_var_ok; \
 })
+#else
+#define RESULT_tryOkElse(Var,...)       ( (!(Var).isErr)?((Var).ok ):( __VA_ARGS__ ) )
+#endif
+
+#ifdef __GNUC__
 #define RESULT_tryErrElse(Var, ...) __extension__({ \
 	__typeof__((Var).err) _RESULT_var_err; \
 	if ( (Var).isErr) { \
 		_RESULT_var_err = (Var).err; \
 	} else { \
-		_RESULT_var_err = __VA_ARGS__ ; \
+		_RESULT_var_err = ( __VA_ARGS__ ); \
 	} \
 	_RESULT_var_err; \
 })
+#else
+#define RESULT_tryErrElse(Var,...)      ( ( (Var).isErr)?((Var).err):( __VA_ARGS__ ) )
+#endif
+
+#ifdef __GNUC__
 
 #define RESULT_TRY __extension__({ \
 	__auto_type _RESULT_var = (
