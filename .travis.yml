@@ -10,6 +10,5 @@ addons:
 script:
    - export CC=gcc-6
    - $CC --version
-   - make
-   - make -CBuild/release test
+   - make all test
 

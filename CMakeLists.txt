@@ -40,21 +40,19 @@ include_directories(src/linux src/lib src/ccan)
 file(GLOB_RECURSE src FOLLOW_SYMLINKS src/lib/*.c src/linux/*.c)
 file(GLOB_RECURSE testsrc FOLLOW_SYMLINKS test/*.c)
 
-# add ccan library
+# add ccan library objects
 add_subdirectory(src/ccan)
-add_dependencies(ccan ccan_config)
+add_dependencies(ccan_object ccan_config)
 
+# generate objects
+add_library(${PROJECT_NAME}_object OBJECT ${src})
+set(objects $<TARGET_OBJECTS:ccan_object> $<TARGET_OBJECTS:${PROJECT_NAME}_object>)
 # generate static library
-add_library(${PROJECT_NAME}_static STATIC ${src})
-add_dependencies(${PROJECT_NAME}_static ccan)
-
+add_library(${PROJECT_NAME}_static STATIC ${objects})
 # generate shared library
-add_library(${PROJECT_NAME}_shared SHARED ${src})
-target_link_libraries(${PROJECT_NAME}_shared ${PROJECT_NAME}_static)
-
+add_library(${PROJECT_NAME}_shared SHARED ${objects})
 # generate test executable and run tests
-add_executable(${PROJECT_NAME}_test ${testsrc})
-target_link_libraries(${PROJECT_NAME}_test ${PROJECT_NAME}_static)
+add_executable(${PROJECT_NAME}_test ${testsrc} ${objects})
 set(CTEST_OUTPUT_ON_FAILURE TRUE)
 enable_testing()
 add_test(${PROJECT_NAME}_test ${PROJECT_NAME}_test)
