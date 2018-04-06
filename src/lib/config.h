@@ -8,8 +8,6 @@
 #ifndef SRC_CLIBS_CONFIG_H_
 #define SRC_CLIBS_CONFIG_H_
 
-#if __GNUC__
-#define HAVE_TYPEOF 1
-#endif
+#include "ccan_config.h"
 
 #endif /* SRC_CLIBS_CONFIG_H_ */

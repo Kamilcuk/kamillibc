@@ -1,3 +1,6 @@
-[submodule "third-party/Unity"]
+[submodule "Unity"]
 	path = third-party/Unity
 	url = https://github.com/ThrowTheSwitch/Unity
+[submodule "ccan"]
+	path = third-party/ccan
+	url = https://github.com/rustyrussell/ccan

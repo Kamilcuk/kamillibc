@@ -11,15 +11,11 @@
 #include <minmax.h>
 #include <time_ex.h>
 #include <filename.h>
-#include <cplusplus/algorithm.h>
 #include <printmacro.h>
 #include <unity/unity.h>
 
 PRINTMACRO(__VERSION__)
 
-static void algorithm_test() {
-	TEST_ASSERT_EQUAL(0, algo_unittest());
-}
 static void rb_test() {
 	TEST_ASSERT_EQUAL(0, rb_unittest());
 }
@@ -43,7 +39,6 @@ int main() {
 	try( findmsg_unittest() == 0 );
 
 	UnityBegin(__FILENAME__);
-	RUN_TEST(algorithm_test);
 	RUN_TEST(minmax_test);
 	RUN_TEST(rb_test);
 	RUN_TEST(printex_test);
