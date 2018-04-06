@@ -27,11 +27,12 @@ foreach(name Unity ccan pt)
 	endif()
 endforeach()
 
-# generate config.h needed by ccan modules. src/ccan/ccan_config.h is included by src/lib/config.h 
+# generate config.h needed by ccan modules. src/ccan/ccan_config.h is included by src/lib/config.h
+add_executable(ccan_configurator third-party/ccan/tools/configurator/configurator.c)
 add_custom_command(
 	OUTPUT src/ccan/ccan_config.h
-	COMMAND $(MAKE) -C${CMAKE_SOURCE_DIR}/third-party/ccan config.h 
-	COMMAND cp -v ${CMAKE_SOURCE_DIR}/third-party/ccan/config.h ${CMAKE_SOURCE_DIR}/src/ccan/ccan_config.h
+	COMMAND ccan_configurator ${CMAKE_C_COMPILER} ${CMAKE_C_FLAGS} > ${CMAKE_SOURCE_DIR}/src/ccan/ccan_config.h
+	DEPENDS ccan_configurator
 )
 add_custom_target(ccan_config DEPENDS src/ccan/ccan_config.h)
 
