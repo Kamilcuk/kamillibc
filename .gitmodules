@@ -4,3 +4,6 @@
 [submodule "ccan"]
 	path = third-party/ccan
 	url = https://github.com/rustyrussell/ccan
+[submodule "third-party/pt"]
+	path = third-party/pt
+	url = https://github.com/zserge/pt

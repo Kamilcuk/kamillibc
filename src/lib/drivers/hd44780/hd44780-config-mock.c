@@ -47,7 +47,7 @@ _(4)
 _(5)
 #undef _
 
-static struct disp_s {
+struct disp_s {
 	uint8_t *ddgram;
 	uint8_t *cgram;
 

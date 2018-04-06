@@ -192,21 +192,6 @@ enum HD44780_FLAG_RW_e {
  * hd44780 documentation page 24 All others execution time = 37 us + extra 3us for cursor = 40us
  */
 #define HD44780_NORMAL_DELAY()            usleep(40)
-
-/**
- * delays from hd44780 documentation page 52 - DC Characteristics (VCC = 4.5 to 5.5 V, Ta = –30 to +75°C*3)
- * for PIC18f2550 with XTAL=48Mhz every Nop is 83ns
- *
- * Notice: Data set-up time | t_DSW | 80 ns is not used.
- * The DB0 through DB7 lines are set up before hd44780_capable_callback, which allows to omit this delay completely.
- * Notice: Data hold time | t_H or t_DHR | 10 (or 5) ns is quite short and therefore not used.
- * After data write we return from recv function, data hold time is not needed (there will be several
- * instructions before we change R/W and E lines states.
- * Notice: The microcontroler has it's own I/O "Port Output Rise Time" and "Port Output Fall Time"
- * It's good to add two additional Nop's to the delays, to let the output signal rise (or fall).
- * Notice: I have written the minimum values in comments. However, these are too short for me,
- * Maybe too long cable or whatever. Found out, that it works stable with 2 us.
- */
 /**
  * Address set-up time | t_DSW | 40 ns
  */
@@ -223,7 +208,6 @@ enum HD44780_FLAG_RW_e {
  * Data hold time | t_H or t_DHR | 10 (or 5) ns
  */
 #define HD44780_DATA_HOLD_TIME()           usleep(2)
-
 /**
  * Additional delay when busyflag checking.or when doing two 4-bit operations
  * Enable cycle time | t_cyclE | 500 ns

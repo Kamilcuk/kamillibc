@@ -172,11 +172,11 @@ static void custom3(uint8_t ctrl, uint8_t col)
 
 static void custom4(uint8_t ctrl, uint8_t col)
 {
-	hd44780_set_cursor_rowcol(ctrl, col, 0);
+	hd44780_write_cursor_rowcol(ctrl, col, 0);
 	hd44780_write_data(ctrl, 2);
 	hd44780_write_data(ctrl, 6);
 	hd44780_write_data(ctrl, 1);
-	hd44780_set_cursor_rowcol(ctrl, col, 1);
+	hd44780_write_cursor_rowcol(ctrl, col, 1);
 	hd44780_write_data(ctrl, 32);
 	hd44780_write_data(ctrl, 32);
 	hd44780_write_data(ctrl, 1);
@@ -196,11 +196,11 @@ static void custom5(uint8_t ctrl, uint8_t col)
 
 static void custom6(uint8_t ctrl, uint8_t col)
 {
-	hd44780_set_cursor_rowcol(ctrl, col,0);
+	hd44780_write_cursor_rowcol(ctrl, col,0);
 	hd44780_write_data(ctrl, 2);
 	hd44780_write_data(ctrl, 3);
 	hd44780_write_data(ctrl, 4);
-	hd44780_set_cursor_rowcol(ctrl, col, 1);
+	hd44780_write_cursor_rowcol(ctrl, col, 1);
 	hd44780_write_data(ctrl, 2);
 	hd44780_write_data(ctrl, 6);
 	hd44780_write_data(ctrl, 1);
@@ -220,11 +220,11 @@ static void custom7(uint8_t ctrl, uint8_t col)
 
 static void custom8(uint8_t ctrl, uint8_t col)
 {
-	hd44780_set_cursor_rowcol(ctrl, col, 0);
+	hd44780_write_cursor_rowcol(ctrl, col, 0);
 	hd44780_write_data(ctrl, 2);
 	hd44780_write_data(ctrl, 3);
 	hd44780_write_data(ctrl, 1);
-	hd44780_set_cursor_rowcol(ctrl, col, 1);
+	hd44780_write_cursor_rowcol(ctrl, col, 1);
 	hd44780_write_data(ctrl, 2);
 	hd44780_write_data(ctrl, 6);
 	hd44780_write_data(ctrl, 1);

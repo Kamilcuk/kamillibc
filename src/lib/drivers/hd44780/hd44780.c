@@ -47,22 +47,23 @@
 
 #define HD44780_CHECK_RAWCURPOS               1
 
-#define hd44780_rawcurpos_check(rawcurpos)   ( ( ((rawcurpos)&0x3F) < HD44780_DISP_COLS ) && ( ((rawcurpos)&0x80) == 0 ) )
+#define hd44780_rawcurpos_check(rawcurpos)    \
+		( ( ((rawcurpos)&0x3F) < HD44780_DISP_COLS ) && ( ((rawcurpos)&0x80) == 0 ) )
 
 /* private macros && macros sanity checks ----------------------------------------------- */
 
 #ifndef HD44780_PDEBUG
-	///#define HD44780_PDEBUG( printf_args )
+	///#define HD44780_PDEBUG( printf_args ) do{}while(0)
 	#define HD44780_PDEBUG( printf_args ) do{ ( printf printf_args ); }while(0)
 #endif
 
 #ifndef HD44780_PERR
-	//#define HD44780_PERR( printf_args )
+	//#define HD44780_PERR( printf_args ) do{}while(0)
 	#define HD44780_PERR( printf_args ) do{ printf("HD44780 PERR(%d):", __LINE__); ( printf printf_args ); }while(0)
 #endif
 
 #ifndef HD44780_USE_ASSERT
-	//#define HD44780_ASSERT(expr)
+	//#define HD44780_ASSERT(expr) do{}while(0)
 	#define HD44780_ASSERT(expr) assert(expr)
 #endif
 
@@ -297,8 +298,10 @@ uint8_t hd44780_read(const uint8_t ctrl, const enum HD44780_FLAG_RS_e flag_rs)
 
 #if HD44780_CHECK_RAWCURPOS
 	// if we have read cursor position, we can check if its ok
-	if ( flag_rs == HD44780_FLAG_RS_INST && ( data & HD44780_DDRAM_ADDRESS ) &&
-				!hd44780_rawcurpos_check(data) ) {
+	if ( flag_rs == HD44780_FLAG_RS_INST &&
+			( data & HD44780_DDRAM_ADDRESS ) &&
+			!hd44780_rawcurpos_check(data)
+		) {
 		HD44780_PERR(("rawcurpos_check data=%x flag_rs=%x ret=%x col=%x\n",
 				data, flag_rs, hd44780_rawcurpos_check(data), hd44780_col_from_rawcurpos(data)
 		));
@@ -324,8 +327,10 @@ void hd44780_write_unsafe(const uint8_t ctrl, const enum HD44780_FLAG_RS_e flag_
 
 #if HD44780_CHECK_RAWCURPOS
 	// if this is a command to set cursor position && if the rawcursor position is outside the window
-	if ( flag_rs == HD44780_FLAG_RS_INST && HD44780_INST_IS_DDRAM_ADDRESS(data) &&
-			!hd44780_rawcurpos_check( HD44780_INST_GET_DDRAM_ADDRESS(data) ) ) {
+	if ( flag_rs == HD44780_FLAG_RS_INST &&
+			HD44780_INST_IS_DDRAM_ADDRESS(data) &&
+			!hd44780_rawcurpos_check( HD44780_INST_GET_DDRAM_ADDRESS(data) )
+		) {
 		HD44780_PERR(("rawcurpos_check flag_rs=%x flag_rs=%x ret=%x col=%x\n",
 				data, flag_rs, hd44780_rawcurpos_check(data), hd44780_col_from_rawcurpos(data)
 		));
@@ -380,7 +385,7 @@ void hd44780_write_unsafe(const uint8_t ctrl, const enum HD44780_FLAG_RS_e flag_
  * The body of this function should be synchronized with hd44780_write
  * Gets called by hd44780_initializa_by_instruction();
  */
-static void hd44780_write_8bit_op(const uint8_t ctrl, const enum HD44780_FLAG_RS_e flag_rs, const uint8_t command)
+static inline void hd44780_write_8bit_op(const uint8_t ctrl, const enum HD44780_FLAG_RS_e flag_rs, const uint8_t command)
 {
 	HD44780_PDEBUG(("hd44780_write_8bit_op(%x,%x,%x)\n", ctrl, flag_rs, command));
 
@@ -411,7 +416,7 @@ void hd44780_write(const uint8_t RAM_and_ctrl, const enum HD44780_FLAG_RS_e flag
 				( (RAM_and_ctrl&0x80) ? HD44780_CGRAM_ADDRESS : HD44780_DDRAM_ADDRESS )
 				| hd44780_read_rawcurpos(ctrl);
 	}
-	uint8_t check_every_write_times;
+	uint_fast8_t check_every_write_times;
 
 	for(check_every_write_times = HD44780_CHECK_EVERY_WRITE_MAX;
 			check_every_write_times;
@@ -565,14 +570,14 @@ void hd44780_write_cgram(const uint8_t ctrl, const uint8_t pos, const uint8_t cg
 
 void hd44780_write_cgram_all(const uint8_t pos, const uint8_t cgram[8])
 {
-	for(uint_fast8_t i = 0; i < HD44780_NUM_CONTROLLERS; ++i) {
+	hd44780_foreach(i) {
 		hd44780_write_cgram(i, pos, cgram);
 	}
 }
 
 /* unit tests ------------------------------------------------------------------------------ */
 
-static void hd44780_unit_tests_curpos()
+static inline void hd44780_unittest_curpos()
 {
 	static_assert( hd44780_rawcurpos_check( 0x80 ) == false, "");
 	static_assert( hd44780_rawcurpos_check( HD44780_DISP_COLS ) == false,"");
@@ -594,7 +599,7 @@ static void hd44780_unit_tests_curpos()
 			{ 0x40 | (HD44780_DISP_COLS-1), HD44780_DISP_COLS+HD44780_DISP_COLS-1, 1, HD44780_DISP_COLS-1 },
 #endif
 	};
-	for(uint8_t i=0;i<sizeof(t)/sizeof(*t);++i) {
+	for(uint_fast8_t i = 0; i < sizeof(t)/sizeof(t[0]); ++i) {
 		assert( hd44780_curpos_from_raw(t[i].raw) == t[i].curpos );
 		assert( hd44780_curpos_to_raw(t[i].curpos) == t[i].raw );
 		assert( hd44780_rowcol_to_rawcurpos(t[i].row, t[i].col) == t[i].raw );
@@ -604,12 +609,12 @@ static void hd44780_unit_tests_curpos()
 	}
 }
 
-void hd44780_unit_tests()
+void hd44780_unittest()
 {
-	hd44780_unit_tests_curpos();
+	hd44780_unittest_curpos();
 }
 
-void hd44780_hw_tests()
+void hd44780_assemblytest()
 {
 	//hd44780_init();
 
@@ -618,12 +623,12 @@ void hd44780_hw_tests()
 	uint8_t pos[] = { 0, 10, HD44780_DISP_COLS-1, HD44780_DISP_COLS+10, };
 	for(uint8_t j=0;j<5;j++) {
 		hd44780_write_curpos(0, pos[j]);
-		for(uint8_t c=0;c<HD44780_NUM_CONTROLLERS;++c) {
+		hd44780_foreach(c) {
 			for(uint8_t i=0;i<20;++i) {
 				hd44780_write_data(c, 100+i);
 			}
 		}
-		for(uint8_t c=0;c<HD44780_NUM_CONTROLLERS;++c) {
+		hd44780_foreach(c) {
 			for(uint8_t i=0;i<20;++i) {
 				assert( hd44780_read_data(c) == 100+i );
 			}
@@ -632,7 +637,7 @@ void hd44780_hw_tests()
 
 	const uint8_t dark[8] = { 0xff };
 	hd44780_write_cgram_all(0, dark);
-	for(uint8_t c=0;c<HD44780_NUM_CONTROLLERS;++c) {
+	hd44780_foreach(c) {
 		for(uint8_t i=0;i<HD44780_DISP_SIZE;++i) {
 			hd44780_write_data(c, 0);
 		}

@@ -222,8 +222,12 @@ void hd44780_write_cgram_all(const uint8_t pos, const uint8_t cgram[8]);
 
 /* user interface macros ------------------------------------------------------------------ */
 
-#define hd44780_write_inst(ctrl, inst)		 hd44780_write(ctrl, HD44780_FLAG_RS_INST, inst)
-#define hd44780_write_data(ctrl, data)		 hd44780_write(ctrl, HD44780_FLAG_RS_DATA, data)
+static inline void hd44780_write_inst(uint8_t ctrl, uint8_t inst) {
+	hd44780_write(ctrl, HD44780_FLAG_RS_INST, inst);
+}
+static inline void hd44780_write_data(uint8_t ctrl, uint8_t data) {
+	hd44780_write(ctrl, HD44780_FLAG_RS_DATA, data);
+}
 
 #define hd44780_read_inst(ctrl)				 hd44780_read(ctrl, HD44780_FLAG_RS_INST)
 #define hd44780_read_data(ctrl)				 hd44780_read(ctrl, HD44780_FLAG_RS_DATA)
@@ -231,28 +235,29 @@ void hd44780_write_cgram_all(const uint8_t pos, const uint8_t cgram[8]);
 #define hd44780_read_rawcurpos(ctrl) \
 	HD44780_INST_GET_DDRAM_ADDRESS( hd44780_read_inst(ctrl) )
 
-#define hd44780_write_rawcurpos(ctrl, rawcurpos) \
-	hd44780_write_inst(ctrl, HD44780_DDRAM_ADDRESS | rawcurpos)
+static inline void hd44780_write_rawcurpos(uint8_t ctrl, uint8_t rawcurpos) {
+	hd44780_write_inst(ctrl, HD44780_DDRAM_ADDRESS | rawcurpos);
+}
+static inline void hd44780_write_curpos(uint8_t ctrl, uint8_t rawcurpos) {
+	hd44780_write_rawcurpos(ctrl, hd44780_curpos_from_raw(rawcurpos) );
+}
+static inline void hd44780_write_cursor_rowcol(uint8_t ctrl, uint_fast8_t row,  uint_fast8_t col) {
+	hd44780_write_rawcurpos(ctrl, hd44780_rowcol_to_rawcurpos(row, col) );
+}
 
-#define hd44780_write_curpos(ctrl, rawcurpos) \
-	hd44780_write_rawcurpos(ctrl, hd44780_curpos_from_raw(rawcurpos) )
-
-#define hd44780_write_cursor_rowcol(ctrl, row, col) \
-	hd44780_write_rawcurpos(ctrl, hd44780_rowcol_to_rawcurpos(row, col) )
-
-#define hd44780_for_all_controllers( iterator_name ) \
-	for(uint8_t iterator_name = 0; iterator_name < HD44780_NUM_CONTROLLERS ; ++iterator_name )
+#define hd44780_foreach( iterator_name ) \
+		for(uint_fast8_t iterator_name = 0; iterator_name < HD44780_NUM_CONTROLLERS ; ++iterator_name )
 
 /* unit tests ------------------------------------------------------------------------------ */
 
 /**
  * Unit tests - internal tests, done without connected hd44780
  */
-void hd44780_unit_tests();
+void hd44780_unittest();
 
 /**
  * Devive tests - tests connected device operation
  */
-void hd44780_hw_tests();
+void hd44780_assemblytest();
 
 #endif // _HD44780_H_
