@@ -76,4 +76,11 @@ static inline bool HAL_UART_IsTransmitReady(const UART_HandleTypeDef *huart)
 
 #endif
 
+static inline bool HAL_IWDG_test()
+{
+	return __HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST);
+}
+
+double HW_IWDG_calc_period(uint32_t Prescaler, uint32_t Period, double *min, double *max);
+
 #endif /* STM32_STM32HAL_H_ */

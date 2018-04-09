@@ -8,6 +8,7 @@
 #ifndef SRC_TIME_EX_H_
 #define SRC_TIME_EX_H_
 
+#include <sys/types.h>
 #include <sys/time.h>
 
 #include <assert.h>
@@ -86,9 +87,20 @@
 
 /* Exported Types ------------------------------------------------------------------- */
 
+#ifndef __time_ms_t_defined
 typedef time_t time_ms_t;
+#define __time_ms_t_defined 1
+#endif
+
+#ifndef __time_us_t_defined
 typedef time_t time_us_t;
+#define __time_us_t_defined 1
+#endif
+
+#ifndef __time_ns_t_defined
 typedef unsigned long long time_ns_t;
+#define __time_ns_t_defined 1
+#endif
 
 /* Exported static inline functions ------------------------------------------------- */
 

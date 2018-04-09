@@ -4,6 +4,8 @@
  *  Created on: 25 mar 2018
  *      Author: kamil
  */
+#define _POSIX_TIMERS
+
 #include <time_ex.h>
 
 #include <uni/cdefs.h>
@@ -12,7 +14,6 @@
 
 #if _POSIX_C_SOURCE >= 199309L
 
-#define _POSIX_TIMERS
 #include <time.h>
 
 __weak_symbol

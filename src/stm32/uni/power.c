@@ -6,11 +6,11 @@
  */
 #include <uni/power.h>
 #include <uni/wdg.h>
+#include <uni/cdefs.h>
 
 #include <machine/hal.h>
 
 #include <unistd.h>
-#include <cdefs.h>
 
 static unsigned int CriticalSectionPrimask;
 

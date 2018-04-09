@@ -25,7 +25,7 @@ typedef int rtc_alarm_t;
 #endif
 
 time_ms_t rtc_time_ms(rtc_t t);
-void rtc_set_alarm(rtc_t t, rtc_alarm_t a, clock_t timeout_ms);
+void rtc_set_alarm(rtc_t t, rtc_alarm_t a, time_ms_t timeout_ms);
 void rtc_alarm_Callback(rtc_t t, rtc_alarm_t a);
 
 #endif /* SRC_STM32CLIBS_OSAL_RTC_H_ */
