@@ -6,7 +6,8 @@
  */
 #include "ringbuffer.h"
 
-#include "minmax.h"
+#include <minmax.h>
+#include <uni/cdefs.h>
 
 #include <stdlib.h>
 #include <string.h>
@@ -15,7 +16,7 @@
 
 /* Private Functions ------------------------------------------------------- */
 
-static inline const size_t LIMIT(size_t val, size_t size)
+static inline __pure2 size_t LIMIT(size_t val, size_t size)
 {
 #if RB_SIZE_MUST_BE_A_POWER_OF_2
 	assert(RB_ISPOWEROF2(size));
@@ -80,9 +81,9 @@ void rb_init(RingBuffer_t *this, char data[], size_t size)
 	this->head = this->fill = 0;
 }
 
-void rb_write(RingBuffer_t *this, const char from[restrict], size_t bytes)
+void rb_write(RingBuffer_t *this, const char from[], size_t bytes)
 {
-	rb_write_memcpy(this, from, bytes);
+ 	rb_write_memcpy(this, from, bytes);
 
 	rb_write_commit(this, bytes);
 }
@@ -104,7 +105,7 @@ char *rb_write_pointer(RingBuffer_t *this, size_t *writable)
 	return &this->data[tail];
 }
 
-void rb_write_memcpy(RingBuffer_t *this, const char from[restrict], size_t bytes)
+void rb_write_memcpy(RingBuffer_t *this, const char from[], size_t bytes)
 {
 	assert(bytes <= rb_remain(this));
 
@@ -129,7 +130,7 @@ void rb_write_commit(RingBuffer_t *this, size_t bytes)
 	rb_advance_tail(this, bytes);
 }
 
-void rb_read(RingBuffer_t *this, char to[restrict], size_t bytes)
+void rb_read(RingBuffer_t *this, char to[], size_t bytes)
 {
 	rb_read_memcpy(this, to, bytes);
 
@@ -153,7 +154,7 @@ const char *rb_read_pointer(RingBuffer_t *this, size_t offset, size_t *readable)
 	return &this->data[head];
 }
 
-void rb_read_memcpy(RingBuffer_t *this, char to[restrict], size_t bytes)
+void rb_read_memcpy(RingBuffer_t *this, char to[], size_t bytes)
 {
 	assert(this != NULL);
 	assert(rb_used(this) >= bytes);
@@ -218,13 +219,13 @@ int rb_unittest()
 
 	for(int i=0;i<2048;++i) {
 
-		for(int nbyte = 0; nbyte < datalen; ++nbyte) {
+		for(size_t nbyte = 0; nbyte < datalen; ++nbyte) {
 			rb_write(rb, data, nbyte);
 			rb_read(rb, tmp, nbyte);
 			if(memcmp(data, tmp, nbyte)) { return -__LINE__; }
 		}
 
-		for(int nbyte = 0; nbyte < datalen; ++nbyte) {
+		for(size_t nbyte = 0; nbyte < datalen; ++nbyte) {
 			size_t writesize;
 			char * const writepnt = rb_write_pointer(rb, &writesize);
 			size_t nbyte2 = MIN(writesize, nbyte);
@@ -235,7 +236,7 @@ int rb_unittest()
 			if(memcmp(data, tmp, nbyte2)) { return -__LINE__; }
 		}
 
-		for(int nbyte = 0; nbyte < datalen; ++nbyte) {
+		for(size_t nbyte = 0; nbyte < datalen; ++nbyte) {
 			size_t writesize;
 			char * const writepnt = rb_write_pointer(rb, &writesize);
 			size_t nbyte2 = MIN(writesize, nbyte);
@@ -252,7 +253,7 @@ int rb_unittest()
 			if(!rb_is_empty(rb)) { return -__LINE__; }
 		}
 
-		for(int nbyte = 0; nbyte < datalen; ++nbyte) {
+		for(size_t nbyte = 0; nbyte < datalen; ++nbyte) {
 			for(size_t i = nbyte; i; ) {
 				size_t writesize;
 				char * const writepnt = rb_write_pointer(rb, &writesize);

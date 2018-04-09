@@ -10,6 +10,7 @@
 
 #include <stdbool.h>
 
+void wdg_init();
 bool wdg_get();
 void wdg_refresh();
 

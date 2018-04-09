@@ -10,6 +10,8 @@
 
 #include <uni/types.h>
 
+#include <time_ex.h> // time_ms_t
+
 #include <time.h>
 
 #ifndef __rtc_t_defined
@@ -22,7 +24,7 @@ typedef int rtc_alarm_t;
 #define __rtc_alarm_t_defined
 #endif
 
-time_t rtc_time_ms(rtc_t t);
+time_ms_t rtc_time_ms(rtc_t t);
 void rtc_set_alarm(rtc_t t, rtc_alarm_t a, clock_t timeout_ms);
 void rtc_alarm_Callback(rtc_t t, rtc_alarm_t a);
 

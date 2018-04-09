@@ -151,12 +151,12 @@ static inline struct timespec timespec_from_clock(clock_t v) {
 static inline void timespec_normalize(struct timespec *ts)
 {
 	while(ts->tv_nsec < 0) {
-		ts->tv_nsec += 1000000000ul;
+		ts->tv_nsec += 1000000000l;
 		if (ts->tv_sec == 0) assert(0);
 		--ts->tv_sec;
 	}
-	while(ts->tv_nsec >= 1000000000ul) {
-		ts->tv_nsec -= 1000000000ul;
+	while(ts->tv_nsec >= 1000000000l) {
+		ts->tv_nsec -= 1000000000l;
 		++ts->tv_sec;
 	}
 }

@@ -4,44 +4,87 @@
  *  Created on: 28 mar 2018
  *      Author: kamil
  */
-#include "power.h"
+#include <uni/power.h>
+#include <uni/wdg.h>
+
+#include <machine/hal.h>
 
 #include <unistd.h>
-#include <sys/cdefs.h>
+#include <cdefs.h>
 
 static unsigned int CriticalSectionPrimask;
-static unsigned int CriticalSectionCnt;
 
-void pwr_CriticalSectionEnter()
+void pwr_CriticalSectionEnter_callback()
 {
-	if (++CriticalSectionCnt == 1) {
-		CriticalSectionPrimask = __get_PRIMASK();
-		__disable_irq();
+	CriticalSectionPrimask = __get_PRIMASK();
+	__disable_irq();
+}
+
+void pwr_CriticalSectionExit_callback()
+{
+	__set_PRIMASK(CriticalSectionPrimask);
+}
+
+__weak_symbol
+void pwrmode_enter_pre(pwrmode_t mode)
+{
+	__USE(mode);
+	switch(mode) {
+	case PWRMODE_STOP:
+	case PWRMODE_STOP_NOSYSTICK:
+	case PWRMODE_STANDBY:
+		fsync(STDOUT_FILENO);
+		break;
+	default:
+		break;
 	}
 }
 
-void pwr_CriticalSectionExit()
+__weak_symbol
+void pwrmode_enter_post(pwrmode_t mode)
 {
-	assert(CriticalSectionCnt > 0);
-	if (--CriticalSectionCnt == 0) {
-		__set_PRIMASK(CriticalSectionPrimask);
+	__USE(mode);
+}
+
+__weak_symbol
+void pwrmode_enter(pwrmode_t mode)
+{
+	switch(mode) {
+	case PWRMODE_RUN:
+		break;
+	case PWRMODE_LOW_POWER_RUN:
+		break;
+	case PWRMODE_SLEEP:
+		if (NVIC_IsInInterrupt()) return;
+		HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
+		wdg_refresh();
+		break;
+	case PWRMODE_SLEEP_NOSYSTICK:
+		HAL_SuspendTick();
+		pwrmode_enter(PWRMODE_SLEEP);
+		HAL_ResumeTick();
+		break;
+	case PWRMODE_STOP:
+		assert(!NVIC_IsInInterrupt());
+		HAL_PWR_EnterSTOPMode(PWR_MAINREGULATOR_ON, PWR_STOPENTRY_WFI);
+		break;
+	case PWRMODE_STOP_NOSYSTICK:
+		HAL_SuspendTick();
+		pwrmode_enter(PWRMODE_STOP);
+		HAL_ResumeTick();
+		break;
+	case PWRMODE_STANDBY:
+		HAL_PWR_EnterSTANDBYMode();
+		break;
+	default:
+		assert(0);
+		break;
 	}
+	wdg_refresh();
 }
 
 __weak_symbol
-void pwr_mode_enter_pre(pwrmode_t mode)
+void pwrmode_restore(pwrmode_t mode)
 {
-	fsync(STDOUT_FILENO);
-}
-
-__weak_symbol
-void pwr_mode_enter_post(pwrmode_t mode)
-{
-
-}
-
-__weak_symbol
-void pwr_mode_restore(pwrmode_t from_mode)
-{
-
+	__USE(mode);
 }

@@ -3,7 +3,6 @@
 #define CCAN_CONTAINER_OF_H
 #include <stddef.h>
 
-#include "config.h"
 #include <check_type.h>
 
 /**
@@ -79,7 +78,7 @@
  *		return i;
  *	}
  */
-#if HAVE_TYPEOF
+#if __GNUC__
 #define container_of_var(member_ptr, container_var, member) \
 	container_of(member_ptr, typeof(*container_var), member)
 #else
@@ -98,7 +97,7 @@
  * structure memory layout.
  *
  */
-#if HAVE_TYPEOF
+#if __GNUC__
 #define container_off_var(var, member)		\
 	container_off(typeof(*var), member)
 #else

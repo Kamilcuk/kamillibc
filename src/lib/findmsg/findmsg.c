@@ -8,9 +8,8 @@
 
 #include <minmax.h>
 #include <clocktimeout.h>
-#include <cdefs.h>
+#include <uni/cdefs.h>
 
-#include <sys/cdefs.h>
 #include <poll.h>
 #include <time.h>
 #include <limits.h>
@@ -54,7 +53,7 @@ static ssize_t findmsg_readAtLeastChars(struct findmsg_s *t, size_t N, clock_t *
 	const ssize_t ret = findmsg_readtimeout(t->fd, &t->buf[t->pos], toread, timeout);
 	clocktimeout_update(start, timeout);
 	if (ret <= 0) return ret;
-	assert(ret <= toread);
+	assert((size_t)ret <= toread);
 #if 0
 	printf("READ %u %u ", t->pos, ret);
 	for(size_t i=0;i<ret;++i) printf("%02x", t->buf[t->pos+i]);
@@ -238,7 +237,7 @@ ssize_t findmsg(struct findmsg_s *t,
 		if ( expectedMsgLen <= 0 ) {
 			return expectedMsgLen;
 		}
-		if ( expectedMsgLen > t->size ) {
+		if ( (size_t)expectedMsgLen > t->size ) {
 			findmsg_flushN(t, 1);
 			PRINTERR("expected %zu rxbufsize %zu\n", expectedMsgLen, t->size);
 			continue;
@@ -270,8 +269,8 @@ ssize_t findmsg_get(struct findmsg_s *t,
 	assert(conf->minlength <= bufsize);
 	const char *msg;
 	const ssize_t msgsize = findmsg(t, conf, arg, timeout, &msg);
-	if (msgsize) return msgsize;
-	const size_t cpysize = MIN(bufsize, msgsize);
+	if (msgsize <= 0) return msgsize;
+	const size_t cpysize = MIN(bufsize, (size_t)msgsize);
 	memcpy(buf, msg, cpysize);
 	findmsg_next(t);
 	return msgsize;

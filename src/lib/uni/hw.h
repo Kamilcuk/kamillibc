@@ -7,5 +7,6 @@
 
 #include <uni/types.h>
 
+void _hw_init_std();
 void hw_init();
 void hw_deinit();

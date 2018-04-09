@@ -46,14 +46,14 @@ void rb_free(RingBuffer_t **this);
 
 void rb_init(RingBuffer_t *this, char data[], size_t size);
 
-void rb_write(RingBuffer_t *this, const char from[restrict], size_t bytes);
+void rb_write(RingBuffer_t *this, const char from[], size_t bytes);
 char *rb_write_pointer(RingBuffer_t *this, size_t *writable);
-void rb_write_memcpy(RingBuffer_t *this, const char from[restrict], size_t bytes);
+void rb_write_memcpy(RingBuffer_t *this, const char from[], size_t bytes);
 void rb_write_commit(RingBuffer_t *this, size_t bytes);
 
-void rb_read(RingBuffer_t *this, char to[restrict], size_t bytes);
+void rb_read(RingBuffer_t *this, char to[], size_t bytes);
 const char *rb_read_pointer(RingBuffer_t *this, size_t offset, size_t *readable);
-void rb_read_memcpy(RingBuffer_t *this, char to[restrict], size_t bytes);
+void rb_read_memcpy(RingBuffer_t *this, char to[], size_t bytes);
 void rb_read_commit(RingBuffer_t *this, size_t bytes);
 
 void rb_stream(RingBuffer_t *from, RingBuffer_t *to, size_t bytes);

@@ -7,8 +7,7 @@
 
 #include <constraint.h>
 
-#include <cdefs.h> // __weak_function
-
+#include <sys/cdefs.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>

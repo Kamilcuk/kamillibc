@@ -1,7 +1,6 @@
 /* CC0 (Public domain) - see LICENSE file for details */
 #ifndef CCAN_CHECK_TYPE_H
 #define CCAN_CHECK_TYPE_H
-#include "config.h"
 
 /**
  * check_type - issue a warning or build failure if type is not correct.
@@ -45,7 +44,7 @@
  *		 ((encl_type *)						\
  *		  ((char *)(mbr_ptr) - offsetof(enclosing_type, mbr))))
  */
-#if HAVE_TYPEOF
+#if __GNUC__
 #define check_type(expr, type)			\
 	((typeof(expr) *)0 != (type *)0)
 
