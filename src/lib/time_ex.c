@@ -11,10 +11,9 @@
 #include <uni/cdefs.h>
 
 #include <assert.h>
+#include <time.h>
 
 #if _POSIX_C_SOURCE >= 199309L
-
-#include <time.h>
 
 __weak_symbol
 uint64_t timer_gettime_ns(timer_t timerid, uint64_t *interval)
