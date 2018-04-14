@@ -21,6 +21,7 @@
  * maximum timeout is equal to MAX_OF(clock_t)
  */
 
+clock_t clocktimeout_start();
 void clocktimeout_init(clock_t *start, clock_t *timeout);
 bool clocktimeout_expired(clock_t *start, clock_t *timeout);
 

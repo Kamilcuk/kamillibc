@@ -16,7 +16,7 @@
 # define USE_FULL_ASSERT 1
 #endif
 
-#include "hal_stm32_switch.h"
+#include "stm32xxxx.h"
 
 #include <stdbool.h>
 #include <assert.h>
@@ -34,10 +34,22 @@ __STATIC_INLINE bool NVIC_IsInInterrupt()
 __STATIC_INLINE void HAL_try(HAL_StatusTypeDef status)
 {
 #ifdef DEBUG
-	volatile HAL_StatusTypeDef debug_HAL_StatusTypeDef = status;
-	UNUSED(debug_HAL_StatusTypeDef);
+	static volatile HAL_StatusTypeDef HAL_try_status = HAL_OK;
+	HAL_try_status = status;
+	UNUSED(HAL_try_status);
 #endif
 	assert(status == HAL_OK);
+}
+
+__STATIC_INLINE HAL_StatusTypeDef HAL_try_ok_or_timeout(HAL_StatusTypeDef status)
+{
+#ifdef DEBUG
+	static volatile HAL_StatusTypeDef HAL_try_status = HAL_OK;
+	HAL_try_status = status;
+	UNUSED(HAL_try_status);
+#endif
+	assert(status == HAL_OK || status == HAL_TIMEOUT);
+	return status;
 }
 
 #ifdef HAL_CRYP_MODULE_ENABLED

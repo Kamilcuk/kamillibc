@@ -11,9 +11,9 @@
 #include <uni/types.h>
 #include <uni/criticalsection.h>
 
-#ifndef __pwrmode_t_declared
-#define __pwrmode_t_declared
+#ifndef __pwrmode_t_defined
 typedef int pwrmode_t;
+#define __pwrmode_t_defined
 #endif
 
 #define pwrmode_enter_while(mode, condition) do{ \

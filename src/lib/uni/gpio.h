@@ -14,10 +14,11 @@
 
 #ifndef __gpio_t_defined
 typedef int gpio_t;
-#define __gpio_t_defined
+#define __gpio_t_defined 1
 #endif
 
 void gpio_set(gpio_t t, bool value);
 bool gpio_get(gpio_t t);
+void gpio_toggle(gpio_t t);
 
 #endif /* STM32_SRC_SYS_GPIO_H_ */

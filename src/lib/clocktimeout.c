@@ -9,11 +9,15 @@
 #include <assert.h>
 #include <limits.h>
 
+clock_t clocktimeout_start() {
+	return clock();
+}
+
 void clocktimeout_init(clock_t *start, clock_t *timeout)
 {
 	assert(start != NULL);
 	if (timeout != NULL) {
-		*start = clock();
+		*start = clocktimeout_start();
 	}
 }
 

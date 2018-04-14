@@ -8,8 +8,6 @@
 #ifndef STM32_SRC_MACHINE_HAL_H_
 #define STM32_SRC_MACHINE_HAL_H_
 
-
-#include <machine/hal_stm32.h>
-
+#include "hal_stm32.h"
 
 #endif /* STM32_SRC_MACHINE_HAL_H_ */

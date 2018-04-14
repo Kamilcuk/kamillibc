@@ -230,7 +230,7 @@ ssize_t findmsg(struct findmsg_s *t,
 	clock_t start;
 	clocktimeout_init(&start, timeout);
 	findmsg_next(t);
-	do {
+	for(;; findmsg_flushN(t, 1) ) {
 
 		const ssize_t expectedMsgLen =
 				findmsg_beginning_started(t, conf->minlength, conf->checkBeginning, arg, &start, timeout);
@@ -238,7 +238,6 @@ ssize_t findmsg(struct findmsg_s *t,
 			return expectedMsgLen;
 		}
 		if ( (size_t)expectedMsgLen > t->size ) {
-			findmsg_flushN(t, 1);
 			PRINTERR("expected %zu rxbufsize %zu\n", expectedMsgLen, t->size);
 			continue;
 		}
@@ -246,7 +245,6 @@ ssize_t findmsg(struct findmsg_s *t,
 		const int ret =
 				findmsg_ending_started(t, expectedMsgLen, conf->maxlength, conf->checkEnding, arg, &start, timeout);
 		if ( ret == findmsg_MSG_INVALID || ret == -ENOBUFS ) {
-			findmsg_flushN(t, 1);
 			continue;
 		}
 		if ( ret <= 0 ) {
@@ -254,9 +252,10 @@ ssize_t findmsg(struct findmsg_s *t,
 		}
 		assert(ret != 0);
 
-		if ( msg != NULL ) *msg = t->buf;
 		t->msgReceivedSize = ret;
-	} while( t->msgReceivedSize == 0 );
+		break;
+	}
+	if ( msg != NULL ) *msg = t->buf;
 	return t->msgReceivedSize;
 }
 

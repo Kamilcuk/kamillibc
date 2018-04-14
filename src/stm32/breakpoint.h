@@ -9,12 +9,17 @@
 #define SRC_STM32_BREAKPOINT_H_
 
 #include <machine/hal.h>
+#include <uni/cdefs.h>
 
-static inline void breakpoint() {
 #ifndef NDEBUG
-	if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
-		__BKPT(0);
+#define _breakpoint(x) __BKPT(x)
+#define breakpoint() do{ \
+	if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) { \
+		_breakpoint(__LINE__); \
+	} \
+}while(0)
+#else
+#define breakpoint() do{}while(0)
 #endif
-}
 
 #endif /* SRC_STM32_BREAKPOINT_H_ */

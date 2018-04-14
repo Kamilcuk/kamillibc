@@ -5,9 +5,11 @@
  *      Author: kamil
  */
 
-#ifndef SRC_SYS_TYPES_H_
-#define SRC_SYS_TYPES_H_
+#ifndef _UNI_TYPES_H_
+#define _UNI_TYPES_H_
 
 #include <uni/_types.h>
 
-#endif /* SRC_SYS_TYPES_H_ */
+// architecture specific types guarded by __*_defined
+
+#endif /* _UNI_TYPES_H_ */

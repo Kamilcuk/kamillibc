@@ -93,6 +93,7 @@ char *rb_write_pointer(RingBuffer_t *this, size_t *writable)
 	assert(writable != NULL);
 
 	if(rb_is_full(this)) {
+		*writable = 0;
 		return NULL;
 	}
 
@@ -142,6 +143,7 @@ const char *rb_read_pointer(RingBuffer_t *this, size_t offset, size_t *readable)
 	assert(readable != NULL);
 
 	if(rb_is_empty(this)) {
+		*readable = 0;
 		return NULL;
 	}
 

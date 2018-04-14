@@ -25,6 +25,8 @@ void pwr_CriticalSectionExit_callback()
 	__set_PRIMASK(CriticalSectionPrimask);
 }
 
+#ifdef __UNI_PWRMODE_DEFAULT_IMPLEMENTATION_ENABLED
+
 __weak_symbol
 void pwrmode_enter_pre(pwrmode_t mode)
 {
@@ -33,7 +35,7 @@ void pwrmode_enter_pre(pwrmode_t mode)
 	case PWRMODE_STOP:
 	case PWRMODE_STOP_NOSYSTICK:
 	case PWRMODE_STANDBY:
-		fsync(STDOUT_FILENO);
+		(void)fsync(STDOUT_FILENO);
 		break;
 	default:
 		break;
@@ -57,7 +59,6 @@ void pwrmode_enter(pwrmode_t mode)
 	case PWRMODE_SLEEP:
 		if (NVIC_IsInInterrupt()) return;
 		HAL_PWR_EnterSLEEPMode(PWR_MAINREGULATOR_ON, PWR_SLEEPENTRY_WFI);
-		wdg_refresh();
 		break;
 	case PWRMODE_SLEEP_NOSYSTICK:
 		HAL_SuspendTick();
@@ -88,3 +89,5 @@ void pwrmode_restore(pwrmode_t mode)
 {
 	__USE(mode);
 }
+
+#endif

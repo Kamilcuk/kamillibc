@@ -16,7 +16,7 @@
 #if _POSIX_C_SOURCE >= 199309L
 
 __weak_symbol
-uint64_t timer_gettime_ns(timer_t timerid, uint64_t *interval)
+time_ns_t timer_gettime_ns(timer_t timerid, time_ns_t *interval)
 {
 	struct itimerspec value;
 	if (timer_gettime(timerid, &value) != 0) { assert(0); }
@@ -25,7 +25,7 @@ uint64_t timer_gettime_ns(timer_t timerid, uint64_t *interval)
 }
 
 __weak_symbol
-int timer_settime_ns(timer_t timerid, uint64_t value, uint64_t interval)
+int timer_settime_ns(timer_t timerid, uint64_t value, time_ns_t interval)
 {
 	struct itimerspec it = {
 			.it_value = timespec_from_ns(value),
@@ -35,7 +35,7 @@ int timer_settime_ns(timer_t timerid, uint64_t value, uint64_t interval)
 }
 
 __weak_symbol
-uint32_t timer_gettime_ms(timer_t timerid, uint32_t *interval)
+time_ms_t timer_gettime_ms(timer_t timerid, time_ms_t *interval)
 {
 	struct itimerspec value;
 	if (timer_gettime(timerid, &value) != 0) { assert(0); }
@@ -44,7 +44,7 @@ uint32_t timer_gettime_ms(timer_t timerid, uint32_t *interval)
 }
 
 __weak_symbol
-int timer_settime_ms(timer_t timerid, uint32_t value, uint32_t interval)
+int timer_settime_ms(timer_t timerid, time_ms_t value, time_ms_t interval)
 {
 	struct itimerspec it = {
 			.it_value = timespec_from_ms(value),

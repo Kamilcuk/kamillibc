@@ -4,10 +4,13 @@
  *  Created on: 10 kwi 2018
  *      Author: kamil
  */
+#define _POSIX_TIMERS
+
 #include <unistd_ex.h>
 
 #include <uni/cdefs.h>
 
+#include <time.h>
 #include <assert.h>
 #include <errno.h>
 
@@ -19,8 +22,8 @@
 #endif
 
 __weak_symbol
-int msleep(mseconds_t ms) {
-	const mseconds_t tausend = 1000;
+int msleep(time_ms_t ms) {
+	const time_ms_t tausend = 1000;
 	assert(!INT_MUL_OVERFLOW_P(ms,tausend));
 	return usleep(ms*tausend);
 }
@@ -30,23 +33,23 @@ void sdelay(time_t seconds) {
 	nanodelay(seconds, 0);
 }
 __weak_symbol
-void mdelay(mseconds_t ms) {
-	const mseconds_t tausend = 1000;
+void mdelay(time_ms_t ms) {
+	const time_ms_t tausend = 1000;
 	assert(!INT_MUL_OVERFLOW_P(ms,tausend));
 	udelay(ms*tausend);
 }
 __weak_symbol
-void udelay(useconds_t us) {
-	const useconds_t tausend = 1000;
+void udelay(time_us_t us) {
+	const time_us_t tausend = 1000;
 	assert(!INT_MUL_OVERFLOW_P(us,tausend));
 	ndelay(us*tausend);
 }
 __weak_symbol
-void ndelay(nseconds_t ns) {
+void ndelay(time_ns_t ns) {
 	nanodelay(0, ns);
 }
 __weak_symbol
-void nanodelay(time_t seconds, suseconds_t nanoseconds) {
+void nanodelay(time_t seconds, time_ns_t nanoseconds) {
 	struct timespec rem = {seconds, nanoseconds};
 	while(nanosleep(&rem, &rem) == -1 && errno == EINTR);
 }

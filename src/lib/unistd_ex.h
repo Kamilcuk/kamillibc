@@ -11,23 +11,21 @@
 #ifndef _UNISTD_EX_H_
 #define _UNISTD_EX_H_
 
+#include <time_ex.h>
 #include <sys/time.h>
 #include <unistd.h>
 #include <time.h>
 #include <poll.h>
 
-typedef useconds_t mseconds_t;
-typedef useconds_t nseconds_t;
-
 // same as usleep, but with miliseconds
-int msleep(mseconds_t ms);
+int msleep(time_ms_t ms);
 
 // delay function work same as sleep, but ignore signals (run in a loop)
 void sdelay(time_t seconds);
-void mdelay(mseconds_t ms);
-void udelay(useconds_t us);
-void ndelay(nseconds_t ns);
-void nanodelay(time_t seconds, suseconds_t nanoseconds);
+void mdelay(time_ms_t ms);
+void udelay(time_us_t us);
+void ndelay(time_ns_t ns);
+void nanodelay(time_t seconds, time_ns_t nanoseconds);
 
 // polls only for POLL* event flag, only fds[*].fd needs to be filled, events are set to POLL* flag
 int poll_in(struct pollfd fds[], nfds_t nfds, int timeout);
