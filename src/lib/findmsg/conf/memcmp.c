@@ -4,7 +4,8 @@
  *  Created on: 17 mar 2018
  *      Author: kamil
  */
-#include "memcmp.h"
+#include "../conf/memcmp.h"
+
 #include <string.h>
 
 ssize_t findmsg_conf_memcmp_checkBeginning(const char buf[], size_t bufsize, void *arg)

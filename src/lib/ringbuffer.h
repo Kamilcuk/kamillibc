@@ -8,6 +8,7 @@
 #ifndef RIRC_RING_BUFFER_H
 #define RIRC_RING_BUFFER_H
 
+#include <uni/cdefs.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <assert.h>
@@ -26,8 +27,10 @@
 
 /* Exported Types ------------------------------------------------------------ */
 
+typedef char rb_type;
+
 typedef struct {
-	char *data;
+	rb_type *data;
     size_t size;
     size_t head;
     size_t fill;
@@ -36,24 +39,24 @@ typedef struct {
 /* Exported Functions --------------------------------------------------------- */
 
 #define RB_INIT(_data, _size)   { \
-	.data = sizeof(char[RB_ISPOWEROF2(_size)?1:-1]) ? (_data) : NULL, \
+	.data = sizeof(rb_type[RB_ISPOWEROF2(_size)?1:-1]) ? (_data) : NULL, \
 	.size = (_size) \
 	}
-#define RB_INIT_ONSTACK(_size)  RB_INIT( ((char[(_size)]){0}), (_size) )
+#define RB_INIT_ONSTACK(_size)  RB_INIT( ((rb_type[(_size)]){0}), (_size) )
 
 RingBuffer_t *rb_new(size_t size);
 void rb_free(RingBuffer_t **this);
 
-void rb_init(RingBuffer_t *this, char data[], size_t size);
+void rb_init(RingBuffer_t *this, rb_type data[], size_t size);
 
-void rb_write(RingBuffer_t *this, const char from[], size_t bytes);
-char *rb_write_pointer(RingBuffer_t *this, size_t *writable);
-void rb_write_memcpy(RingBuffer_t *this, const char from[], size_t bytes);
+void rb_write(RingBuffer_t *this, const rb_type from[], size_t bytes);
+rb_type *rb_write_pointer(RingBuffer_t *this, size_t *writable);
+void rb_write_memcpy(RingBuffer_t *this, const rb_type from[], size_t bytes);
 void rb_write_commit(RingBuffer_t *this, size_t bytes);
 
-void rb_read(RingBuffer_t *this, char to[], size_t bytes);
+void rb_read(RingBuffer_t *this, rb_type to[], size_t bytes);
 const char *rb_read_pointer(RingBuffer_t *this, size_t offset, size_t *readable);
-void rb_read_memcpy(RingBuffer_t *this, char to[], size_t bytes);
+void rb_read_memcpy(RingBuffer_t *this, rb_type to[], size_t bytes);
 void rb_read_commit(RingBuffer_t *this, size_t bytes);
 
 void rb_stream(RingBuffer_t *from, RingBuffer_t *to, size_t bytes);

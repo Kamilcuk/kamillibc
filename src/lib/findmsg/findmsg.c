@@ -221,10 +221,10 @@ ssize_t findmsg_ending(struct findmsg_s *t, size_t startlen, size_t maxlen,
  * @param Timeout
  * @return negative value on error, zero on timeout or message length
  */
-ssize_t findmsg(struct findmsg_s *t,
+ssize_t findmsg_findmsg(struct findmsg_s *t,
 		const struct findmsg_conf_s *conf, void *arg,
 		clock_t *timeout,
-		const char *msg[])
+		char *msg[])
 {
 	assert(conf != NULL);
 	clock_t start;
@@ -266,8 +266,8 @@ ssize_t findmsg_get(struct findmsg_s *t,
 {
 	assert(buf != NULL);
 	assert(conf->minlength <= bufsize);
-	const char *msg;
-	const ssize_t msgsize = findmsg(t, conf, arg, timeout, &msg);
+	char *msg;
+	const ssize_t msgsize = findmsg_findmsg(t, conf, arg, timeout, &msg);
 	if (msgsize <= 0) return msgsize;
 	const size_t cpysize = MIN(bufsize, (size_t)msgsize);
 	memcpy(buf, msg, cpysize);

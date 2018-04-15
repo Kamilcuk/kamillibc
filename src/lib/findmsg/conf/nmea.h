@@ -8,7 +8,7 @@
 #ifndef SRC_findmsg_NMEA_H_
 #define SRC_findmsg_NMEA_H_
 
-#include <findmsg/findmsg.h>
+#include <findmsg/types.h>
 
 enum {
 	findmsg_conf_NMEA_minlength  = (sizeof("$,99\r\n")-1),

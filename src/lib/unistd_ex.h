@@ -17,9 +17,6 @@
 #include <time.h>
 #include <poll.h>
 
-// same as usleep, but with miliseconds
-int msleep(time_ms_t ms);
-
 // delay function work same as sleep, but ignore signals (run in a loop)
 void sdelay(time_t seconds);
 void mdelay(time_ms_t ms);

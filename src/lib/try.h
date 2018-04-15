@@ -15,8 +15,8 @@
 #include <stdlib.h>
 #include <assert.h>
 #define _TRY_FAILED(expr)  ( \
-		(void)fprintf(stderr, "Try %s failed\n", #expr), \
 		assert(expr), \
+		(void)fprintf(stderr, "Try %s failed\n", #expr), \
 		abort() \
 		)
 #endif

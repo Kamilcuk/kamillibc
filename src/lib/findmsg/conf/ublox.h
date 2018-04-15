@@ -8,12 +8,12 @@
 #ifndef SRC_FINDMSG_CONFS_UBLOX_H_
 #define SRC_FINDMSG_CONFS_UBLOX_H_
 
-#include <findmsg/findmsg.h>
+#include <findmsg/types.h>
 
 #include <stdbool.h>
 
 enum {
-	findmsg_ublox_minlength = sizeof("ub######")-1,
+	findmsg_ublox_minlength = 8,
 	findmsg_ublox_maxlength = 512,
 };
 

@@ -5,8 +5,10 @@
  *      Author: kamil
  */
 
-#include "stub.h"
+#include "../conf/stub.h"
+
 #include <string.h>
+#include <stdint.h>
 
 const struct findmsg_conf_s findmsg_conf_stub = {
 		.minlength = 0,

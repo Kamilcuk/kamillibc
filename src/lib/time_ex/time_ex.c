@@ -25,7 +25,7 @@ time_ns_t timer_gettime_ns(timer_t timerid, time_ns_t *interval)
 }
 
 __weak_symbol
-int timer_settime_ns(timer_t timerid, uint64_t value, time_ns_t interval)
+int timer_settime_ns(timer_t timerid, time_ns_t value, time_ns_t interval)
 {
 	struct itimerspec it = {
 			.it_value = timespec_from_ns(value),

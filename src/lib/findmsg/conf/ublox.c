@@ -5,7 +5,7 @@
  *      Author: kamil
  */
 
-#include "findmsg/confs/ublox.h"
+#include "../conf/ublox.h"
 
 #include <assert.h>
 #include <sys/cdefs.h>

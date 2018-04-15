@@ -8,6 +8,7 @@
 #ifndef SRC_FINDMSG_MEMCMP_H_
 #define SRC_FINDMSG_MEMCMP_H_
 
+#include <findmsg/types.h>
 #include <findmsg/findmsg.h>
 
 #include <assert.h>
@@ -30,7 +31,7 @@ static inline ssize_t findmsg_memcmp(struct findmsg_s *t, const char mem[], size
 {
 	assert(memsize);
 	const struct findmsg_conf_s conf = findmsg_conf_memcmp(memsize);
-	return findmsg(t,
+	return findmsg_findmsg(t,
 			&conf, (void*)mem,
 			timeout,
 			NULL);

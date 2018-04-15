@@ -8,9 +8,9 @@
 #ifndef SRC_findmsg_NEWLINE_H_
 #define SRC_findmsg_NEWLINE_H_
 
-#include <findmsg/findmsg.h>
+#include <findmsg/types.h>
 
-const struct findmsg_conf_s findmsg_conf_newline;
+extern const struct findmsg_conf_s findmsg_conf_newline;
 
 int findmsg_conf_newline_checkEnding(const char buf[], size_t size, void *arg);
 

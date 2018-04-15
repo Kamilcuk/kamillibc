@@ -17,19 +17,15 @@
 #endif
 
 #include "stm32xxxx.h"
+#include "nvic.h"
 
 #include <stdbool.h>
 #include <assert.h>
+#include <stddef.h>
 #include <stdnoreturn.h>
 
-noreturn __STATIC_INLINE void NVIC_SystemReset(void);
 
 noreturn void HAL_PWR_EnterSTANDBYMode(void);
-
-__STATIC_INLINE bool NVIC_IsInInterrupt()
-{
-    return (SCB->ICSR & SCB_ICSR_VECTACTIVE_Msk) != 0 ;
-}
 
 __STATIC_INLINE void HAL_try(HAL_StatusTypeDef status)
 {

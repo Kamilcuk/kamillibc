@@ -16,7 +16,7 @@ typedef int pwrmode_t;
 #define __pwrmode_t_defined
 #endif
 
-#define pwrmode_enter_while(mode, condition) do{ \
+#define PWRMODE_ENTER_WHILE(mode, condition) do{ \
 		pwr_CRITICALSECTION_for( \
 				pwrmode_enter_pre(mode), \
 				(condition), \

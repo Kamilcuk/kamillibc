@@ -23,22 +23,21 @@ char *printint64_r(int64_t v, char result[21]);
 char *printint64(int64_t v);
 #define PRINTINT64(v)  printint64_r((v), (char[21]){0})
 
-/**
- * PRINTARRAY
- * Usage example:
- * char arr[10] = "abcdefgah";
- * PRINTARRAY(("arr len:%d content in hex: ", 10), "|" "%02x", arr, 10, ("\n"));
- */
-#define PRINTFARRAY(printf_args_pre, sep, fmt_arr, arr, arrsize, printf_args_post) do{ \
-	printf printf_args_pre ; \
-	if ( (arrsize) > 1 ) { \
-		printf((fmt_arr), ((arr)++)[0]); \
-		for(size_t _i = (arrsize)-1; _i; --_i) { \
-			printf(sep); \
-			printf((fmt_arr), ((arr)++)[0]); \
-		} \
+#define PRINTARRAY(fmt_arr, arr, arrsize, ...) do{ \
+	const size_t _end = (arrsize); \
+	for(size_t _i = 0; _i < _end; ++_i) { \
+		printf((fmt_arr), (arr)[_i], ##__VA_ARGS__); \
 	} \
-	printf printf_args_post ; \
+}while(0)
+
+#define PRINTARRAY_SEP(sep, fmt_arr, arr, arrsize, ...) do{ \
+	const size_t _end = (arrsize); \
+	for(size_t _i = 0; _i < _end; ++_i) { \
+		if (_i != 0) { \
+			printf(sep); \
+		} \
+		printf((fmt_arr), (arr)[_i], ##__VA_ARGS__); \
+	} \
 }while(0)
 
 int printex_unittest();

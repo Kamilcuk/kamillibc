@@ -71,7 +71,7 @@ void rb_free(RingBuffer_t **this)
 	}
 }
 
-void rb_init(RingBuffer_t *this, char data[], size_t size)
+void rb_init(RingBuffer_t *this, rb_type data[], size_t size)
 {
 	assert(this != NULL);
 	assert(RB_ISPOWEROF2(size));
@@ -81,14 +81,14 @@ void rb_init(RingBuffer_t *this, char data[], size_t size)
 	this->head = this->fill = 0;
 }
 
-void rb_write(RingBuffer_t *this, const char from[], size_t bytes)
+void rb_write(RingBuffer_t *this, const rb_type from[], size_t bytes)
 {
  	rb_write_memcpy(this, from, bytes);
 
 	rb_write_commit(this, bytes);
 }
 
-char *rb_write_pointer(RingBuffer_t *this, size_t *writable)
+rb_type *rb_write_pointer(RingBuffer_t *this, size_t *writable)
 {
 	assert(writable != NULL);
 
@@ -131,14 +131,14 @@ void rb_write_commit(RingBuffer_t *this, size_t bytes)
 	rb_advance_tail(this, bytes);
 }
 
-void rb_read(RingBuffer_t *this, char to[], size_t bytes)
+void rb_read(RingBuffer_t *this, rb_type to[], size_t bytes)
 {
 	rb_read_memcpy(this, to, bytes);
 
 	rb_read_commit(this, bytes);
 }
 
-const char *rb_read_pointer(RingBuffer_t *this, size_t offset, size_t *readable)
+const rb_type *rb_read_pointer(RingBuffer_t *this, size_t offset, size_t *readable)
 {
 	assert(readable != NULL);
 
@@ -156,7 +156,7 @@ const char *rb_read_pointer(RingBuffer_t *this, size_t offset, size_t *readable)
 	return &this->data[head];
 }
 
-void rb_read_memcpy(RingBuffer_t *this, char to[], size_t bytes)
+void rb_read_memcpy(RingBuffer_t *this, rb_type to[], size_t bytes)
 {
 	assert(this != NULL);
 	assert(rb_used(this) >= bytes);

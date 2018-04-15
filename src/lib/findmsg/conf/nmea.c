@@ -4,7 +4,8 @@
  *  Created on: 17 mar 2018
  *      Author: kamil
  */
-#include "nmea.h"
+#include "../conf/nmea.h"
+
 #include <assert.h>
 
 const struct findmsg_conf_s findmsg_conf_NMEA = {

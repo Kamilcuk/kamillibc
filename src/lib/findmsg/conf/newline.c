@@ -5,9 +5,11 @@
  *      Author: kamil
  */
 
-#include "newline.h"
+#include "../conf/newline.h"
 
-#include "stub.h"
+#include "../conf/stub.h"
+
+#include <stdint.h>
 
 const struct findmsg_conf_s findmsg_conf_newline = {
 		.minlength = 1,

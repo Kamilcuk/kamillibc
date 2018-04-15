@@ -12,7 +12,7 @@
 
 typedef struct {
 	GPIO_TypeDef *GPIOx;
-	uint32_t GPIO_Pin;
+	unsigned int GPIO_Pin;
 } __gpio_t;
 #define ___gpio_t_defined 1
 

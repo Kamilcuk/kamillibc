@@ -11,6 +11,7 @@
 #include <uni/_cdefs.h>
 
 // omg libc
+
 #ifndef __weak_symbol
 #if __GNUC__
 #define __weak_symbol __attribute__((__weak__))
@@ -19,6 +20,16 @@
 #endif
 #endif
 
+#ifndef __nonnull
+#if __GNUC__
+#define __nonnull(x) __attribute__((__nonnull__ x ))
+#else
+#define __nonnull(x)
+#endif
+#endif
 
+#ifndef __arraycount
+#define __arraycount(x)  (sizeof(x)/sizeof(x[0]))
+#endif
 
 #endif /* SRC_LIB_UNI_CDEFS_H_ */
