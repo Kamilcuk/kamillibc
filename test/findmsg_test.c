@@ -5,8 +5,8 @@
  *      Author: kamil
  */
 #include <findmsg/findmsg.h>
-#include <findmsg/confs/newline.h>
-#include <findmsg/confs/stub.h>
+#include <findmsg/conf/newline.h>
+#include <findmsg/conf/stub.h>
 #include <assert.h>
 #include <unity/unity.h>
 #include <try.h>
@@ -44,11 +44,11 @@ static void test_recv_newline()
 	int fd = CREATE_TMPFILE(c);
 	struct findmsg_s f = findmsg_INIT_ON_STACK(fd, 16);
 
-	const char *line;
+	char *line;
 	clock_t timeout = 30;
 	ssize_t linelen;
 	char *in = strchr(c, '\n');
-	for(int i = 0; (linelen = findmsg(&f, &findmsg_conf_newline, NULL, &timeout, &line)) > 0; ++i) {
+	for(int i = 0; (linelen = findmsg_findmsg(&f, &findmsg_conf_newline, NULL, &timeout, &line)) > 0; ++i) {
 		TEST_ASSERT_EQUAL(4, linelen);
 		TEST_ASSERT_EQUAL(in[0], line[linelen-1]);
 		TEST_ASSERT_EQUAL(in[-1], line[linelen-2]);
@@ -67,7 +67,7 @@ static void test_ending_badFd()
 	TEST_ASSERT_EQUAL(-1, ret);
 	ret = findmsg_ending(&f, 1, 2, findmsg_stub_checkEnding, NULL, NULL);
 	TEST_ASSERT_EQUAL(-1, ret);
-	ret = findmsg(&f, &findmsg_conf_stub, NULL, NULL, NULL);
+	ret = findmsg_findmsg(&f, &findmsg_conf_stub, NULL, NULL, NULL);
 	TEST_ASSERT_EQUAL(-1, ret);
 }
 
@@ -111,7 +111,7 @@ static void test_conf_returingNegative()
 		char c[] = "aaa\nbbb\nccc\n";
 		int fd = CREATE_TMPFILE(c);
 		struct findmsg_s f = findmsg_INIT_ON_STACK(fd, 32);
-		ret = findmsg(&f, &conf, &val, NULL, NULL);
+		ret = findmsg_findmsg(&f, &conf, &val, NULL, NULL);
 		TEST_ASSERT_EQUAL(-2000, ret);
 	}
 }
