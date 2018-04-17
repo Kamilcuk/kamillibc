@@ -14,9 +14,9 @@
 /* Exported constants -------------------------------------------- */
 
 enum findmsg_MSG_e {
-	findmsg_MSG_TOO_SHORT  =      0,
-	findmsg_MSG_VALID      =      1,
-	findmsg_MSG_INVALID    =      2,
+	findmsg_MSG_VALID      =  1,
+	findmsg_MSG_TOO_SHORT  =  0,
+	findmsg_MSG_INVALID    = -1,
 };
 
 /* Exported types --------------------------------------------------- */

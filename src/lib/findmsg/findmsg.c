@@ -25,7 +25,8 @@
 /* Weak function ------------------------------------------------------ */
 
 __weak_symbol
-ssize_t findmsg_readtimeout(int fd, char buf[], size_t size, clock_t *timeout)
+ssize_t findmsg_readtimeout(int fd, char buf[restrict], size_t size,
+		clock_t * restrict timeout)
 {
 	// try to read from fd
 	const ssize_t readret = read(fd, buf, size);
@@ -63,9 +64,9 @@ static ssize_t findmsg_readAtLeastChars(struct findmsg_s *t, size_t N, clock_t *
 	return ret;
 }
 
-static void findmsg_flushN(struct findmsg_s *t, size_t N)
+static void findmsg_flushN(struct findmsg_s * restrict t, size_t N)
 {
-	assert(N <= t->pos);
+	assert(t != NULL && N <= t->pos);
 	memmove(&t->buf[0], &t->buf[N], t->pos - N);
 	t->pos -= N;
 	t->msgReceivedSize = 0;
@@ -75,12 +76,7 @@ static ssize_t findmsg_beginning_started(struct findmsg_s *t, size_t minlength,
 		ssize_t (*checkBeginning)(const char buf[], size_t minlength, void *arg), void *arg,
 		clock_t *start, clock_t *timeout)
 {
-	assert(t != NULL);
-	if (minlength == 0) {
-		minlength = 1;
-	}
-	assert(minlength < t->size);
-	assert(checkBeginning != NULL);
+	assert(t != NULL && minlength && minlength < t->size && checkBeginning != NULL);
 	int ret;
 	while( (ret = findmsg_readAtLeastChars(t, minlength, start, timeout)) >= 0 && t->pos >= minlength ) {
 		// check every minlength characters starting from t->buf[minlength ... t->pos-1] for beginning
@@ -103,12 +99,8 @@ ssize_t findmsg_ending_started(struct findmsg_s *t, size_t startlen, size_t maxl
 		int (*checkEnding)(const char buf[], size_t len, void *arg), void *arg,
 		clock_t *start, clock_t *timeout)
 {
-	assert(t != NULL);
-	assert(checkEnding != NULL);
-	if (startlen == 0) {
-		startlen = 1;
-	}
-	if (maxlength == 0 || maxlength > t->size ) {
+	assert(t != NULL && checkEnding != NULL && startlen && maxlength);
+	if (maxlength > t->size) {
 		maxlength = t->size;
 	}
 	assert(startlen < maxlength);
@@ -264,8 +256,7 @@ ssize_t findmsg_get(struct findmsg_s *t,
 		clock_t *timeout,
 		/*out*/ char buf[], size_t bufsize)
 {
-	assert(buf != NULL);
-	assert(conf->minlength <= bufsize);
+	assert(buf != NULL && conf->minlength <= bufsize);
 	char *msg;
 	const ssize_t msgsize = findmsg_findmsg(t, conf, arg, timeout, &msg);
 	if (msgsize <= 0) return msgsize;
