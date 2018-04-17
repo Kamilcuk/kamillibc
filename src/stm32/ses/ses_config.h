@@ -8,7 +8,6 @@
 #ifndef SRC_APPLICATION_SES_CONFIG_H_
 #define SRC_APPLICATION_SES_CONFIG_H_
 
-
 #ifndef SES_USE_ao_string_tokenize
 #define SES_USE_ao_string_tokenize 0
 #endif
@@ -16,13 +15,8 @@
 #include "tokenize/ao_string_tokenize.h"
 #endif
 
-// PS1 – Default interaction prompt
-#ifndef SES_PS1
-#define SES_PS1 " uptime: \\t > "
-#endif
-
-#ifndef SES_USE_PS1_ESCAPE_SEQUENCES
-#define SES_USE_PS1_ESCAPE_SEQUENCES 1
+#ifndef SES_USE_CMDS_DESCRIPTION
+#define SES_USE_CMDS_DESCRIPTION 0
 #endif
 
 #endif /* SRC_APPLICATION_SES_CONFIG_H_ */

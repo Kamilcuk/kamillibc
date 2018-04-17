@@ -17,7 +17,7 @@
 #include <string.h>
 #include <time.h>
 
-static inline int ses_tokenize_ao_string_tokenize(char **argv, size_t argvsize, char * arg)
+static inline int ses_tokenize_ao_string_tokenize(char *argv[restrict], size_t argvsize, char arg[restrict])
 {
 #if !SES_USE_ao_string_tokenize
 	typedef struct {
@@ -30,12 +30,12 @@ static inline int ses_tokenize_ao_string_tokenize(char **argv, size_t argvsize, 
 	const token_list_t * const p = ao_string_tokenize(arg);
 	if (p == NULL) {
 		printf("Parsing string ``%s'' failed:\n\terrno %d\n", arg, errno);
-		argc = -ENOMEM;
+		argc = SES_ENOMEM;
 	} else {
 		//printf("Parsed string ``%s''\ninto %d tokens:\n", arg, p->tkn_ct);
 		argc = p->tkn_ct;
 		if (argc > argvsize) {
-			argc = -ENOMEM;
+			argc = SES_ENOMEM;
 		} else {
 			for(int i = 0; i < p->tkn_ct; ++i) {
 				uintptr_t offset = (uintptr_t)p->tkn_list[i] - (uintptr_t)p->tkn_list[0];
@@ -50,21 +50,21 @@ static inline int ses_tokenize_ao_string_tokenize(char **argv, size_t argvsize, 
 	return argc;
 }
 
-static inline int ses_tokenize_strtok(char ** restrict argv, size_t argvsize, char * restrict arg)
+static inline int ses_tokenize_strtok(char *argv[restrict], size_t argvsize, char line[restrict])
 {
 	int argc = 0;
 	const char * delim = " \t\n";
 #if __POSIX_VISIBLE >= 200809
-	for(char *tok = arg, *ptrptr; (tok = strtok_r(tok, delim, &ptrptr)); tok = NULL)
+	for(char *tok = line, *ptrptr; (tok = strtok_r(tok, delim, &ptrptr)); tok = NULL)
 #else
 	for(char *tok = arg; (tok = strtok(tok, delim)); tok = NULL)
 #endif
 	{
-		if (tok != arg)
+		if (tok != line)
 			tok[-1] = '\0';
 		argv[argc++] = tok;
 		if (argc > argvsize) {
-			return -ENOMEM;
+			return SES_ENOMEM;
 		}
 	}
     return argc;
@@ -73,39 +73,19 @@ static inline int ses_tokenize_strtok(char ** restrict argv, size_t argvsize, ch
 void ses_printinfo(const struct ses_cmds_s cmds[restrict], size_t cmdssize)
 {
 	for(; cmdssize--; ++cmds) {
+#if SES_USE_CMDS_DESCRIPTIONS
 		printf(" %s - %s\n", cmds[0].name, cmds[0].desc?cmds[0].desc:"");
+#else
+		printf(" %s\n", cmds[0].name);
+#endif
 	}
 }
 
-int ses_tokenize(char ** restrict argv, size_t argvsize, char * restrict arg)
+bool ses_cmds_is_duplicated(const struct ses_cmds_s cmds[restrict], size_t cmdscnt)
 {
-	assert(argv && argvsize);
-#if SES_USE_ao_string_tokenize
-	return ses_tokenize_ao_string_tokenize(argv, argvsize, arg);
-#else
-	return ses_tokenize_strtok(argv, argvsize, arg);
-#endif
-}
-
-int ses_internal_help(const struct ses_cmds_s cmds[restrict], size_t cmdssize,
-		int argc, char *argv[])
-{
-	printf(
-			"Simple Embedded Shell, version 0.0.1 on <target>\n"
-			"These shell commands are defined internally:\n"
-			" help - print this text\n"
-			"\n"
-			"These shell commands are defined by application:\n");
-	ses_printinfo(cmds, cmdssize);
-	printf("\n"
-			"Written by Kamil Cukrowski 2017.\n"
-			"\n");
-}
-
-bool ses_cmds_is_duplicated(const struct ses_cmds_s cmds[restrict], size_t cmdssize)
-{
-	for(;cmdssize--; ++cmds) {
-		for(int i = 1; i < cmdssize; ++i) {
+	assert(cmds && cmdscnt);
+	for(;cmdscnt--; ++cmds) {
+		for(int i = 1; i < cmdscnt; ++i) {
 			if (!strcmp(cmds[i].name, cmds[0].name)) {
 				return true;
 			}
@@ -114,97 +94,93 @@ bool ses_cmds_is_duplicated(const struct ses_cmds_s cmds[restrict], size_t cmdss
 	return false;
 }
 
-int ses_exec(const struct ses_cmds_s cmds[restrict], size_t cmdssize,
-		char ** restrict argv, size_t argvcnt, char * restrict line)
+void ses_printf_issue()
 {
-	assert(!ses_cmds_is_duplicated(cmds, cmdssize));
-	const int argc = ses_tokenize(argv, argvcnt, line);
-	if (argc < 0) return argc;
-	if (!strcmp("help", argv[0])) {
-		return ses_internal_help(cmds, cmdssize, argc, argv);
-	}
-	for(;cmdssize--; ++cmds) {
+	printf("\n"
+			"-----------------------------------------\n"
+			" Simple Embedded Shell version " SES_VERSION "\n"
+			" Type 'help' for commands list.\n"
+			"-----------------------------------------\n"
+			"\n");
+}
+
+int ses_printf_help(const struct ses_cmds_s cmds[restrict], size_t cmdscnt)
+{
+	assert(cmds && cmdscnt);
+	printf(
+			"Simple Embedded Shell, version " SES_VERSION " on <target>\n"
+			"These shell commands are defined internally:\n"
+			" help - print this text\n"
+			"\n"
+			"These shell commands are defined by application:\n");
+	ses_printinfo(cmds, cmdscnt);
+	printf("\n"
+			"Written by Kamil Cukrowski 2017.\n"
+			"\n");
+}
+
+int ses_tokenize(char *argv[restrict], size_t argvsize, char line[restrict])
+{
+	assert(argv && argvsize);
+#if SES_USE_ao_string_tokenize
+	return ses_tokenize_ao_string_tokenize(argv, argvsize, line);
+#else
+	return ses_tokenize_strtok(argv, argvsize, line);
+#endif
+}
+
+int ses_system(const struct ses_cmds_s cmds[restrict], size_t cmdscnt,
+		int argc, char *argv[restrict],
+		int *exit_status)
+{
+	assert(cmds && cmdscnt && argc > 0 && argv);
+	assert(!ses_cmds_is_duplicated(cmds, cmdscnt));
+	for(;cmdscnt--; ++cmds) {
 		if (!strcmp(cmds[0].name, argv[0])) {
 			assert(cmds[0].func != NULL);
-			return (char)cmds[0].func(argc, argv);
+			const int ret = cmds[0].func(argc, argv);
+			if (exit_status) *exit_status = ret;
+			return 0;
 		}
 	}
-	printf("%s: Command not found.\n", argv[0]);
-	printf(" Type 'help' for commands list.\n");
-	return INT_MIN;
+	return SES_ECOMMAND_NOT_FOUND;
 }
 
-void ses_display_prompt_esc_t()
+void ses_run_line(const struct ses_cmds_s cmds[restrict], size_t cmdscnt,
+		char *argv[restrict], size_t argvcnt,
+		char line[restrict])
 {
-	time_t now = time(NULL);
-	int seconds = now%60;
-	now /= 60;
-	int minutes = now%60;
-	int hours = now / 60;
-	printf("%d:%d:%d", hours, minutes, seconds);
-}
-void ses_display_prompt_esc_h()
-{
-#ifndef HOST_NAME_MAX
-#define HOST_NAME_MAX 64
-#endif
-	char buffer[HOST_NAME_MAX];
-	(void)gethostname(buffer, sizeof(buffer));
-	fwrite(buffer, 1, strlen(buffer), stdout);
-}
-void ses_display_prompt_esc_u()
-{
-	fwrite(getlogin(), 1, strlen(getlogin()), stdout);
-}
+	if (line[0] == '\0') {
+		return;
+	}
 
-void ses_display_prompt() {
-	const char prompt[] = SES_PS1;
-#if SES_USE_PS1_ESCAPE_SEQUENCES
-	for(const char * c = &prompt[0]; *c != '\0'; ++c) {
-		if (*c == '\\') {
-			++c;
-			assert(*c != '\0');
-			switch(*c) {
-			case '\\': fputc(*c, stdout); break;
-			case 't': ses_display_prompt_esc_t(); break;
-			case 'h': ses_display_prompt_esc_h(); break;
-			case 'u': ses_display_prompt_esc_u(); break;
-			default: assert(0); break;
-			}
-		} else {
-			fputc(*c, stdout);
+	if (!strcmp("help", line)) {
+		ses_printf_help(cmds, cmdscnt);
+		return;
+	}
+
+	const int argc = ses_tokenize(argv, argvcnt, line);
+	if (argc < 1) {
+		if (argc == SES_ENOMEM) {
+			printf("Out of memory for function arguments!\n");
+			return;
 		}
+		printf("Unhandled ses_tokenize error: %d\n", argc);
+		return;
 	}
-#else
-	fwrite(prompt, sizeof(prompt)-1, f);
-#endif
-}
 
-int ses_internal_echo(int argc, char *argv[])
-{
-	if (--argc) {
-		printf("%s", (++argv)[0]);
-		while(--argc) {
-			printf(" ");
-			printf("%s", (++argv)[0]);
+	int exit_status;
+	const int ret = ses_system(cmds, cmdscnt, argc, argv, &exit_status);
+	if (ret != 0) {
+		if (ret == SES_ECOMMAND_NOT_FOUND) {
+			printf("%s: Command not found.\n", argv[0]);
+			printf(" Type 'help' for commands list.\n");
+			return;
 		}
+		printf("Unhandled ses_system error: %d\n", ret);
+		return;
 	}
-	printf("\n");
-	return 0;
-}
-
-int ses_internal_abort(int argc, char *argv[])
-{
-	abort();
-	return 0;
-}
-
-int ses_internal_exit(int argc, char *argv[])
-{
-	if (argc > 2) {
-		exit(atoi(argv[1]));
-	} else {
-		exit(0);
+	if (exit_status != 0) {
+		printf("Last command returned %d\n", exit_status);
 	}
-	return 0;
 }

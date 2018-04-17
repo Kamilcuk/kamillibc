@@ -22,12 +22,12 @@
  */
 
 clock_t clocktimeout_start();
-void clocktimeout_init(clock_t *start, clock_t *timeout);
-bool clocktimeout_expired(clock_t *start, clock_t *timeout);
+void clocktimeout_init(clock_t * restrict start, clock_t * restrict timeout);
+bool clocktimeout_expired(clock_t * restrict start, clock_t * restrict timeout);
 
-int clocktimeout_timeout_to_polltimeout(clock_t *timeout);
+int clocktimeout_timeout_to_polltimeout(clock_t * restrict timeout);
 
-static inline void clocktimeout_update(clock_t *start, clock_t *timeout)
+static inline void clocktimeout_update(clock_t * restrict start, clock_t * restrict timeout)
 {
 	(void)clocktimeout_expired(start, timeout);
 }

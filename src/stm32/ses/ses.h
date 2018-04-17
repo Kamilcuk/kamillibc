@@ -9,39 +9,39 @@
 #define SRC_APPLICATION_SES_H_
 
 #include <ses/ses_config.h>
+#include <ses/builtin.h>
 #include <stdio.h>
 #include <stdbool.h>
+#include <limits.h>
+
+#define SES_VERSION "0.0.1"
+
+enum {
+	SES_OK = 0,
+	SES_ENOMEM,
+	SES_ECOMMAND_NOT_FOUND,
+};
 
 struct ses_cmds_s {
 	const char * name;
-	union {
-		int (*func)(int argc, char *argv[]);
-		int (*vfunc)(void);
-	};
+	int (*func)(int argc, char *argv[]);
+#if SES_USE_CMDS_DESCRIPTIONS
 	const char * desc;
+#endif
 };
 
 void ses_printinfo(const struct ses_cmds_s cmds[restrict], size_t size);
-int ses_tokenize(char ** restrict argv, size_t argvsize, char * restrict arg);
-int ses_internal_help(const struct ses_cmds_s cmds[restrict], size_t cmdssize,
-		int argc, char *argv[]);
-bool ses_cmds_is_duplicated(const struct ses_cmds_s cmds[restrict], size_t cmdssize);
-int ses_exec(const struct ses_cmds_s cmds[restrict], size_t cmdssize,
-		char ** restrict argv, size_t argvcnt, char * restrict line);
+bool ses_cmds_is_duplicated(const struct ses_cmds_s cmds[restrict], size_t cmdscnt);
 
-void ses_display_prompt();
+void ses_printf_issue();
+int ses_printf_help(const struct ses_cmds_s cmds[restrict], size_t cmdscnt);
+int ses_tokenize(char *argv[restrict], size_t argvsize, char line[restrict]);
+int ses_system(const struct ses_cmds_s cmds[restrict], size_t cmdscnt,
+		int argc, char *argv[restrict],
+		int *exit_status);
 
-#define SES_CMDS_ADD_INTERNAL(name)  { #name, &ses_internal_##name }
-int ses_internal_echo(int argc, char *argv[]);
-#define SES_CMDS_ADD_INTERNAL_ECHO() SES_CMDS_ADD_INTERNAL(echo)
-int ses_internal_abort(int argc, char *argv[]);
-#define SES_CMDS_ADD_INTERNAL_ABORT() SES_CMDS_ADD_INTERNAL(abort)
-int ses_internal_exit(int argc, char *argv[]);
-#define SES_CMDS_ADD_INTERNAL_EXIT() SES_CMDS_ADD_INTERNAL(exit)
-
-#define SES_CMDS_ADD_INTERNAL_ALL() \
-	SES_CMDS_ADD_INTERNAL_ECHO(), \
-	SES_CMDS_ADD_INTERNAL_ABORT(), \
-	SES_CMDS_ADD_INTERNAL_EXIT()
+void ses_run_line(const struct ses_cmds_s cmds[restrict], size_t cmdscnt,
+		char *argv[restrict], size_t argvcnt,
+		char line[restrict]);
 
 #endif /* SRC_APPLICATION_SES_H_ */

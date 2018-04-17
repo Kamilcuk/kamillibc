@@ -13,7 +13,7 @@ clock_t clocktimeout_start() {
 	return clock();
 }
 
-void clocktimeout_init(clock_t *start, clock_t *timeout)
+void clocktimeout_init(clock_t * restrict start, clock_t * restrict timeout)
 {
 	assert(start != NULL);
 	if (timeout != NULL) {
@@ -21,7 +21,7 @@ void clocktimeout_init(clock_t *start, clock_t *timeout)
 	}
 }
 
-bool clocktimeout_expired(clock_t *start, clock_t *timeout)
+bool clocktimeout_expired(clock_t * restrict start, clock_t * restrict timeout)
 {
 	assert(start != NULL);
 	if (timeout == NULL) return false;
@@ -38,7 +38,7 @@ bool clocktimeout_expired(clock_t *start, clock_t *timeout)
 	return false;
 }
 
-int clocktimeout_timeout_to_polltimeout(clock_t *timeout)
+int clocktimeout_timeout_to_polltimeout(clock_t * restrict timeout)
 {
 	int polltimeout;
 	if (timeout == NULL) {
