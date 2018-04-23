@@ -11,7 +11,7 @@
 #include <stdint.h>
 
 const struct findmsg_conf_s findmsg_conf_stub = {
-		.minlength = 0,
+		.minlength = 1,
 		.maxlength = SIZE_MAX,
 		.checkBeginning = &findmsg_stub_checkBeginning,
 		.checkEnding = &findmsg_stub_checkEnding,

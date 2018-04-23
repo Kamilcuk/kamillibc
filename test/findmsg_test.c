@@ -87,7 +87,7 @@ static int test_conf_returingNegative_checkEnding(const char buf[], size_t size,
 static void test_conf_returingNegative()
 {
 	struct findmsg_conf_s conf = {
-			0,0,test_conf_returingNegative_checkBeginning,test_conf_returingNegative_checkEnding
+			1, SIZE_MAX, test_conf_returingNegative_checkBeginning, test_conf_returingNegative_checkEnding
 	};
 	ssize_t ret;
 	{

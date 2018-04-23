@@ -12,6 +12,7 @@
 #include <time_ex.h>
 #include <filename.h>
 #include <printmacro.h>
+#include <bitstr/bitstr.h>
 #include <unity/unity.h>
 
 PRINTMACRO(__VERSION__)
@@ -30,6 +31,9 @@ static void printex_test() {
 static void time_ex_test() {
 	TEST_ASSERT_EQUAL(0, _time_ex_unittest());
 }
+static void bitstr_test() {
+	TEST_ASSERT_EQUAL(0, bitstr_unittest());
+}
 
 int main() {
 	setvbuf(stdout, NULL, _IOLBF, 100);
@@ -40,6 +44,7 @@ int main() {
 
 	UnityBegin(__FILENAME__);
 	RUN_TEST(minmax_test);
+	RUN_TEST(bitstr_test);
 	RUN_TEST(rb_test);
 	RUN_TEST(printex_test);
 	RUN_TEST(time_ex_test);

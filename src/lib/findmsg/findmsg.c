@@ -76,7 +76,10 @@ static ssize_t findmsg_beginning_started(struct findmsg_s *t, size_t minlength,
 		ssize_t (*checkBeginning)(const char buf[], size_t minlength, void *arg), void *arg,
 		clock_t *start, clock_t *timeout)
 {
-	assert(t != NULL && minlength && minlength < t->size && checkBeginning != NULL);
+	assert(t != NULL);
+	assert(1 <= minlength);
+	assert(minlength < t->size);
+	assert(checkBeginning != NULL);
 	int ret;
 	while( (ret = findmsg_readAtLeastChars(t, minlength, start, timeout)) >= 0 && t->pos >= minlength ) {
 		// check every minlength characters starting from t->buf[minlength ... t->pos-1] for beginning

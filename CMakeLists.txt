@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.4)
+cmake_minimum_required (VERSION 3.10)
 project(kamil C)
 
 # default compile options
@@ -28,7 +28,7 @@ add_library(${PROJECT_NAME}_static STATIC ${objects})
 add_library(${PROJECT_NAME}_shared SHARED ${objects})
 # generate test executable and run tests
 add_executable(${PROJECT_NAME}_test ${testsrc} ${objects})
-set(CTEST_OUTPUT_ON_FAILURE TRUE)
 enable_testing()
+set(CTEST_OUTPUT_ON_FAILURE true)
 add_test(${PROJECT_NAME}_test ${PROJECT_NAME}_test)
 
