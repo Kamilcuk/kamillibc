@@ -13,25 +13,33 @@ Compile using CMake for Build/release/libkamil.so
      - Every library has it's namespace, either lower or upper case
 - Library namespace shouldn't change between lower and upper case
 - Integer expression constants should be declared as enums
-- Library names should be named:
-     - ... namespace_function(struct namspace_s *this, ...);
-     - or ... namespace_function(namespace_t *this, ...);
-- If a library needs one, it should follow the naming of:
-     - data structure, preferred as structure, as typedefs should be discouraged<br>
-       struct namespace_s;<br>
-       typedef ... namespace_t;
-     - allocation function<br>
-       struct namespace_s * namespace_new(...);
-     - deallocation function<br>
-       void_or_int namespace_free(struct namespace_s **this);
-     - init functions<br>
-       void_or_int namespace_init(struct namespace_s *this, ...)
-     - deinitialization function<br>
-       void_or_int namespace_fini(struct namespace_s *this, ...)
-     - unittest<br>
-       int namespace_unittest(...);
-     - integrationtest<br>
-       int nemspace_integrationtest(...);
+- Example library structure:<br>
+
+```
+enum lib_err_e {
+	LIB_EOK = 0,
+	LIB_ERROR,
+	LIB_ENOBUF,
+	...
+};
+
+struct lib_s {
+	...
+};
+
+#define LIB_INIT(...) {...}
+
+struct lib_s * lib_new(...);
+void lib_free(const struct lib_s *t);
+
+... lib_init(struct lib_s *t, ...);
+void lib_deinit(struct lib_s *t);
+
+int lib_test_unit();
+int lib_test_integration(...);
+int lib_test_assembly(...);
+```
+
 - The mean value of asserts per function should be 2
 - Overloading macro on variable number of arguments should look like:
 

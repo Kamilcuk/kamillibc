@@ -106,7 +106,7 @@ rb_type *rb_write_pointer(RingBuffer_t *this, size_t *writable)
 	return &this->data[tail];
 }
 
-void rb_write_memcpy(RingBuffer_t *this, const char from[], size_t bytes)
+void rb_write_memcpy(RingBuffer_t *this, const rb_type from[], size_t bytes)
 {
 	assert(bytes <= rb_remain(this));
 
