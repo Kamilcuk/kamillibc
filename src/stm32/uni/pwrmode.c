@@ -4,51 +4,17 @@
  *  Created on: 28 mar 2018
  *      Author: kamil
  */
-#include <uni/power.h>
+#include <uni/pwrmode.h>
+
 #include <uni/wdg.h>
-#include <uni/cdefs.h>
+#include <cdefs.h>
 
 #include <machine/hal.h>
 
+#include <assert.h>
 #include <unistd.h>
 
-static unsigned int CriticalSectionPrimask;
-
-void pwr_CriticalSectionEnter_callback()
-{
-	CriticalSectionPrimask = __get_PRIMASK();
-	__disable_irq();
-}
-
-void pwr_CriticalSectionExit_callback()
-{
-	__set_PRIMASK(CriticalSectionPrimask);
-}
-
-#ifdef __UNI_PWRMODE_DEFAULT_IMPLEMENTATION_ENABLED
-
-__weak_symbol
-void pwrmode_enter_pre(pwrmode_t mode)
-{
-	__USE(mode);
-	switch(mode) {
-	case PWRMODE_STOP:
-	case PWRMODE_STOP_NOSYSTICK:
-	case PWRMODE_STANDBY:
-		(void)fsync(STDOUT_FILENO);
-		break;
-	default:
-		break;
-	}
-}
-
-__weak_symbol
-void pwrmode_enter_post(pwrmode_t mode)
-{
-	__USE(mode);
-}
-
-__weak_symbol
+__weak
 void pwrmode_enter(pwrmode_t mode)
 {
 	switch(mode) {
@@ -84,10 +50,8 @@ void pwrmode_enter(pwrmode_t mode)
 	wdg_refresh();
 }
 
-__weak_symbol
+__weak
 void pwrmode_restore(pwrmode_t mode)
 {
 	__USE(mode);
 }
-
-#endif

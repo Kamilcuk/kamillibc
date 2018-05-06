@@ -10,26 +10,35 @@
 
 #ifdef HAL_IWDG_MODULE_ENABLED
 
-extern IWDG_HandleTypeDef hiwdg;
+#include <machine/mx.h>
 
 static bool wdg_status;
 
-void wdg_init() {
+void uni_wdg_init(void)
+{
 	wdg_status = __HAL_RCC_GET_FLAG(RCC_FLAG_IWDGRST);
 }
 
-bool wdg_get() {
+bool wdg_get(void)
+{
 	return wdg_status;
 }
 
-void wdg_refresh() {
+void wdg_refresh(void)
+{
 	HAL_try( HAL_IWDG_Refresh(&hiwdg) );
 }
 
 #else
 
-void wdg_init() {}
-bool wdg_get() { return false; }
-void wdg_refresh() {}
+void uni_wdg_init(void) {
+}
+
+bool wdg_get(void) {
+	return false;
+}
+
+void wdg_refresh(void) {
+}
 
 #endif

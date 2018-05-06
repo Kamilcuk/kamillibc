@@ -33,8 +33,8 @@ struct ses_cmds_s {
 void ses_printinfo(const struct ses_cmds_s cmds[restrict], size_t size);
 bool ses_cmds_is_duplicated(const struct ses_cmds_s cmds[restrict], size_t cmdscnt);
 
-void ses_printf_issue();
-int ses_printf_help(const struct ses_cmds_s cmds[restrict], size_t cmdscnt);
+void ses_printf_issue(void);
+void ses_printf_help(const struct ses_cmds_s cmds[restrict], size_t cmdscnt);
 int ses_tokenize(char *argv[restrict], size_t argvsize, char line[restrict]);
 int ses_system(const struct ses_cmds_s cmds[restrict], size_t cmdscnt,
 		int argc, char *argv[restrict],

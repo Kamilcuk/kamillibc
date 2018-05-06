@@ -6,7 +6,7 @@
  *     License: All rights reserved. Copyright by Netemera(C).
  */
 
-#include <uni/power.h>
+#include "../../../../../src/kamillibc/uni/pwrmode.h"
 
 #include <signal.h>
 #include <stddef.h>

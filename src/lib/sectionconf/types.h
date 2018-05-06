@@ -9,7 +9,7 @@
 #ifndef SRC_LIB_SECTIONCONF_TYPES_H_
 #define SRC_LIB_SECTIONCONF_TYPES_H_
 
-#include <uni/cdefs.h>
+#include <cdefs.h>
 #include <stdint.h>
 
 #define SECTIONCONF_HEADER_MAGIC_START { 0xAA, 0xBB, 0xCC, 0xDD }

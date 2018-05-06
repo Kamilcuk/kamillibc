@@ -6,24 +6,21 @@
  */
 #include <uni/criticalsection.h>
 
-#include <uni/cdefs.h>
-
 #include <assert.h>
 
-static unsigned int CriticalSectionCnt = 0;
+static unsigned int criticalsection_cnt = 0;
 
-__weak_symbol
-void pwr_CriticalSectionEnter()
+void criticalsection_enter()
 {
-	if (++CriticalSectionCnt == 1) {
-		pwr_CriticalSectionEnter_callback();
+	if (++criticalsection_cnt == 1) {
+		criticalsection_enter_callback();
 	}
 }
 
-void pwr_CriticalSectionExit()
+void criticalsection_exit()
 {
-	assert(CriticalSectionCnt > 0);
-	if (--CriticalSectionCnt == 0) {
-		pwr_CriticalSectionExit_callback();
+	assert(criticalsection_cnt > 0);
+	if (--criticalsection_cnt == 0) {
+		criticalsection_exit_callback();
 	}
 }

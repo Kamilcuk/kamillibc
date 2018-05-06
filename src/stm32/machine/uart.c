@@ -8,9 +8,9 @@
 #ifdef HAL_UART_MODULE_ENABLED
 
 #include <machine/uart.h>
-#include <uni/power.h>
 
 #include <inttypes.h>
+#include <string.h>
 #include <stdio.h>
 
 /* Private Macros --------------------------------------------------------------------------- */
@@ -44,7 +44,11 @@ static inline void _UART_Transmit_DMArb_move_cndtr(struct HW_UART_dmatxrb_s * re
 		// we can notify DMA of new data, do hdmatx->cndtr += nbyte
 		if ( !HAL_UART_IsTransmitReady(t->conf.huart) ) {
 			// DMA is working - stop it
+#if defined(STM32L1)
+			HAL_DMA_Abort_IT(t->conf.huart->hdmatx);
+#else
 			HAL_UART_AbortTransmit(t->conf.huart);
+#endif
 
 			NVIC_EnableIRQlist(t->conf.IRQlist);
 
@@ -101,11 +105,6 @@ void HW_UART_dmatxrb_TxCplt_IRQHandler(struct HW_UART_dmatxrb_s * restrict t)
 
 /* --------------------------------------------------------------------------- */
 
-void HW_UART_Transmit_fsync(UART_HandleTypeDef * restrict huart)
-{
-	PWRMODE_ENTER_WHILE(PWRMODE_SLEEP, !HAL_UART_IsTransmitReady(huart));
-}
-
 void HW_UART_noirq_rb_flush(RingBuffer_t * restrict rb, struct IRQlist_s IRQlist)
 {
 	NVIC_DisableIRQlist(IRQlist);
@@ -124,7 +123,7 @@ void HW_UART_IDLE_IRQHandler(UART_HandleTypeDef * restrict huart)
 		__HAL_UART_CLEAR_IT(huart, UART_CLEAR_IDLEF);
 		HW_UART_IdleCallback(huart);
 	}
-#elif defined(STM32F1)
+#elif defined(STM32F1) || defined(STM32L1)
 	if (__HAL_UART_GET_FLAG(huart, UART_FLAG_IDLE) && __HAL_UART_GET_IT_SOURCE(huart, UART_IT_IDLE)) {
 		__HAL_UART_CLEAR_IDLEFLAG(huart);
 		HW_UART_IdleCallback(huart);

@@ -14,7 +14,7 @@
 #include <machine/uart_dmarx.h>
 #include <machine/nvic.h>
 #include <ringbuffer.h>
-#include <uni/cdefs.h>
+#include <cdefs.h>
 
 struct HW_UART_dmatxrb_conf_s {
 	UART_HandleTypeDef * restrict huart;
@@ -30,7 +30,6 @@ size_t HW_UART_dmatxrb_write(struct HW_UART_dmatxrb_s * restrict t,
 void HW_UART_dmatxrb_TxCplt_IRQHandler(struct HW_UART_dmatxrb_s * restrict t) __nonnull((1));
 
 void HW_UART_ErrorCheckPrintf(UART_HandleTypeDef * restrict huart) __nonnull((1));
-void HW_UART_Transmit_fsync(UART_HandleTypeDef * restrict huart) __nonnull((1));
 void HW_UART_noirq_rb_flush(RingBuffer_t * restrict rb, struct IRQlist_s IRQlist) __nonnull((1));
 
 void HW_UART_IdleCallback(UART_HandleTypeDef * restrict huart) __nonnull((1));

@@ -7,7 +7,7 @@
 #include <machine/rtc.h>
 #include <machine/hal.h>
 #include <uni/rtc.h>
-#include <uni/power.h>
+#include <uni/pwrmode.h>
 #include <time_ex.h>
 #include <time.h>
 #include <string.h>
@@ -37,10 +37,11 @@ time_t time(time_t *t)
 }
 
 __weak_symbol
-int nanosleep(const struct timespec *rqtp, struct timespec *rmtp) {
+int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
+{
 	const clock_t startclock = clock();
 	const clock_t stopclock = startclock + timespec_to_clock(*rqtp);
-	PWRMODE_ENTER_WHILE(PWRMODE_SLEEP, stopclock > clock());
+	PWRMODE_WHILE(PWRMODE_SLEEP, stopclock > clock());
 	rmtp->tv_sec = 0;
 	rmtp->tv_nsec = 0;
 	return 0;

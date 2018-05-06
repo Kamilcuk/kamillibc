@@ -8,7 +8,7 @@
 
 #include <minmax.h>
 #include <clocktimeout.h>
-#include <uni/cdefs.h>
+#include <cdefs.h>
 
 #include <poll.h>
 #include <time.h>

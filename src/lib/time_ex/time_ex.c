@@ -8,7 +8,7 @@
 
 #include <time_ex.h>
 
-#include <uni/cdefs.h>
+#include <cdefs.h>
 
 #include <assert.h>
 #include <time.h>

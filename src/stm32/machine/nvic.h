@@ -37,7 +37,7 @@ __STATIC_INLINE void NVIC_EnableIRQn(const IRQn_Type IRQns[], size_t IRQnn) {
 		NVIC_EnableIRQ(IRQns--[0]);
 	}
 }
-__STATIC_INLINE void NVIC_DisableIRQlist(struct IRQlist_s IRQlist) {
+__STATIC_INLINE void NVIC_DisableIRQlist(const struct IRQlist_s IRQlist) {
 	NVIC_DisableIRQn(IRQlist.list, IRQlist.num);
 }
 

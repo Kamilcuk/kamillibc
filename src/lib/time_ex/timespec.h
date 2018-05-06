@@ -55,11 +55,11 @@
 
 static inline time_ns_t timespec_to_ns(struct timespec ts) __pure2;
 static inline time_ns_t timespec_to_ns(struct timespec ts) {
-	return TIMESPEC_TO_INT_RATIO(ts, 1L, 1000000000L);
+	return TIMESPEC_TO_INT_RATIO(ts, 1LL, 1000000000LL);
 }
 static inline struct timespec timespec_from_ns(time_ns_t v) __pure2;
 static inline struct timespec timespec_from_ns(time_ns_t v) {
-	return (struct timespec)TIMESPEC_FROM_INT_RATIO(v, 1L, 1000000000L);
+	return (struct timespec)TIMESPEC_FROM_INT_RATIO(v, 1LL, 1000000000LL);
 }
 static inline time_us_t timespec_to_us(struct timespec ts) __pure2;
 static inline time_us_t timespec_to_us(struct timespec ts) {
@@ -67,37 +67,37 @@ static inline time_us_t timespec_to_us(struct timespec ts) {
 }
 static inline struct timespec timespec_from_us(time_us_t v) __pure2;
 static inline struct timespec timespec_from_us(time_us_t v) {
-	return (struct timespec)TIMESPEC_FROM_INT_RATIO(v, 1L, 1000000L);
+	return (struct timespec)TIMESPEC_FROM_INT_RATIO(v, 1LL, 1000000LL);
 }
 static inline time_ms_t timespec_to_ms(struct timespec ts) __pure2;
 static inline time_ms_t timespec_to_ms(struct timespec ts) {
-	return TIMESPEC_TO_INT_RATIO(ts, 1L, 1000);
+	return TIMESPEC_TO_INT_RATIO(ts, 1LL, 1000LL);
 }
 static inline struct timespec timespec_from_ms(time_ms_t v) __pure2;
 static inline struct timespec timespec_from_ms(time_ms_t v) {
-	return (struct timespec)TIMESPEC_FROM_INT_RATIO(v, 1L, 1000);
+	return (struct timespec)TIMESPEC_FROM_INT_RATIO(v, 1LL, 1000LL);
 }
 static inline clock_t timespec_to_clock(struct timespec ts) __pure2;
 static inline clock_t timespec_to_clock(struct timespec ts) {
-	return TIMESPEC_TO_INT_RATIO(ts, 1L, CLOCKS_PER_SEC);
+	return TIMESPEC_TO_INT_RATIO(ts, 1LL, (long long)CLOCKS_PER_SEC);
 }
 static inline struct timespec timespec_from_clock(clock_t v) __pure2;
 static inline struct timespec timespec_from_clock(clock_t v) {
-	return (struct timespec)TIMESPEC_FROM_INT_RATIO(v, 1L, CLOCKS_PER_SEC);
+	return (struct timespec)TIMESPEC_FROM_INT_RATIO(v, 1LL, (long long)CLOCKS_PER_SEC);
 }
 static inline void timespec_normalize(struct timespec *ts) __pure2;
 static inline void timespec_normalize(struct timespec *ts)
 {
 	while(ts->tv_nsec < 0) {
-		ts->tv_nsec += 1000000000l;
+		ts->tv_nsec += 1000000000LL;
 		if (ts->tv_sec <= 0) {
 			assert(ts->tv_sec == 0);
 			return;
 		}
 		--ts->tv_sec;
 	}
-	while(ts->tv_nsec >= 1000000000l) {
-		ts->tv_nsec -= 1000000000l;
+	while(ts->tv_nsec >= 1000000000LL) {
+		ts->tv_nsec -= 1000000000LL;
 		++ts->tv_sec;
 	}
 }

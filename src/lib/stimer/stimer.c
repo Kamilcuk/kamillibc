@@ -9,7 +9,7 @@
 #include <stimer/stimer_config.h>
 
 #include <uni/queue.h>
-#include <uni/cdefs.h>
+#include <cdefs.h>
 
 #include <sys/time.h>
 #include <stdbool.h>

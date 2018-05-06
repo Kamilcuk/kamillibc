@@ -57,7 +57,7 @@ static inline int ses_tokenize_strtok(char *argv[restrict], size_t argvsize, cha
 #if __POSIX_VISIBLE >= 200809
 	for(char *tok = line, *ptrptr; (tok = strtok_r(tok, delim, &ptrptr)); tok = NULL)
 #else
-	for(char *tok = arg; (tok = strtok(tok, delim)); tok = NULL)
+	for(char *tok = line; (tok = strtok(tok, delim)); tok = NULL)
 #endif
 	{
 		if (tok != line)
@@ -94,7 +94,7 @@ bool ses_cmds_is_duplicated(const struct ses_cmds_s cmds[restrict], size_t cmdsc
 	return false;
 }
 
-void ses_printf_issue()
+void ses_printf_issue(void)
 {
 	printf("\n"
 			"-----------------------------------------\n"
@@ -104,7 +104,7 @@ void ses_printf_issue()
 			"\n");
 }
 
-int ses_printf_help(const struct ses_cmds_s cmds[restrict], size_t cmdscnt)
+void ses_printf_help(const struct ses_cmds_s cmds[restrict], size_t cmdscnt)
 {
 	assert(cmds && cmdscnt);
 	printf(

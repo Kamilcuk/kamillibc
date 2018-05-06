@@ -7,10 +7,10 @@
 #include <time.h>
 #include <time_ex.h>
 #include <reent.h>
-#include <uni/cdefs.h>
+#include <cdefs.h>
 #include <uni/rtc.h>
 
-__weak_symbol
+__weak
 clock_t clock() {
 	return clock_from_ms(HAL_GetTick());
 }

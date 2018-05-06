@@ -11,7 +11,7 @@
 #include <machine/hal.h>
 #ifdef HAL_UART_MODULE_ENABLED
 
-#include <uni/cdefs.h>
+#include <cdefs.h>
 #include <stddef.h>
 #include <stdint.h>
 

@@ -9,7 +9,7 @@
 
 #include <uni/_types.h>
 
-#ifndef __pwrmode_defined
+#ifndef __pwrmode_t_defined
 typedef enum {
 	PWRMODE_RUN,
 	PWRMODE_LOW_POWER_RUN,
@@ -31,6 +31,6 @@ typedef __gpio_t gpio_t;
 #define __UNI_USE_GPIO_DEFAULT_IMPLEMENTATION 1
 #endif
 
-#include <uni/machine_types.h>
+#include <uni/system_types.h>
 
 #endif /* _UNI_TYPES_H_ */

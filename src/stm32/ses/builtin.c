@@ -36,7 +36,8 @@ int ses_builtin_exit(int argc, char *argv[])
 	return 0;
 }
 
-static int ses_builtin_testargs(int argc, char *argv[]) {
+int ses_builtin_testargs(int argc, char *argv[])
+{
 	for(int i = 0; i < argc; ++i) {
 		printf("argv[%d] = '%s'\n", i, argv[i]);
 	}

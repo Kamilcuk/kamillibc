@@ -11,30 +11,30 @@
 #include <uni/types.h>
 #include <stdbool.h>
 
-#define pwr_CRITICALSECTION() \
-	for(int _tOdO = (UNI_CriticalSectionEnter(), 1); _tOdO; _tOdO = (UNI_CriticalSectionExit(), 0) )
+#define CRITICALSECTION() \
+	for(int _tOdO = (criticalsection_enter(), 1); \
+		_tOdO; \
+		_tOdO = (criticalsection_exit(), 0) )
 
-#define pwr_CRITICALSECTION_for(pre, condition, action, post) do{ \
-	for(;;) { \
-		(void)(pre); \
-		pwr_CriticalSectionEnter(); \
-		const bool _tOdO = (bool)(condition); \
+#define CRITICALSECTION_FOR(condition, action) \
+do{ \
+	for(bool _tOdO = 1; _tOdO; ) { \
+		criticalsection_enter(); \
+		_tOdO = !!(condition); \
 		if (_tOdO) { \
-			(void)(action); \
+			(void)( action ); \
 		} \
-		pwr_CriticalSectionExit(); \
-		(void)(post); \
-		if (!_tOdO) \
-			break; \
+		criticalsection_exit(); \
 	} \
 }while(0)
 
-#define pwr_CRITICALSECTION_while(condition)  POWER_STATE_for(0, condition, 0, 0);
+#define CRITICALSECTION_WHILE(condition) \
+	CRITICALSECTION_FOR((condition),0);
 
-void pwr_CriticalSectionEnter();
-void pwr_CriticalSectionExit();
+void criticalsection_enter(void);
+void criticalsection_exit(void);
 
-void pwr_CriticalSectionEnter_callback();
-void pwr_CriticalSectionExit_callback();
+void criticalsection_enter_callback(void);
+void criticalsection_exit_callback(void);
 
 #endif /* SRC_KAMILLIBC_UNI_CRITICALSECTION_H_ */

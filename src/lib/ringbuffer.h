@@ -8,7 +8,6 @@
 #ifndef RIRC_RING_BUFFER_H
 #define RIRC_RING_BUFFER_H
 
-#include <uni/cdefs.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <assert.h>

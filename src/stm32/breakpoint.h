@@ -9,7 +9,7 @@
 #define SRC_STM32_BREAKPOINT_H_
 
 #include <machine/hal.h>
-#include <uni/cdefs.h>
+#include <cdefs.h>
 
 #ifndef NDEBUG
 #define _breakpoint(x) __BKPT(x)

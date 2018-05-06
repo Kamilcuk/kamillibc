@@ -7,7 +7,7 @@
 #include "ringbuffer.h"
 
 #include <minmax.h>
-#include <uni/cdefs.h>
+#include <cdefs.h>
 
 #include <stdlib.h>
 #include <string.h>

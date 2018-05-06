@@ -72,14 +72,26 @@ static inline bool HAL_SPI_IsTransmitReceiveReady(const SPI_HandleTypeDef *hspi)
 
 static inline bool HAL_UART_IsReceiveReady(const UART_HandleTypeDef *huart)
 {
-	assert(huart != NULL && huart->gState != HAL_UART_STATE_RESET);
+	assert(huart != NULL);
+#if defined(STM32L1)
+	assert(huart->State != HAL_UART_STATE_RESET);
+	return huart->State == HAL_UART_STATE_READY;
+#else
+	assert(huart->gState != HAL_UART_STATE_RESET);
 	return huart->RxState == HAL_UART_STATE_READY;
+#endif
 }
 
 static inline bool HAL_UART_IsTransmitReady(const UART_HandleTypeDef *huart)
 {
-	assert(huart != NULL && huart->gState != HAL_UART_STATE_RESET);
+	assert(huart != NULL);
+#if defined(STM32L1)
+	assert(huart->State != HAL_UART_STATE_RESET);
+	return huart->State == HAL_UART_STATE_READY;
+#else
+	assert(huart->gState != HAL_UART_STATE_RESET);
 	return huart->gState == HAL_UART_STATE_READY;
+#endif
 }
 
 #endif
