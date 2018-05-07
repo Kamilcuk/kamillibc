@@ -11,11 +11,14 @@
 #include <minmax.h>
 #include <time_ex.h>
 #include <filename.h>
-#include <printmacro.h>
 #include <bitstr/bitstr.h>
+#include <macroprint.h>
 #include <unity/unity.h>
 
-PRINTMACRO(__VERSION__)
+#ifdef __GNUC__
+MACROPRINT(__GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__)
+#endif
+MACROPRINT(__VERSION__)
 
 static void rb_test() {
 	TEST_ASSERT_EQUAL(0, rb_unittest());

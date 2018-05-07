@@ -15,7 +15,7 @@
 
 #if _POSIX_C_SOURCE >= 199309L
 
-__weak_symbol
+__weak
 time_ns_t timer_gettime_ns(timer_t timerid, time_ns_t *interval)
 {
 	struct itimerspec value;
@@ -24,7 +24,7 @@ time_ns_t timer_gettime_ns(timer_t timerid, time_ns_t *interval)
 	return timespec_to_ns(value.it_value);
 }
 
-__weak_symbol
+__weak
 int timer_settime_ns(timer_t timerid, time_ns_t value, time_ns_t interval)
 {
 	struct itimerspec it = {
@@ -34,7 +34,7 @@ int timer_settime_ns(timer_t timerid, time_ns_t value, time_ns_t interval)
 	return timer_settime(timerid, 0, &it, NULL);
 }
 
-__weak_symbol
+__weak
 time_ms_t timer_gettime_ms(timer_t timerid, time_ms_t *interval)
 {
 	struct itimerspec value;
@@ -43,7 +43,7 @@ time_ms_t timer_gettime_ms(timer_t timerid, time_ms_t *interval)
 	return timespec_to_ms(value.it_value);
 }
 
-__weak_symbol
+__weak
 int timer_settime_ms(timer_t timerid, time_ms_t value, time_ms_t interval)
 {
 	struct itimerspec it = {
