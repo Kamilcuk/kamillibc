@@ -75,22 +75,19 @@ static inline void _UART_Transmit_DMArb_move_cndtr(struct HW_UART_dmatxrb_s * re
 size_t HW_UART_dmatxrb_write(struct HW_UART_dmatxrb_s * restrict t,
 		const uint8_t buf[restrict], size_t nbyte)
 {
-	assert(t && buf && nbyte);
+	assert(t);
+	assert(buf);
+	assert(nbyte);
 
 	NVIC_DisableIRQlist(t->conf.IRQlist);
-	size_t tocopy;
-	uint8_t * const pnt = (uint8_t*)rb_write_pointer(&t->rb, &tocopy);
+	size_t tocopy = rb_remain(&t->rb);
 	if (tocopy > nbyte)
 		tocopy = nbyte;
+	NVIC_DisableIRQlist(t->conf.IRQlist);
+	rb_write(&t->rb, (const char*)buf, tocopy);
 	NVIC_EnableIRQlist(t->conf.IRQlist);
-	if (tocopy != 0) {
-		memcpy(pnt, buf, tocopy);
-		NVIC_DisableIRQlist(t->conf.IRQlist);
-		rb_write_commit(&t->rb, tocopy);
-		if ( HAL_UART_IsTransmitReady(t->conf.huart) ) {
-			HW_UART_dmatxrb_arm(t->conf.huart, &t->rb);
-		}
-		NVIC_EnableIRQlist(t->conf.IRQlist);
+	if ( HAL_UART_IsTransmitReady(t->conf.huart) ) {
+		HW_UART_dmatxrb_arm(t->conf.huart, &t->rb);
 	}
 
 	return tocopy;
@@ -98,7 +95,9 @@ size_t HW_UART_dmatxrb_write(struct HW_UART_dmatxrb_s * restrict t,
 
 void HW_UART_dmatxrb_TxCplt_IRQHandler(struct HW_UART_dmatxrb_s * restrict t)
 {
-	assert(t && t->conf.huart && t->conf.huart->TxXferCount == 0);
+	assert(t);
+	assert(t->conf.huart);
+	assert(t->conf.huart->TxXferCount == 0);
 	rb_read_commit(&t->rb, t->conf.huart->TxXferSize);
 	HW_UART_dmatxrb_arm(t->conf.huart, &t->rb);
 }
