@@ -15,6 +15,7 @@ clock_t clock() {
 	return clock_from_ms(HAL_GetTick());
 }
 
+__weak
 int _gettimeofday_r(struct _reent *r, struct timeval *ptimeval, void *ptimezone)
 {
 	__USE(r);
