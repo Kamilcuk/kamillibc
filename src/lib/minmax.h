@@ -8,8 +8,6 @@
 #ifndef SRC_MINMAX_H_
 #define SRC_MINMAX_H_
 
-// -pedantic: warning: ISO C forbids braced-groups within expressions
-
 #ifdef __GNUC__
 # define MIN(a,b)  __extension__({ \
 	__typeof__ (a) _a = (a); \

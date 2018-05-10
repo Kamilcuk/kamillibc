@@ -12,24 +12,10 @@
 #include <stdbool.h>
 
 #define CRITICALSECTION() \
-	for(int _tOdO = (criticalsection_enter(), 1); \
-		_tOdO; \
-		_tOdO = (criticalsection_exit(), 0) )
-
-#define CRITICALSECTION_FOR(condition, action) \
-do{ \
-	for(bool _tOdO = 1; _tOdO; ) { \
-		criticalsection_enter(); \
-		_tOdO = !!(condition); \
-		if (_tOdO) { \
-			(void)( action ); \
-		} \
-		criticalsection_exit(); \
-	} \
-}while(0)
+	for(bool _tOdO = (criticalsection_enter(), 1); _tOdO; _tOdO = (criticalsection_exit(), 0))
 
 #define CRITICALSECTION_WHILE(condition) \
-	CRITICALSECTION_FOR((condition),0);
+	for(; criticalsection_enter(), !!(condition); criticalsection_exit())
 
 void criticalsection_enter(void);
 void criticalsection_exit(void);
