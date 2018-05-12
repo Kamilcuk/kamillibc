@@ -63,7 +63,17 @@ function(cubemx_get_linker_script result_var cubemx_dir)
 	set(${result_var} "${CMAKE_SOURCE_DIR}/${cubemx_dir}/${temp}" PARENT_SCOPE)
 endfunction()
 
-function(cubemx_add_generate_mx_h_target target result_file cubemx_dir)
+function(cubemx_add_hal_library target type c_inc_output_var cubemx_dir halrepo_dir)
+	cubemx_get_asm_sources(mx_asm_src ${cubemx_dir})
+	cubemx_get_c_sources(mx_c_src ${cubemx_dir} ${halrepo_dir})
+	cubemx_get_c_includes(mx_c_inc ${cubemx_dir} ${halrepo_dir})
+	list(APPEND mx_c_inc "${cubemx_dir}/Inc")
+	add_library(hal ${type} ${mx_asm_src} ${mx_c_src})
+	target_include_directories(${target} PUBLIC ${mx_c_inc})
+	set(${c_inc_output_var} "${mx_c_inc}" PARENT_SCOPE)
+endfunction()
+
+function(cubemx_add_gen_include_header_target target result_file cubemx_dir)
 	file(GLOB mx_headers "${cubemx_dir}/Inc/*.h")
 	get_filename_component(result_file_dir "${result_file}" DIRECTORY)
 	file(GLOB mx_headers_relative RELATIVE "${result_file_dir}" "${cubemx_dir}/Inc/*.h")
@@ -77,12 +87,37 @@ function(cubemx_add_generate_mx_h_target target result_file cubemx_dir)
 	add_custom_target(${target} DEPENDS "${result_file}")
 endfunction()
 
-function(cubemx_add_hal_library target type c_inc_output_var cubemx_dir halrepo_dir)
-	cubemx_get_asm_sources(mx_asm_src ${cubemx_dir})
-	cubemx_get_c_sources(mx_c_src ${cubemx_dir} ${halrepo_dir})
-	cubemx_get_c_includes(mx_c_inc ${cubemx_dir} ${halrepo_dir})
-	list(APPEND mx_c_inc "${cubemx_dir}/Inc")
-	add_library(hal ${type} ${mx_asm_src} ${mx_c_src})
-	target_include_directories(${target} PUBLIC ${mx_c_inc})
-	set(${c_inc_output_var} "${mx_c_inc}" PARENT_SCOPE)
+function(cubemx_add_gen_cubemx_header_target target result_file cubemx_dir)
+	file(GLOB cubemx_c_src ${cubemx_dir}/Src/*.c)
+	get_filename_component(result_dir "${result_file}" DIRECTORY) 
+	add_custom_command(
+		OUTPUT "${result_file}"
+		COMMAND mkdir -p "${result_dir}"
+		COMMAND printf "%s\\n"
+			"/**"
+			" * This file was generated automatically by ${CMAKE_CURRENT_LIST_FILE} cmake script."
+			" */"
+			""
+			"/* handles and functions extracted from cubemx files */"
+			> "${result_file}"
+		COMMAND 
+			grep -h -a "^[^[:space:]]*_HandleTypeDef \\|^void MX_[^[:space:]]*_Init(void)" -- ${cubemx_c_src} |
+			sort -u |
+			sed 
+			-e "s/\\r//" # remove windows newlines
+			-e "/_HandleTypeDef/s/^/extern /" # prepend HandleTypeDef variables with extern
+			-e "/^void MX_/s/$/;/" # append missing semicolon to functions
+			>> "${result_file}"
+		COMMAND printf "%s\\n"
+			""
+			"void MX_Init(void);"
+			"void SystemClock_Config(void);"
+			"" 
+			>> "${result_file}"
+		DEPENDS ${cubemx_c_src}
+		COMMENT "Generate ${result_file} from cubemx headers" VERBATIM 
+	)
+	add_custom_target(${target} DEPENDS "${result_file}")
+	set(${result_var} ${res} PARENT_SCOPE)
 endfunction()
+
