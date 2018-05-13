@@ -112,6 +112,7 @@ function(cubemx_add_gen_cubemx_header_target target result_file cubemx_dir)
 			""
 			"void MX_Init(void);"
 			"void SystemClock_Config(void);"
+			"void _Error_Handler(char *, int);"
 			"" 
 			>> "${result_file}"
 		DEPENDS ${cubemx_c_src}
