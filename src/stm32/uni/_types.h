@@ -8,5 +8,4 @@
 #ifndef SRC_STM32_UNI__TYPES_H_
 #define SRC_STM32_UNI__TYPES_H_
 
-
 #endif /* SRC_STM32_UNI__TYPES_H_ */

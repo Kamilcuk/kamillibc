@@ -17,7 +17,12 @@ typedef int pwrmode_t;
 #endif
 
 #define PWRMODE_WHILE(mode, condition) \
-	for(; criticalsection_enter(), !!(condition) ? (pwrmode_enter(mode), 1) : 0; criticalsection_exit())
+	for(; \
+		criticalsection_enter(), \
+		!!(condition) \
+			? (pwrmode_enter(mode), 1) \
+			: (criticalsection_exit(), 0); \
+		criticalsection_exit())
 
 void pwrmode_enter(pwrmode_t mode);
 void pwrmode_restore(pwrmode_t mode);
