@@ -41,13 +41,15 @@ int lib_test_assembly(...);
 ```
 
 - The mean value of asserts per function should be 2
-- Overloading macro on variable number of arguments should look like:
+- Overloading macro `MACRO` on variable number of arguments should look like:
 
-     _MACRO_1(arg1)              /* do smth with args */
-     _MACRO_2(arg1, arg2)        /* do smth with args */
-     _MACRO_3(arg1, arg2, arg3)  /* do smth with args */
-     _MACRO_N(_1, _2, _3, N, ...)    _MACRO_##N
-     MACRO(arg, ...)             _MACRO_N(arg, ##__VA_ARGS__, 3, 2, 1)(arg, ##__VA_ARGS__)
+```
+#define _mMACRO_3(arg1, arg2, arg3)      printf(#arg1 "," #arg2 "," #arg3)
+#define _mMACRO_2(arg1, arg2)            _mMACRO_3(arg1, arg2, default_arg3)
+#define _mMACRO_1(arg1)                  _mMACRO_2(arg1, default_arg2)
+#define _mMACRO_N(_1, _2, _3, N, ...)    _mMACRO_##N
+#define MACRO(arg1, ...)                 _mMACRO_N(arg1, ##__VA_ARGS__, 3, 2, 1)(arg1, ##__VA_ARGS__)
+```
      
 # Frustration
 
