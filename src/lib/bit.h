@@ -35,19 +35,7 @@
 #define BIT_CLEAR(REG, BIT)   ( (REG) &= ~(1<<(BIT)) )
 #define BIT_SET(REG, BIT)     ( (REG) |=  (1<<(BIT)) )
 #define BIT_TOGGLE(REG, BIT)  ( (REG) ^=  (1<<(BIT)) )
-
-#define BIT_WRITE(REG, BIT, VAL) do{ \
-	if((VAL)) { \
-		BIT_SET(REG,BIT); \
-	} else { \
-		BIT_CLEAR(REG,BIT); \
-	} \
-}while(0)
-
-#define BIT_WRITE_EXPRESSION(REG, BIT, VAL) ( (REG) = ( (REG)& ~(1<<(BIT)) ) | ( (VAL)<<(BIT) ) )
-
-//#define BIT_WRITE(REG, BIT, VAL) ( (REG) = ((VAL) ? ((REG) | (1<<(BIT))) : ((REG) & (1<<(BIT))) ) )
-//#define BIT_WRITE(REG, BIT, VAL) ( (REG)  = ((REG)&(~(1<<(BIT)))) | ((VAL)?(1<<(BIT):0)) )
+#define BIT_WRITE(REG, BIT, VAL)  ( (VAL) ? BIT_SET((REG),(BIT)) : BIT_CLEAR((REG),(BIT)) )
 
 #define BITMASK_READ(REG, MASK)          ( (REG) &   (MASK) )
 #define BITMASK_CLEAR(REG, MASK)         ( (REG) &= ~(MASK) )
