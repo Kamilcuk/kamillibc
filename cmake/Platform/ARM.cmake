@@ -1,1 +1,1 @@
-message(STATUS "Configuring for ARM platform")
+message(STATUS "Configuring for ARM platform using arm-none-eabi-gcc compiler")

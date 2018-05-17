@@ -21,7 +21,10 @@ endfunction()
 
 function(print_executable_size target)
 	if(NOT CMAKE_SIZE_UTIL)
-		message(FATAL_ERROR "CMAKE_SIZE_UTIL not defined")
+		find_program(CMAKE_SIZE_UTIL ${_CMAKE_TOOLCHAIN_PREFIX}size HINTS ${_CMAKE_TOOLCHAIN_LOCATION})
+		if(NOT CMAKE_SIZE_UTIL)
+			message(FATAL_ERROR "CMAKE_SIZE_UTIL not found")
+		endif()
 	endif()
     add_custom_command(TARGET "${target}" POST_BUILD
         COMMAND "${CMAKE_SIZE_UTIL}" -B "${CMAKE_BINARY_DIR}/${target}${CMAKE_EXECUTABLE_SUFFIX}"
