@@ -12,13 +12,13 @@
 
 #include <try.h>
 
-#include <uni/cdefs.h>
+#include <cdefs.h>
 #include <time.h>
 #include <sys/time.h>
 
 #define HW_RTC_DBG(fmt, ...) //printf(fmt, ##__VA_ARGS__)
 
-__weak_symbol
+__weak
 time_t HW_RTC_ticks_to_time_t_Callback(RTC_HandleTypeDef *hrtc, time_t t)
 {
 	assert(HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_RTC) == LSE_VALUE);
@@ -27,7 +27,7 @@ time_t HW_RTC_ticks_to_time_t_Callback(RTC_HandleTypeDef *hrtc, time_t t)
 	return t * 128 / LSE_VALUE;
 }
 
-__weak_symbol
+__weak
 time_t HW_RTC_time_t_to_ticks_Callback(RTC_HandleTypeDef *hrtc, time_t t)
 {
 	assert(HAL_RCCEx_GetPeriphCLKFreq(RCC_PERIPHCLK_RTC) == LSE_VALUE);

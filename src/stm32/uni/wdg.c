@@ -10,8 +10,6 @@
 
 #ifdef HAL_IWDG_MODULE_ENABLED
 
-#include <machine/mx.h>
-
 static bool wdg_status;
 
 void uni_wdg_init(void)
@@ -26,7 +24,9 @@ bool wdg_get(void)
 
 void wdg_refresh(void)
 {
-	HAL_try( HAL_IWDG_Refresh(&hiwdg) );
+	extern IWDG_HandleTypeDef hiwdg;
+	if (hiwdg.Instance != NULL)
+		HAL_try(HAL_IWDG_Refresh(&hiwdg));
 }
 
 #else

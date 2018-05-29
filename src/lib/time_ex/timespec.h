@@ -85,21 +85,20 @@ static inline struct timespec timespec_from_clock(clock_t v) __pure2;
 static inline struct timespec timespec_from_clock(clock_t v) {
 	return (struct timespec)TIMESPEC_FROM_INT_RATIO(v, 1LL, (long long)CLOCKS_PER_SEC);
 }
-static inline void timespec_normalize(struct timespec *ts) __pure2;
-static inline void timespec_normalize(struct timespec *ts)
+static inline struct timespec timespec_normalize(struct timespec ts) __pure2;
+static inline struct timespec timespec_normalize(struct timespec ts)
 {
-	while(ts->tv_nsec < 0) {
-		ts->tv_nsec += 1000000000LL;
-		if (ts->tv_sec <= 0) {
-			assert(ts->tv_sec == 0);
-			return;
-		}
-		--ts->tv_sec;
+	while(ts.tv_nsec < 0) {
+		ts.tv_nsec += 1000000000LL;
+		assert(!__builtin_sub_overflow_p(ts.tv_sec, 1, (time_t)0));
+		--ts.tv_sec;
 	}
-	while(ts->tv_nsec >= 1000000000LL) {
-		ts->tv_nsec -= 1000000000LL;
-		++ts->tv_sec;
+	while(ts.tv_nsec >= 1000000000LL) {
+		ts.tv_nsec -= 1000000000LL;
+		assert(!__builtin_add_overflow_p(ts.tv_sec, 1, (time_t)0));
+		++ts.tv_sec;
 	}
+	return ts;
 }
 
 #endif /* SRC_LIB_TIME_EX_TIMESPEC_H_ */

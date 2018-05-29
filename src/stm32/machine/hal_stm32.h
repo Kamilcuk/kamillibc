@@ -24,8 +24,6 @@
 #include <stddef.h>
 #include <stdnoreturn.h>
 
-noreturn void HAL_PWR_EnterSTANDBYMode(void);
-
 __STATIC_INLINE void HAL_try(HAL_StatusTypeDef status)
 {
 #ifdef DEBUG
