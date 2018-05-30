@@ -26,9 +26,9 @@ static inline time_ms_t clock_to_ms(clock_t t) __pure2;
 static inline time_ms_t clock_to_ms(clock_t t) {
 	return CLOCK_FROM_INT_RATIO(t, 1, 1000);
 }
-static inline clock_t clock_from_s(time_t ms) __pure2;
-static inline clock_t clock_from_s(time_t ms) {
-	return CLOCK_TO_INT_RATIO(ms, 1, 1);
+static inline clock_t clock_from_s(time_t s) __pure2;
+static inline clock_t clock_from_s(time_t s) {
+	return CLOCK_TO_INT_RATIO(s, 1, 1);
 }
 static inline time_t clock_to_s(clock_t t) __pure2;
 static inline time_t clock_to_s(clock_t t) {
