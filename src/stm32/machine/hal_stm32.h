@@ -24,15 +24,11 @@
 #include <stddef.h>
 #include <stdnoreturn.h>
 
-__STATIC_INLINE void HAL_try(HAL_StatusTypeDef status)
-{
-#ifdef DEBUG
-	static volatile HAL_StatusTypeDef HAL_try_status = HAL_OK;
-	HAL_try_status = status;
-	UNUSED(HAL_try_status);
-#endif
-	assert(status == HAL_OK);
-}
+void HAL_try(HAL_StatusTypeDef status);
+#define HAL_try(status)  do{ \
+	volatile HAL_StatusTypeDef HAL_try_status = (status); \
+	assert(HAL_try_status == HAL_OK); \
+}while(0)
 
 __STATIC_INLINE HAL_StatusTypeDef HAL_try_ok_or_timeout(HAL_StatusTypeDef status)
 {

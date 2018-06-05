@@ -17,26 +17,26 @@
 #include <limits.h>
 #include <assert.h>
 
-__weak_symbol
+__weak
 void abort(void) {
 	NVIC_SystemReset();
 }
 
-__weak_symbol
+__weak
 int pause()
 {
 	pwrmode_enter(PWRMODE_SLEEP);
 	return 0;
 }
 
-__weak_symbol
+__weak
 time_t time(time_t *t)
 {
 	assert(t == NULL);
 	return clock()/CLOCKS_PER_SEC;
 }
 
-__weak_symbol
+__weak
 int nanosleep(const struct timespec *rqtp, struct timespec *rmtp)
 {
 	const clock_t startclock = clock();

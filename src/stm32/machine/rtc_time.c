@@ -19,7 +19,7 @@
 /* Config --------------------------------------------- */
 
 // Unix epoch time in Julian calendar (UnixTime = 00:00:00 01.01.1970 => JDN = 2440588)
-#define UNIX_EPOCH_TIME_IN_JULIAN_DAYS     2440588
+static const uint32_t UNIX_EPOCH_TIME_IN_JULIAN_DAYS = 2440588l;
 
 /* Exported Functions ------------------------------------------ */
 
@@ -37,7 +37,7 @@ bool HW_RTC_IsLeapYear(unsigned int nYear)
 	return false;
 }
 
-RTC_TimeTypeDef HW_RTC_time_t_to_TimeTypeDef(time_t seconds)
+RTC_TimeTypeDef HW_RTC_ticks_to_TimeTypeDef(HW_RTC_ticks_t seconds)
 {
 	RTC_TimeTypeDef ret;
 	ret.Seconds = seconds % 60;
