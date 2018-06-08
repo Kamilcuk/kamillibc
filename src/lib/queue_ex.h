@@ -8,7 +8,7 @@
 #ifndef SRC_LIB_UNI_QUEUE_H_
 #define SRC_LIB_UNI_QUEUE_H_
 
-#include <uni/_queue.h>
+#include <sys/queue.h>
 
 // missing in glibc
 #ifndef SLIST_REMOVE_AFTER

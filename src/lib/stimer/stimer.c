@@ -8,7 +8,8 @@
 
 #include <stimer/stimer_config.h>
 
-#include <uni/queue.h>
+#include <queue_ex.h>
+#include <sys/queue.h>
 #include <cdefs.h>
 
 #include <sys/time.h>
