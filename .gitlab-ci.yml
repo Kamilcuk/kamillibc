@@ -1,13 +1,13 @@
 build_gcc:
   image: gcc
-  scripts:
+  script:
   - apt-get update -y
   - apt-get install -y cmake make
   - make all test
 
 build_arm:
   image: debian
-  scripts:
+  script:
   - apt-get update -y
   - apt-get install -y cmake make gcc-arm-none-eabi
   - make all test
@@ -15,7 +15,7 @@ build_arm:
 
 build_alpine:
   image: alpine
-  scripts:
+  script:
   - apk update
   - apk add gcc cmake musl-dev make bsd-compat-headers linux-headers
   - make all test
