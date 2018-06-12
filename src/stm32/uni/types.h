@@ -18,6 +18,7 @@ typedef enum {
 	PWRMODE_STOP,
 	PWRMODE_STOP_NOSYSTICK,
 	PWRMODE_STANDBY,
+	PWRMODE_SOFT_RESET,
 } pwrmode_t;
 #define __pwrmode_t_defined 1
 #define __UNI_PWRMODE_DEFAULT_IMPLEMENTATION_ENABLED 1

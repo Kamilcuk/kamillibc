@@ -43,6 +43,9 @@ void pwrmode_enter(pwrmode_t mode)
 	case PWRMODE_STANDBY:
 		HAL_PWR_EnterSTANDBYMode();
 		break;
+	case PWRMODE_SOFT_RESET:
+		NVIC_SystemReset();
+		break;
 	default:
 		assert(0);
 		break;

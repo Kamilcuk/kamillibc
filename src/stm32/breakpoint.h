@@ -13,8 +13,13 @@
 
 #ifndef NDEBUG
 #define _breakpoint(x) __BKPT(x)
+#ifdef Coredebug
+#define _breakpoint_isDebuggerConnected()  (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk)
+#else
+#define _breakpoint_isDebuggerConnected()  (1)
+#endif
 #define breakpoint() do{ \
-	if (CoreDebug->DHCSR & CoreDebug_DHCSR_C_DEBUGEN_Msk) { \
+	if (_breakpoint_isDebuggerConnected()) { \
 		_breakpoint(__LINE__); \
 	} \
 }while(0)
