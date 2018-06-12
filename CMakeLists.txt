@@ -1,18 +1,14 @@
-cmake_minimum_required (VERSION 3.9)
+cmake_minimum_required (VERSION 3.7)
 project(kamil C)
 
 # default compile options
+SET(CMAKE_AR "gcc-ar")
+SET(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
+SET(CMAKE_C_ARCHIVE_FINISH   true)
 set(COMMON_FLAGS           "-std=gnu11 -O3 -fPIC -flto -Wall")
 set(CMAKE_ASM_FLAGS        "${COMMON_FLAGS}")
 set(CMAKE_C_FLAGS          "${COMMON_FLAGS}")
 set(CMAKE_EXE_LINKER_FLAGS "${COMMON_FLAGS}")
-
-# git submodule init
-foreach(name Unity pt)
-	if(NOT EXISTS third_party/${name})
-		execute_process(COMMAND git submodule update --init --recursive third_party/${name})
-	endif()
-endforeach()
 
 # get sources
 include_directories(src/linux src/lib)

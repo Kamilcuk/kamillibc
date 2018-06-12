@@ -16,6 +16,8 @@
 
 /* Exported Types ------------------------------------------------------- */
 
+typedef time_t HW_RTC_ticks_t;
+
 /**
  * Represents time elapsed since Epoch
  * 1970-01-01 00:00:00 +0000 (UTC)
@@ -28,7 +30,7 @@ struct HW_RTC_DateTime_s {
 /* Exported Functions --------------------------------------------------- */
 
 bool HW_RTC_IsLeapYear(unsigned int nYear);
-RTC_TimeTypeDef HW_RTC_time_t_to_TimeTypeDef(time_t seconds);
+RTC_TimeTypeDef HW_RTC_ticks_to_TimeTypeDef(HW_RTC_ticks_t seconds);
 time_t HW_RTC_DateTime_to_time_t_from_wiki(struct HW_RTC_DateTime_s dt);
 time_t HW_RTC_DateTime_to_time_t_from_net(struct HW_RTC_DateTime_s dt);
 struct HW_RTC_DateTime_s HW_RTC_time_t_to_DateTime_from_hal(time_t timev);
@@ -37,7 +39,7 @@ struct tm HW_RTC_DateTime_to_tm(struct HW_RTC_DateTime_s dt);
 struct HW_RTC_DateTime_s HW_RTC_tm_to_DateTime(struct tm t);
 bool HW_RTC_DateTime_isValid(const struct HW_RTC_DateTime_s *dt);
 char *HW_RTC_DateTime_print_r(const struct HW_RTC_DateTime_s *dt, char result[26]);
-#define HW_RTC_DateTime_print(dt)  HW_RTC_DateTime_print_r((dt)(char[26]){0})
+#define HW_RTC_DateTime_print(dt)  HW_RTC_DateTime_print_r((dt), (char[26]){0})
 
 int HW_RTC_time_unittest();
 
