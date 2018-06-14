@@ -5,10 +5,7 @@ project(kamil C)
 SET(CMAKE_AR "gcc-ar")
 SET(CMAKE_C_ARCHIVE_CREATE "<CMAKE_AR> qcs <TARGET> <LINK_FLAGS> <OBJECTS>")
 SET(CMAKE_C_ARCHIVE_FINISH   true)
-set(COMMON_FLAGS           "-std=gnu11 -O3 -fPIC -flto -Wall")
-set(CMAKE_ASM_FLAGS        "${COMMON_FLAGS}")
-set(CMAKE_C_FLAGS          "${COMMON_FLAGS}")
-set(CMAKE_EXE_LINKER_FLAGS "${COMMON_FLAGS}")
+set(CMAKE_C_FLAGS          "-std=gnu11 -O3 -Wall -fPIC -flto")
 
 # get sources
 include_directories(src/linux src/lib)

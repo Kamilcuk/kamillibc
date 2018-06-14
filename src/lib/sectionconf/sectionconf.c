@@ -46,7 +46,7 @@ bool sectionconf_header_isValid(const struct sectionconf_header_s *h)
 	return true;
 }
 
-__weak
+__attribute__((__weak__))
 bool sectionconf_isValid(const struct sectionconf_s *s)
 {
 	static_assert(CHAR_BIT == 8, "");
@@ -55,7 +55,7 @@ bool sectionconf_isValid(const struct sectionconf_s *s)
 	return true;
 }
 
-__weak
+__attribute__((__weak__))
 void sectionconf_printf(const struct sectionconf_s *s)
 {
 }

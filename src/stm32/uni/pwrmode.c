@@ -14,7 +14,7 @@
 #include <assert.h>
 #include <unistd.h>
 
-__weak
+__attribute__((__weak__))
 void pwrmode_enter(pwrmode_t mode)
 {
 	switch(mode) {
@@ -53,7 +53,7 @@ void pwrmode_enter(pwrmode_t mode)
 	wdg_refresh();
 }
 
-__weak
+__attribute__((__weak__))
 void pwrmode_restore(pwrmode_t mode)
 {
 	__USE(mode);

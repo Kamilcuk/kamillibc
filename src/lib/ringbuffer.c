@@ -16,7 +16,7 @@
 
 /* Private Functions ------------------------------------------------------- */
 
-static inline __pure2 size_t LIMIT(size_t val, size_t size)
+static inline size_t LIMIT(size_t val, size_t size)
 {
 #if RB_SIZE_MUST_BE_A_POWER_OF_2
 	assert(RB_ISPOWEROF2(size));

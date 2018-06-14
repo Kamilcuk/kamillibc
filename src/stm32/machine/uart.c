@@ -132,7 +132,7 @@ void HW_UART_IDLE_IRQHandler(UART_HandleTypeDef * restrict huart)
 #endif
 }
 
-__weak_symbol
+__attribute__((__weak__))_symbol
 void HW_UART_IdleCallback(UART_HandleTypeDef * restrict huart)
 {
 

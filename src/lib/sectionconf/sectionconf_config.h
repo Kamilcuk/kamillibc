@@ -17,6 +17,6 @@ struct sectionconf_s {
 	long my_mymber;
 
 
-} __packed;
+} __attribute__((__packed__));
 
 #endif /* SRC_LIB_SECTIONCONF_SECTIONCONF_CONFIG_H_ */

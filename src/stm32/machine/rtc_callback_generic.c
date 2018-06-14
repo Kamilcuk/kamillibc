@@ -38,13 +38,13 @@ static uint32_t HW_RTC_ticks_to_time_getPresc(RTC_HandleTypeDef *hrtc)
 			1;
 }
 
-__weak
+__attribute__((__weak__))
 time_t HW_RTC_ticks_to_time_t_Callback(RTC_HandleTypeDef *hrtc, time_t t)
 {
 	return t * HW_RTC_ticks_to_time_getPresc(hrtc) / HW_RTC_ticks_to_time_getFreq();
 }
 
-__weak
+__attribute__((__weak__))
 time_t HW_RTC_time_t_to_ticks_Callback(RTC_HandleTypeDef *hrtc, time_t t)
 {
 	return t * HW_RTC_ticks_to_time_getFreq() / HW_RTC_ticks_to_time_getPresc(hrtc);

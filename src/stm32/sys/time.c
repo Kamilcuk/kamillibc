@@ -10,12 +10,12 @@
 #include <cdefs.h>
 #include <uni/rtc.h>
 
-__weak
+__attribute__((__weak__))
 clock_t clock() {
 	return clock_from_ms(HAL_GetTick());
 }
 
-__weak
+__attribute__((__weak__))
 int _gettimeofday_r(struct _reent *r, struct timeval *ptimeval, void *ptimezone)
 {
 	__USE(r);

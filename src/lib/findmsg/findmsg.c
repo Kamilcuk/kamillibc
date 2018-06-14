@@ -24,7 +24,7 @@
 
 /* Weak function ------------------------------------------------------ */
 
-__weak
+__attribute__((__weak__))
 ssize_t findmsg_readtimeout(int fd, char buf[restrict], size_t size,
 		clock_t * restrict timeout)
 {
