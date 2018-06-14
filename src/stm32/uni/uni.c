@@ -18,7 +18,7 @@
 #define STDERR_BUFFER_SIZE 256
 #endif
 
-__constructor __weak
+__attribute__((__constructor__, __weak__))
 void uni_init_std(void)
 {
 	static char stdout_buffer[STDOUT_BUFFER_SIZE];
