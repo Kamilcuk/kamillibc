@@ -15,7 +15,7 @@
 #include <stdlib.h>
 #include <assert.h>
 
-static inline void printbinary_r_in_char(int width, const char *v, char *result[-width])
+static inline void printbinary_in_char(int width, const char *v, char *result[-width])
 {
 	for(unsigned int i = 0; i < width; ++i) {
 		const char res = ( ( *v >> i ) & 1 ) + '0';
@@ -23,7 +23,7 @@ static inline void printbinary_r_in_char(int width, const char *v, char *result[
 	}
 }
 
-static char *printbinary_r_in(int width, const char *v, char result[width+1])
+static char *printbinary_in(int width, const char *v, char result[width+1])
 {
 	result = &result[width];
 	result[0] = '\0';
@@ -34,13 +34,13 @@ static char *printbinary_r_in(int width, const char *v, char result[width+1])
     return result;
 }
 
-char *printbinary_r(int width, uintmax_t v, char result[width+1])
+char *printbinary(int width, uintmax_t v, char result[width+1])
 {
 	assert(result != NULL);
 	return printbinary_r_in(width, (const char *)&v, result);
 }
 
-char *printuint64_r(uint64_t v, char result[21])
+char *printuint64(uint64_t v, char result[21])
 {
 	assert(result != NULL);
 	result = &result[20];
@@ -59,24 +59,13 @@ char *printuint64_r(uint64_t v, char result[21])
 	return result;
 }
 
-char *printuint64(uint64_t v) {
-	static char bfr[21];
-	return printuint64_r(v, bfr);
-}
-
-char *printint64_r(int64_t v, char result[21])
+char *printint64(int64_t v, char result[21])
 {
 	result = printuint64_r(llabs(v), &result[1]);
 	if ( v < 0 ) {
 		(--result)[0] = '-';
 	}
 	return result;
-}
-
-char *printint64(int64_t v)
-{
-	static char result[21];
-	return printint64_r(v, result);
 }
 
 int printex_unittest()
