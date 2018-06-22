@@ -28,4 +28,7 @@ void nanodelay(time_t seconds, time_ns_t nanoseconds);
 int poll_in(struct pollfd fds[], nfds_t nfds, int timeout);
 int poll_out(struct pollfd fds[], nfds_t nfds, int timeout);
 
+int poll_in1(int fd, int timeout);
+int poll_out1(int fd, int timeout);
+
 #endif /* _UNISTD_EX_H_ */

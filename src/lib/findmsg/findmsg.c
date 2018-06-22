@@ -25,8 +25,8 @@
 /* Weak function ------------------------------------------------------ */
 
 __attribute__((__weak__))
-ssize_t findmsg_readtimeout(int fd, char buf[restrict], size_t size,
-		clock_t * restrict timeout)
+ssize_t findmsg_readtimeout(int fd, char buf[], size_t size,
+		clock_t timeout)
 {
 	// try to read from fd
 	const ssize_t readret = read(fd, buf, size);
@@ -36,7 +36,7 @@ ssize_t findmsg_readtimeout(int fd, char buf[restrict], size_t size,
 			.fd = fd,
 			.events = POLLIN,
 	};
-	const int poll_timeout = clocktimeout_timeout_to_polltimeout(timeout);
+	const int poll_timeout = timeout * 1000 / CLOCKS_PER_SEC;
 	const int pollret = poll(&pollfd, 1, poll_timeout);
 	if(pollret <= 0) return pollret;
 	assert(pollfd.revents&POLLIN);
@@ -51,7 +51,7 @@ static ssize_t findmsg_readAtLeastChars(struct findmsg_s *t, size_t N, clock_t *
 {
 	if (t->pos >= N) return 0;
 	const size_t toread = N - t->pos;
-	const ssize_t ret = findmsg_readtimeout(t->fd, &t->buf[t->pos], toread, timeout);
+	const ssize_t ret = findmsg_readtimeout(t->fd, &t->buf[t->pos], toread, timeout != NULL ? *timeout : (clock_t)-1);
 	clocktimeout_update(start, timeout);
 	if (ret <= 0) return ret;
 	assert((size_t)ret <= toread);

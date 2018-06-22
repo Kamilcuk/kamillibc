@@ -38,17 +38,3 @@ bool clocktimeout_expired(clock_t * restrict start, clock_t * restrict timeout)
 	return false;
 }
 
-int clocktimeout_timeout_to_polltimeout(clock_t * restrict timeout)
-{
-	int polltimeout;
-	if (timeout == NULL) {
-		polltimeout = -1;
-	} else {
-		clock_t timeout_poll = *timeout;
-		if (CLOCKS_PER_SEC != 1000) {
-			timeout_poll *= 1000 / CLOCKS_PER_SEC;
-		}
-		polltimeout = timeout_poll > INT_MAX ? INT_MAX : timeout_poll;
-	}
-	return polltimeout;
-}

@@ -18,7 +18,7 @@
 
 /* Weak functions --------------------------------------------------------- */
 
-ssize_t findmsg_readtimeout(int fd, char buf[], size_t size, clock_t *timeout);
+ssize_t findmsg_readtimeout(int fd, char buf[], size_t size, clock_t timeout);
 
 /* Exported Functions ----------------------------------------------------- */
 

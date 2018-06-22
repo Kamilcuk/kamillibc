@@ -28,16 +28,16 @@ static char *printbinary_in(int width, const char *v, char result[width+1])
 	result = &result[width];
 	result[0] = '\0';
     for(; width >= CHAR_BIT; width -= CHAR_BIT, ++v) {
-    	printbinary_r_in_char(CHAR_BIT, v, &result);
+    	printbinary_in_char(CHAR_BIT, v, &result);
     }
-    printbinary_r_in_char(width, v, &result);
+    printbinary_in_char(width, v, &result);
     return result;
 }
 
 char *printbinary(int width, uintmax_t v, char result[width+1])
 {
 	assert(result != NULL);
-	return printbinary_r_in(width, (const char *)&v, result);
+	return printbinary_in(width, (const char *)&v, result);
 }
 
 char *printuint64(uint64_t v, char result[21])
@@ -46,7 +46,7 @@ char *printuint64(uint64_t v, char result[21])
 	result = &result[20];
 	result[0] = '\0';
 	for (bool first = true; v || first; first = false) {
-#if printuint64_r_USE_DIV
+#if printuint64_USE_DIV
 		div_t d = div(v, 10);
 		const char c = d.qout + '0';
 		v = d.rem;
@@ -61,7 +61,7 @@ char *printuint64(uint64_t v, char result[21])
 
 char *printint64(int64_t v, char result[21])
 {
-	result = printuint64_r(llabs(v), &result[1]);
+	result = printuint64(llabs(v), &result[1]);
 	if ( v < 0 ) {
 		(--result)[0] = '-';
 	}
@@ -73,23 +73,23 @@ int printex_unittest()
 #define TEST(expr) do{ if(!(expr)) { assert(0); return -__LINE__; } }while(0)
 	char *tmp, buf[65];
 
-	tmp = printuint64_r(1234567654321, buf);
+	tmp = printuint64(1234567654321, buf);
 	TEST(tmp >= &buf[0] && tmp < &buf[21]);
 	TEST(!strcmp(tmp, "1234567654321"));
 
-	tmp = printint64_r(1234567654321, buf);
+	tmp = printint64(1234567654321, buf);
 	TEST(tmp >= &buf[0] && tmp < &buf[21]);
 	TEST(!strcmp(tmp, "1234567654321"));
 
-	tmp = printint64_r(-1234567654321, buf);
+	tmp = printint64(-1234567654321, buf);
 	TEST(tmp >= &buf[0] && tmp < &buf[21]);
 	TEST(!strcmp(tmp, "-1234567654321"));
 
-	tmp = printbinary_r(2, 0x2, buf);
+	tmp = printbinary(2, 0x2, buf);
 	TEST(tmp == buf);
 	TEST(!strcmp(buf, "10"));
 
-	tmp = printbinary_r(64, 0xcd0aa5f8cc389648, buf);
+	tmp = printbinary(64, 0xcd0aa5f8cc389648, buf);
 	TEST(tmp == buf);
 	TEST(!strcmp(tmp, "1100110100001010101001011111100011001100001110001001011001001000"));
 
