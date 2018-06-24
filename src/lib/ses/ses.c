@@ -8,6 +8,10 @@
 
 #include <ses/ses.h>
 
+#if SES_USE_ao_string_tokenize
+#include "tokenize/ao_string_tokenize.h"
+#endif
+
 #include <unistd.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -30,7 +34,7 @@ static inline int ses_tokenize_ao_string_tokenize(char *argv[restrict], size_t a
 	int argc;
 	const token_list_t * const p = ao_string_tokenize(arg);
 	if (p == NULL) {
-		printf("Parsing string ``%s'' failed:\n\terrno %d\n", arg, errno);
+		fprintf(stderr, "Parsing string ``%s'' failed:\n\terrno %d\n", arg, errno);
 		argc = SES_ENOMEM;
 	} else {
 		//printf("Parsed string ``%s''\ninto %d tokens:\n", arg, p->tkn_ct);
@@ -163,10 +167,10 @@ void ses_run_line(const struct ses_cmds_s cmds[restrict], size_t cmdscnt,
 	const int argc = ses_tokenize(argv, argvcnt, line);
 	if (argc < 1) {
 		if (argc == SES_ENOMEM) {
-			printf("Out of memory for function arguments!\n");
+			fprintf(stderr, "Out of memory for function arguments!\n");
 			return;
 		}
-		printf("Unhandled ses_tokenize error: %d\n", argc);
+		fprintf(stderr, "Unhandled ses_tokenize error: %d\n", argc);
 		return;
 	}
 
@@ -174,11 +178,11 @@ void ses_run_line(const struct ses_cmds_s cmds[restrict], size_t cmdscnt,
 	const int ret = ses_system(cmds, cmdscnt, argc, argv, &exit_status);
 	if (ret != 0) {
 		if (ret == SES_ECOMMAND_NOT_FOUND) {
-			printf("%s: Command not found.\n", argv[0]);
-			printf(" Type 'help' for commands list.\n");
+			fprintf(stderr, "%s: Command not found.\n"
+					"Type 'help' for commands list.\n", argv[0]);
 			return;
 		}
-		printf("Unhandled ses_system error: %d\n", ret);
+		fprintf(stderr, "Unhandled ses_system error: %d\n", ret);
 		return;
 	}
 	if (exit_status != 0) {
