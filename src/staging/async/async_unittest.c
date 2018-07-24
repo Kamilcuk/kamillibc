@@ -25,6 +25,13 @@
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #endif
 
+#define dbgln(str, ...) ((void)0)
+#ifndef dbgln
+#define dbgln(str, ...)  fprintf(stderr, "%s:%d: " str "\n", __func__, __LINE__, ##__VA_ARGS__)
+#endif
+#define TEST(expr) do{ if (!(expr)) { fprintf(stderr, "%s:%d: %s failed!\n", __func__, __LINE__, #expr); return -__LINE__; } }while(0)
+#define try(expr) do{ if (!(expr)) { fprintf(stderr, "%s:%d: %s failed!\n", __func__, __LINE__, #expr); abort(); } }while(0)
+
 static void *f_ret_1(void *arg) {
 	(void)arg;
 	return (void*)(uintptr_t)1;
@@ -55,18 +62,25 @@ static long long timespec_sub_ms(struct timespec *tm1, struct timespec *tm2) {
 }
 static void *f_lock_mutex(void *arg) {
 	pthread_mutex_t *mutex = arg;
-	pthread_mutex_lock(mutex);
-	pthread_mutex_unlock(mutex);
+	assert(mutex != NULL);
+	try(pthread_mutex_lock(mutex) == 0);
+	try(pthread_mutex_unlock(mutex) == 0);
+	return (void*)(uintptr_t)1;
+}
+static void *f_unlock_mutex(void *arg) {
+	pthread_mutex_t *mutex = arg;
+	assert(mutex != NULL);
+	try(pthread_mutex_unlock(mutex) == 0);
 	return (void*)(uintptr_t)1;
 }
 static struct timespec measure_start(void) {
 	struct timespec tm;
-	clock_gettime(CLOCK_MONOTONIC, &tm);
+	try(clock_gettime(CLOCK_MONOTONIC, &tm) == 0);
 	return tm;
 }
 static long long measure_stop_ms(struct timespec tm1) {
 	struct timespec tm2;
-	clock_gettime(CLOCK_MONOTONIC, &tm2);
+	TEST(clock_gettime(CLOCK_MONOTONIC, &tm2) == 0);
 	return timespec_sub_ms(&tm1, &tm2);
 }
 static void *f_mul_2_void(void *arg) {
@@ -103,46 +117,49 @@ typedef struct {
 static void *f_args2(void *arg0) {
 	args2_t *t = arg0;
 	assert(t != NULL);
-	pthread_mutex_lock(&t->mutex);
-	pthread_mutex_unlock(&t->mutex);
+	try(pthread_mutex_lock(&t->mutex) == 0);
+	try(pthread_mutex_unlock(&t->mutex) == 0);
 	return (void*)t->retval;
 }
 
+static void *async_unittest_f2(void *arg)
+{
+	dbgln("");
+	pthread_mutex_t my_mutex = PTHREAD_MUTEX_INITIALIZER;
+	pthread_mutex_t *mutex = arg;
+	if (arg == NULL) {
+		mutex = &my_mutex;
+	}
 
-//#define dbgln(str, ...) ((void)0)
-#ifndef dbgln
-#define dbgln(str, ...)  fprintf(stderr, str "\n", ##__VA_ARGS__)
-#endif
-#define TEST(expr) do{ if (!(expr)) { fprintf(stderr, "%s:%d: %s failed!\n", __func__, __LINE__, #expr); return -__LINE__; } }while(0)
+	try(pthread_mutex_lock(mutex) == 0);
+	async_t *t = async_create(f_unlock_mutex, mutex);
+	try(t != NULL);
+	try(pthread_mutex_lock(mutex) == 0);
+	try(pthread_mutex_unlock(mutex) == 0);
+	async_detach(&t);
+
+	if (arg == NULL) {
+		pthread_mutex_destroy(&my_mutex);
+	}
+	return NULL;
+}
 
 int async_unittest(void) {
-	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+	for (int i = 0; i < 10; ++i) {
+		TEST(async_unittest_f2(NULL) == NULL);
+	}
 
-	dbgln("-- %d ---------------------------------", __LINE__);
-	for (int i = 0; i < 50; ++i) {
-		TEST(pthread_mutex_lock(&mutex) == 0);
-		async_t *t = async_create(f_lock_mutex, &mutex);
-		TEST(t != NULL);
-		pthread_mutex_unlock(&mutex);
-		async_cancel(&t);
+	async_t *t_f2[5];
+	for (size_t i = 0; i < sizeof(t_f2)/sizeof(t_f2[0]); ++i) {
+		t_f2[i] = async_create(async_unittest_f2, NULL);
+		TEST(t_f2[i] != NULL);
 	}
-	return 0;
-	dbgln("-- %d ---------------------------------", __LINE__);
-	{
-		TEST(pthread_mutex_lock(&mutex) == 0);
-		async_t *t = async_create(f_lock_mutex, &mutex);
-		TEST(t != NULL);
-		async_cancel(&t);
-		pthread_mutex_unlock(&mutex);
+	for (size_t i = 0; i < sizeof(t_f2)/sizeof(t_f2[0]); ++i) {
+		async_detach(&t_f2[i]);
 	}
-	dbgln("-- %d ---------------------------------", __LINE__);
-	{
-		TEST(pthread_mutex_lock(&mutex) == 0);
-		async_t *t = async_create(f_lock_mutex, &mutex);
-		TEST(t != NULL);
-		async_detach(&t);
-		pthread_mutex_unlock(&mutex);
-	}
+
+
+	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	dbgln("-- %d ---------------------------------", __LINE__);
 	{
 		TEST(pthread_mutex_lock(&mutex) == 0);
@@ -259,7 +276,7 @@ int async_unittest(void) {
 	async_t *t0 = async_create(f_ret_1, NULL);
 	TEST(t0 != NULL);
 
-	{
+	for (int i = 0; i < 50; ++i) {
 		async_t *t = async_create_chain(
 				f_ret_1, (void*)(uintptr_t)1,
 				NULL
@@ -268,7 +285,7 @@ int async_unittest(void) {
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
-	{
+	for (int i = 0; i < 50; ++i) {
 		async_t *t = async_then_chain(
 				t0,
 				f_mul_2,
@@ -278,7 +295,7 @@ int async_unittest(void) {
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
-	{
+	for (int i = 0; i < 50; ++i) {
 		async_t *t = async_create(f_ret_1, (void*)(uintptr_t)1);
 		async_t *t2 = async_then(t, f_mul_2);
 		async_detach(&t);
@@ -286,7 +303,7 @@ int async_unittest(void) {
 		async_cancel(&t2);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
-	{
+	for (int i = 0; i < 50; ++i) {
 		async_t *t = async_create_chain(
 				f_ret_1, (void*)(uintptr_t)1,
 				f_mul_2,
@@ -296,7 +313,7 @@ int async_unittest(void) {
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
-	{
+	for (int i = 0; i < 50; ++i) {
 		async_t *t = async_create_chain(
 				f_ret_1, (void*)(uintptr_t)1,
 				f_mul_2,
@@ -307,7 +324,7 @@ int async_unittest(void) {
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
-	{
+	for (int i = 0; i < 50; ++i) {
 		async_t *t = async_then_chain(
 				t0,
 				f_mul_2,
@@ -318,7 +335,7 @@ int async_unittest(void) {
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
-	{
+	for (int i = 0; i < 50; ++i) {
 		async_t *t = async_create_chain(
 				f_ret_1, (void*)(uintptr_t)1,
 				f_add_2,
@@ -331,7 +348,7 @@ int async_unittest(void) {
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
-	{
+	for (int i = 0; i < 50; ++i) {
 		async_t *t1 = async_create(f_ret_1, NULL);
 		TEST(t1 != NULL);
 		async_t *t = async_then_chain(

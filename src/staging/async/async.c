@@ -81,7 +81,7 @@ static inline void _dbgln(int line, const char func[], const char fmt[], ...)
 	try(pthread_mutex_unlock(&sout_mutex) == 0);
 	va_end(va);
 }
-#define dbgln(str, ...)   _dbgln(__LINE__, __func__, str, __VA_ARGS__)
+#define dbgln(str, ...)   _dbgln(__LINE__, __func__, str,  ##__VA_ARGS__)
 #endif
 
 /* Private Functions Forward Declarations ---------------------------------- */
@@ -91,6 +91,20 @@ static void async_refref_up(async_t *t);
 static void async_refref_down(async_t *t);
 
 /* Private Functions ------------------------------------------------------- */
+
+static inline int async_mutex_lock(async_t *t)
+{
+	assert(t != NULL);
+	dbgln("%p %u", (void*)t, t->mutex.__data.__nusers);
+	return pthread_mutex_lock(&t->mutex);
+}
+
+static inline int async_mutex_unlock(async_t *t)
+{
+	assert(t != NULL);
+	dbgln("%p %u", (void*)t, t->mutex.__data.__nusers);
+	return pthread_mutex_unlock(&t->mutex);
+}
 
 static int async_poll_ignore_signal(struct pollfd *fds, nfds_t nfds, int timeout)
 {
@@ -117,9 +131,9 @@ static void async_ref_up_in(async_t *t)
 static void async_ref_up(async_t *t)
 {
 	assert(t != NULL);
-	tryret(pthread_mutex_lock(&t->mutex) == 0);
+	tryret(async_mutex_lock(t) == 0);
 	async_ref_up_in(t);
-	tryret(pthread_mutex_unlock(&t->mutex) == 0);
+	tryret(async_mutex_unlock(t) == 0);
 }
 
 static bool async_ref_down_in(async_t *t)
@@ -131,7 +145,7 @@ static bool async_ref_down_in(async_t *t)
 	if (t->refcnt == 0) {
 		dbgln("%p ref=%u freeing", (void*)t, t->refcnt);
 		try(pthread_detach(t->thread) == 0);
-		try(pthread_mutex_unlock(&t->mutex) == 0);
+		try(async_mutex_unlock(t) == 0);
 		async_free(t);
 		return true;
 	} else {
@@ -144,9 +158,9 @@ static void async_ref_down(async_t *t)
 {
 	assert(t != NULL);
 	dbgln("%p", (void*)t);
-	try(pthread_mutex_lock(&t->mutex) == 0);
+	try(async_mutex_lock(t) == 0);
 	if (!async_ref_down_in(t)) {
-		try(pthread_mutex_unlock(&t->mutex) == 0);
+		try(async_mutex_unlock(t) == 0);
 	}
 }
 
@@ -154,11 +168,11 @@ static void async_thread_cleanup(void *arg0)
 {
 	async_t *t = arg0;
 	assert(t != NULL);
-	try(pthread_mutex_lock(&t->mutex) == 0);
+	try(async_mutex_lock(t) == 0);
 	if (!async_ref_down_in(t)) {
 		dbgln("%p not freed, readying", (void*)t);
 		async_notify_ready(t);
-		try(pthread_mutex_unlock(&t->mutex) == 0);
+		try(async_mutex_unlock(t) == 0);
 	}
 }
 
@@ -168,7 +182,7 @@ static void *async_thread(void *arg0)
 	assert(t != NULL);
 	pthread_cleanup_push(async_thread_cleanup, t);
 	dbgln("%p startup", (void*)t);
-	try(pthread_mutex_unlock(&t->mutex) == 0);
+	try(async_mutex_unlock(t) == 0);
 
 	assert(0 <= t->type && t->type <= (int)ASYNC_TYPE_MAX);
 	switch(t->type) {
@@ -253,6 +267,8 @@ static void async_refref_down(async_t *t)
 
 static int async_start(async_t *t)
 {
+	if (t->started == true) return 0;
+
 	async_ref_up_in(t);
 	t->started = true;
 
@@ -263,25 +279,30 @@ static int async_start(async_t *t)
 	dbgln("%p thread=%ld waiting for startup", (void*)t, (unsigned long)t->thread);
 	{
 		const struct timespec timeout = ASYNC_THREAD_STARTUP_TIME_TIMESPEC;
-		struct timespec abstime = { .tv_sec = 1, };
+		struct timespec abstime;
 		try(clock_gettime(CLOCK_REALTIME, &abstime) == 0);
 		abstime.tv_sec += timeout.tv_sec;
 		abstime.tv_nsec += timeout.tv_nsec;
-		const int ret = pthread_mutex_timedlock(&t->mutex, &timeout);
-		try(ret == 0 || ret == ETIMEDOUT);
+		const int ret = pthread_mutex_timedlock(&t->mutex, &abstime);
+		if (ret != 0) {
+			goto PTHREAD_MUTEX_TIMEDLOCK_FAIL;
+		}
 	}
-	try(pthread_mutex_unlock(&t->mutex) == 0);
+	try(async_mutex_unlock(t) == 0);
 	dbgln("%p thread=%ld started up", (void*)t, (unsigned long)t->thread);
 
 	return 0;
 
+	PTHREAD_MUTEX_TIMEDLOCK_FAIL:
 	try(pthread_cancel(t->thread) == 0);
 	try(pthread_detach(t->thread) == 0);
 	PTHREAD_CREATE_FAIL:
 	return -1;
 }
 
-static async_t *async_create_ex_in(enum async_attr_e attr, enum async_type_e type, union async_call_u call)
+/* Alloc and Free Functions ------------------------------------------------------------- */
+
+async_t *async_create_ex(enum async_attr_e attr, enum async_type_e type, union async_call_u call)
 {
 	assert(!(attr & ~1));
 	assert(0 <= type && type <= (int)ASYNC_TYPE_MAX);
@@ -313,7 +334,7 @@ static async_t *async_create_ex_in(enum async_attr_e attr, enum async_type_e typ
 	if (pthread_mutex_init(&t->mutex, NULL)) {
 		goto PTHREAD_MUTEX_INIT_MUTEX_FAIL;
 	}
-	try(pthread_mutex_lock(&t->mutex) == 0);
+	try(async_mutex_lock(t) == 0);
 
 	t->refcnt = 1;
 	t->attr = attr;
@@ -345,20 +366,23 @@ static async_t *async_create_ex_in(enum async_attr_e attr, enum async_type_e typ
 	if (t->type == ASYNC_TYPE_WHENALL || t->type == ASYNC_TYPE_WHENANY) {
 		free(t->c.w.asyncs);
 	}
-	(void)pthread_mutex_unlock(&t->mutex);
+	(void)async_mutex_unlock(t);
 	try(pthread_mutex_destroy(&t->mutex) == 0);
 	PTHREAD_MUTEX_INIT_MUTEX_FAIL:
 	try(close(t->readyfd) == 0);
 	EVENTFD_FAIL:
 	free(t);
 	MALLOC_FAIL:
+	dbgln("fail");
 	return NULL;
 }
 
 static void async_free(async_t *t)
 {
 	assert(t != NULL);
-	assert((pthread_mutex_trylock(&t->mutex) == 0 ? pthread_mutex_unlock(&t->mutex), 1 : 0));
+	if (t->cleanup) {
+		t->cleanup(t);
+	}
 	async_refref_down(t);
 	if (t->type == ASYNC_TYPE_WHENALL || t->type == ASYNC_TYPE_WHENANY) {
 		free(t->c.w.asyncs);
@@ -369,32 +393,7 @@ static void async_free(async_t *t)
 	return;
 }
 
-/* Exported Functions ------------------------------------------------------------- */
-
-async_t *async_create_ex(enum async_attr_e attr, enum async_type_e type, union async_call_u call)
-{
-	return async_create_ex_in(attr, type, call);
-}
-
-async_t *async_create(void *(*f)(void*), void *arg)
-{
-	return async_create_ex(0, ASYNC_TYPE_VOID, (union async_call_u){ .v = {f, arg}});
-}
-
-async_t *async_then(async_t *arg, void *(*f)(async_t*))
-{
-	return async_create_ex(0, ASYNC_TYPE_THEN, (union async_call_u){ .t = {f, arg}});
-}
-
-async_t *async_when_all(async_t *asyncs[], size_t asyncs_cnt, void *(*f)(async_t *asyncs[], size_t asyncs_cnt))
-{
-	return async_create_ex(0, ASYNC_TYPE_WHENALL, (union async_call_u){ .w = {f, asyncs, asyncs_cnt}});
-}
-
-async_t *async_when_any(async_t *asyncs[], size_t asyncs_cnt, void *(*f)(async_t *asyncs[], size_t asyncs_cnt))
-{
-	return async_create_ex(0, ASYNC_TYPE_WHENANY, (union async_call_u){ .w = {f, asyncs, asyncs_cnt}});
-}
+/* Chain Functions --------------------------------------------------------------- */
 
 async_t *async_create_chain(void *(*f)(void*), void *arg, ...)
 {
@@ -466,12 +465,12 @@ void async_cancel(async_t **t0)
 	async_t *t = *t0;
 	assert(t != NULL);
 	dbgln("%p ref=%u", (void*)t, t->refcnt);
-	try(pthread_mutex_lock(&t->mutex) == 0);
+	try(async_mutex_lock(t) == 0);
 	if (!async_is_ready(t)) {
 		try(pthread_cancel(t->thread) == 0);
 	}
 	if (!async_ref_down_in(t)) {
-		try(pthread_mutex_unlock(&t->mutex) == 0);
+		try(async_mutex_unlock(t) == 0);
 	}
 	*t0 = NULL;
 }
@@ -489,12 +488,12 @@ int async_is_ready(async_t *t)
 void *async_get(async_t *t)
 {
 	assert(t != NULL);
-	dbgln("%p thread=%ld", (void*)t, t->thread);
-	try(async_wait_for(t, -1) == true);
-	try(pthread_mutex_lock(&t->mutex) == 0);
+	dbgln("%p thread=%lu", (void*)t, (unsigned long)t->thread);
+	try(async_wait_for(t, -1) == 1);
+	try(async_mutex_lock(t) == 0);
 	void * const ret = t->returned;
-	try(pthread_mutex_unlock(&t->mutex) == 0);
-	dbgln("%p thread=%ld returned %p", (void*)t, t->thread, ret);
+	try(async_mutex_unlock(t) == 0);
+	dbgln("%p thread=%lu returned %p", (void*)t, (unsigned long)t->thread, ret);
 	return ret;
 }
 
@@ -507,10 +506,25 @@ int async_wait(async_t *t)
 
 int async_wait_for(async_t *t, int timeout)
 {
+	assert(t != NULL);
     struct pollfd fds[1];
     fds[0].events = POLLIN;
     fds[0].fd = t->readyfd;
     return async_poll_ignore_signal(fds, 1, timeout);
+}
+
+int async_cleanup_reg(async_t *t, void (*cleanup_func)(async_t *))
+{
+	assert(t != NULL);
+	assert(cleanup_func != NULL);
+	tryret(async_mutex_lock(t), -1);
+	if (!async_is_ready(t)) {
+		t->cleanup = cleanup_func;
+	} else {
+		cleanup_func(t);
+	}
+	tryret(async_mutex_unlock(t), -1);
+	return 0;
 }
 
 /* Asyncs -------------------------------------------------------------- */

@@ -1,8 +1,9 @@
-# Build directory
 build
-# eclipse settings dir
+.tracecompass
 .settings
+vgcore*
 
+## defaults
 # Prerequisites
 *.d
 
