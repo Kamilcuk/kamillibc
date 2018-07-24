@@ -1,16 +1,4 @@
-
-.PHONY: all Debug Release RelWithDebInfo MinSizeRel
-all Debug Release RelWithDebInfo MinSizeRel: CMAKE_BUILD_TYPE=$@
-all Debug Release RelWithDebInfo MinSizeRel:
-	cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE)
-	$(MAKE) -Cbuild
-	
-.PHONY: test
-test:
-	$(MAKE) -Cbuild test
-
-.PHONY: clean
-clean:
-	rm -rf build
-
-
+all:
+	gcc -std=gnu17 -g3 -O3 -x c -o /tmp/a.out -Wall -Wextra -pedantic -lpthread src/staging/async/async.c src/staging/async/async_unittest.c
+	#timeout 3 /tmp/a.out
+	timeout 5 valgrind --leak-check=full /tmp/a.out 

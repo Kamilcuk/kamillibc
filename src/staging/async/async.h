@@ -12,42 +12,71 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <pthread.h>
+#include <stdarg.h>
 
-typedef void *(*async_funcptr_t)();
+#define ASYNC_THREAD_STARTUP_TIME_TIMESPEC  { .tv_sec = 1, .tv_nsec = 0 }
 
 typedef struct async_s async_t;
+typedef void *(*async_funcptr_void_t)(void *arg);
+typedef void *(*async_funcptr_then_t)(async_t *async);
+typedef void *(*async_funcptr_when_t)(async_t *asyncs[], size_t asyncs_len);
+
+enum async_type_e {
+	ASYNC_TYPE_VOID,
+	ASYNC_TYPE_THEN,
+	ASYNC_TYPE_WHENALL,
+	ASYNC_TYPE_WHENANY,
+};
+enum {
+	ASYNC_TYPE_MAX = ASYNC_TYPE_WHENANY,
+};
+enum async_attr_e {
+	ASYNC_ATTR_ASYNC        = 0<<0,
+	ASYNC_ATTR_DEFERRED     = 1<<0
+};
+
+union async_call_u {
+	// valid only if type == ASYNC_TYPE_VOID
+	struct async_call_void_s {
+		void *(*f)(void *);
+		void *arg;
+	} v;
+	// valid only if type == ASYNC_TYPE_THEN
+	struct async_call_async_s {
+		void *(*f)(async_t *);
+		async_t *arg;
+	} t;
+	// valid only if type = ASYNC_TYPE_WHEN*
+	struct async_call_asyncs_s {
+		void *(*f)(async_t *asyncs[], size_t asyncs_cnt);
+		async_t **asyncs;
+		size_t asyncs_cnt;
+	} w;
+};
 
 struct async_s {
-	// created thread
-	pthread_t thread;
+	union {
+		pthread_t thread;
+		pid_t pid;
+	};
 
 	struct {
 		// mutex protecting this struct
 		pthread_mutex_t mutex;
-		// Becomes the value of f() returned after readyfd is ready
-		void *returned;
-		// allocated file descriptor of the process shared with thread
-		// stays open until thread is executing
+		// Eventfd file descriptor shared with calling thread
 		int readyfd;
-		// Means that calling thread called async_detach or async_cancel
-		// and our thread should deallocate memory itself;
-		bool do_free;
+		// Becomes the returned value of called function after readyfd is ready
+		void *returned;
+		// Reference count
+		unsigned int refcnt;
+		// thread started?
+		bool started;
 	};
 
-	// caller function to be called
-	union {
-		async_funcptr_t f;
-		void *(*f_voidptr)(void *);
-		void *(*f_asyncarr)(async_t *asyncs[], size_t asyncs_cnt);
-	};
-	// arguments passed to function f
-	union {
-		void *arg;
-		struct {
-			async_t **asyncs;
-			size_t asyncs_cnt;
-		};
-	};
+	enum async_attr_e attr;
+	enum async_type_e type;
+	union async_call_u c;
+
 };
 
 /* Exported Functions ---------------------------------------------------------------- */
@@ -56,18 +85,15 @@ struct async_s {
  * @{
  */
 
+__attribute__((__warn_unused_result__))
+async_t *async_create_ex(enum async_attr_e attr, enum async_type_e type, union async_call_u call);
+
 /**
  * Create new async object. Run function f with argument arg.
  * @return Valid async_t object on success. NULL on error.
  */
 __attribute__((__nonnull__(1), __warn_unused_result__))
 async_t *async_create(void *(*f)(void*), void *arg);
-/**
- * Same as async_create, but to function f is passed the returned value.
- * @return Valid async_t object on success. NULL on error.
- */
-__attribute__((__nonnull__(1), __warn_unused_result__))
-async_t *async_create_arg_self(void *(*f)(async_t*));
 /**
  * Attach the continuation function f to t.
  * @return Valid async_t object on success. NULL on error.
@@ -86,6 +112,15 @@ async_t *async_when_all(async_t *asyncs[], size_t asyncs_cnt, void *(*f)(async_t
  */
 __attribute__((__nonnull__(3), __warn_unused_result__))
 async_t *async_when_any(async_t *asyncs[], size_t asyncs_cnt, void *(*f)(async_t *asyncs[], size_t asyncs_cnt));
+
+__attribute__((__nonnull__(1), __sentinel__))
+async_t *async_create_chain(void *(*f)(void*), void *arg, ...);
+__attribute__((__nonnull__(1,2), __sentinel__))
+async_t *async_then_chain(async_t *t, void *(*f)(async_t *), ...);
+__attribute__((__nonnull__(1)))
+async_t *async_create_chain_va(void *(*f)(void*), void *arg, va_list va);
+__attribute__((__nonnull__(1,2)))
+async_t *async_then_chain_va(async_t *t, void *(*f)(async_t *), va_list va);
 
 /**
  * @}
@@ -111,10 +146,24 @@ void async_cancel(async_t **t);
  * @{
  */
 /**
+ * Get is a attribute is deferred
+ */
+static inline bool async_attr_isDefered(enum async_attr_e attr)
+{
+	return attr & ASYNC_ATTR_DEFERRED;
+}
+/**
+ * Get if a attribute is asynchronous
+ */
+static inline bool async_attr_isAsync(enum async_attr_e attr)
+{
+	return !(async_attr_isDefered(attr));
+}
+/**
  * Checks if the shared state is ready
  */
 __attribute__((__nonnull__(1), __warn_unused_result__))
-bool async_is_ready(async_t *t);
+int async_is_ready(async_t *t);
 /**
  * Returns the result
  */
@@ -124,14 +173,14 @@ void *async_get(async_t *t);
  * Waits for the result to become available
  */
 __attribute__((__nonnull__(1)))
-void async_wait(async_t *t);
+int async_wait(async_t *t);
 /**
  * Wait for the result to become available for specified timeout.
  * @param t valid handle to async_t object
  * @param timeout_ms timeout passed to poll(2) function
  */
 __attribute__((__nonnull__(1)))
-bool async_wait_for(async_t *t, int timeout_ms);
+int async_wait_for(async_t *t, int timeout_ms);
 
 /**
  * @}
@@ -149,7 +198,7 @@ void asyncs_cancel(async_t *asyncs[], size_t asyncs_cnt);
 /**
  * Wait for all asyncs to complete
  */
-void asyncs_wait(async_t *asyncs[], size_t asyncs_cnt);
+int asyncs_wait(async_t *asyncs[], size_t asyncs_cnt);
 /**
  * Wait for all asyncs to complete in specified timeout
  */
@@ -168,6 +217,7 @@ int asyncs_anywait_for(async_t *asyncs[], size_t asyncs_cnt, int timeout);
 /**
  * Async failure handler, declared with weak linkeage
  */
+__attribute__((__nonnull__))
 void async_fail_handler(const char file[], int line, const char func[], const char expr[]);
 
 /**

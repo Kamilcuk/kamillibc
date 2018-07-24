@@ -6,40 +6,306 @@
  *     License: Jointly under MIT License and Beerware License
  */
 #include "async.h"
-
 #include <sys/eventfd.h>
 #include <poll.h>
 #include <unistd.h>
-
-#include <errno.h>
+#include <sys/time.h>
+#include <time.h>
 #include <assert.h>
+#include <errno.h>
+#include <stdarg.h>
 #include <stddef.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
+#include <limits.h>
 
-#ifndef __GNUC__
+/* ------------------------------------------------------------------------- */
+
+#ifdef __GNUC__
+#pragma GCC diagnostic ignored "-Wnonnull-compare"
+#else
 #define __builtin_expect(expr, val)  ((expr) == (val))
 #endif
 
-#define try(expr)  do{ if (__builtin_expect(!(expr), 0)) { async_fail_handler(__FILE__, __LINE__, __func__, #expr); } }while(0)
+#define try(expr)  do{ \
+	if (__builtin_expect(!(expr), 0)) { \
+		async_fail_handler(__FILE__, __LINE__, __func__, #expr); \
+		abort(); \
+	} \
+}while(0)
+#define tryret(expr, ...) do{ \
+	if (__builtin_expect(!(expr), 0)) { \
+		async_fail_handler(__FILE__, __LINE__, __func__, #expr); \
+		return __VA_ARGS__; \
+	} \
+}while(0)
 
-#define dbg(str, ...)  ((void)0)
-//#define dbg(str, ...)  fprintf(stderr, str, ##__VA_ARGS__)
+#define dbgln(str, ...)  ((void)0)
+#ifndef dbgln
+#include <execinfo.h>
+static pthread_mutex_t sout_mutex = PTHREAD_MUTEX_INITIALIZER;
+static inline void _dbgln(int line, const char func[], const char fmt[], ...)
+{
+	FILE * const sout = stderr;
 
-#define dbgln(str, ...)  dbg("%15ld:%5d:%-21s : " str "\n", \
-    ((unsigned long)pthread_self()), __LINE__, __func__, ##__VA_ARGS__)
+	va_list va;
+	va_start(va, fmt);
+
+	struct timespec t;
+	try(clock_gettime(CLOCK_REALTIME, &t) == 0);
+
+	try(pthread_mutex_lock(&sout_mutex) == 0);
+
+	fprintf(sout, "%2ld.%06ld: %15ld:%5d:%-21s : ", t.tv_sec%100, t.tv_nsec, (unsigned long)pthread_self(), line, func);
+
+	vfprintf(sout, fmt, va);
+
+#if 0
+	void *backbuf[10];
+	int backbuflen = backtrace(backbuf, sizeof(backbuf)/sizeof(backbuf[0]));
+	try(backbuflen > 1);
+	char **backsym = backtrace_symbols(backbuf, backbuflen);
+	try(backsym != NULL);
+	fprintf(sout, " ");
+	for (int i = 0; i < backbuflen - 1; ++i) {
+		assert(backsym[i] != NULL);
+		fprintf(sout, "%s->", backsym[i]);
+	}
+	free(backsym);
+#endif
+
+	fprintf(sout, "\n");
+
+	try(pthread_mutex_unlock(&sout_mutex) == 0);
+	va_end(va);
+}
+#define dbgln(str, ...)   _dbgln(__LINE__, __func__, str, __VA_ARGS__)
+#endif
+
+/* Private Functions Forward Declarations ---------------------------------- */
+
+static void async_free(async_t *t);
+static void async_refref_up(async_t *t);
+static void async_refref_down(async_t *t);
 
 /* Private Functions ------------------------------------------------------- */
 
-static inline async_t *async_alloc(void)
+static int async_poll_ignore_signal(struct pollfd *fds, nfds_t nfds, int timeout)
 {
+    int ret;
+    while ((ret = poll(fds, nfds, timeout)) == -1 && errno == EINTR);
+    assert ((nfds_t)ret <= nfds);
+    return ret;
+}
+
+static inline void async_notify_ready(async_t *t)
+{
+    tryret(write(t->readyfd, (uint64_t[1]){1}, sizeof(uint64_t)) == sizeof(uint64_t));
+}
+
+static void async_ref_up_in(async_t *t)
+{
+	assert(t != NULL);
+	assert(pthread_mutex_trylock(&t->mutex) == EBUSY);
+	assert(t->refcnt < UINT_MAX);
+	++t->refcnt;
+	dbgln("%p ref=%d", (void*)t, t->refcnt);
+}
+
+static void async_ref_up(async_t *t)
+{
+	assert(t != NULL);
+	tryret(pthread_mutex_lock(&t->mutex) == 0);
+	async_ref_up_in(t);
+	tryret(pthread_mutex_unlock(&t->mutex) == 0);
+}
+
+static bool async_ref_down_in(async_t *t)
+{
+	assert(t != NULL);
+	assert(pthread_mutex_trylock(&t->mutex) == EBUSY);
+	assert(t->refcnt > 0);
+	--t->refcnt;
+	if (t->refcnt == 0) {
+		dbgln("%p ref=%u freeing", (void*)t, t->refcnt);
+		try(pthread_detach(t->thread) == 0);
+		try(pthread_mutex_unlock(&t->mutex) == 0);
+		async_free(t);
+		return true;
+	} else {
+		dbgln("%p ref=%u", (void*)t, t->refcnt);
+	}
+	return false;
+}
+
+static void async_ref_down(async_t *t)
+{
+	assert(t != NULL);
+	dbgln("%p", (void*)t);
+	try(pthread_mutex_lock(&t->mutex) == 0);
+	if (!async_ref_down_in(t)) {
+		try(pthread_mutex_unlock(&t->mutex) == 0);
+	}
+}
+
+static void async_thread_cleanup(void *arg0)
+{
+	async_t *t = arg0;
+	assert(t != NULL);
+	try(pthread_mutex_lock(&t->mutex) == 0);
+	if (!async_ref_down_in(t)) {
+		dbgln("%p not freed, readying", (void*)t);
+		async_notify_ready(t);
+		try(pthread_mutex_unlock(&t->mutex) == 0);
+	}
+}
+
+static void *async_thread(void *arg0)
+{
+	async_t *t = arg0;
+	assert(t != NULL);
+	pthread_cleanup_push(async_thread_cleanup, t);
+	dbgln("%p startup", (void*)t);
+	try(pthread_mutex_unlock(&t->mutex) == 0);
+
+	assert(0 <= t->type && t->type <= (int)ASYNC_TYPE_MAX);
+	switch(t->type) {
+	case ASYNC_TYPE_VOID:
+		dbgln("%p Running %p(%p)", (void*)t, (void*)(uintptr_t)t->c.v.f, t->c.v.arg);
+		assert(t->c.v.f != NULL);
+		t->returned = t->c.v.f(t->c.v.arg);
+		dbgln("%p Running %p(%p) returned %p", (void*)t, (void*)(uintptr_t)t->c.v.f, t->c.v.arg, t->returned);
+		break;
+	case ASYNC_TYPE_THEN:
+		dbgln("%p Running %p(%p)", (void*)t, (void*)(uintptr_t)t->c.t.f, (void*)t->c.t.arg);
+		assert(t->c.t.f != NULL);
+		t->returned = t->c.t.f(t->c.t.arg);
+		dbgln("%p Running %p(%p) returned %p", (void*)t, (void*)(uintptr_t)t->c.t.f, (void*)t->c.t.arg, t->returned);
+		break;
+	case ASYNC_TYPE_WHENALL:
+	case ASYNC_TYPE_WHENANY:
+		switch(t->type) {
+		case ASYNC_TYPE_WHENALL:
+			dbgln("%p asyncs_wait(%p, %zu)", (void*)t, (void*)t->c.w.asyncs, t->c.w.asyncs_cnt);
+			try(asyncs_wait(t->c.w.asyncs, t->c.w.asyncs_cnt) == 0);
+			break;
+		case ASYNC_TYPE_WHENANY:
+			dbgln("%p asyncs_anywait_for(%p, %zu, -1)", (void*)t, (void*)t->c.w.asyncs, t->c.w.asyncs_cnt);
+		    try(asyncs_anywait_for(t->c.w.asyncs, t->c.w.asyncs_cnt, -1) >= 0);
+		    break;
+		default:
+			break;
+		}
+		dbgln("%p Running %p(%p,%zu)", (void*)t, (void*)(uintptr_t)t->c.w.f, (void*)t->c.w.asyncs, t->c.w.asyncs_cnt);
+		assert(t->c.w.f != NULL);
+		t->returned = t->c.w.f(t->c.w.asyncs, t->c.w.asyncs_cnt);
+		dbgln("%p Running %p(%p,%zu) returned %p", (void*)t, (void*)(uintptr_t)t->c.w.f, (void*)t->c.w.asyncs, t->c.w.asyncs_cnt, t->returned);
+		break;
+	}
+
+	pthread_cleanup_pop(1);
+	return NULL;
+}
+
+static void async_refref_up(async_t *t)
+{
+	assert(t != NULL);
+	switch(t->type) {
+	case ASYNC_TYPE_VOID:
+		break;
+	case ASYNC_TYPE_THEN:
+		dbgln("%p -> %p", (void*)t, (void*)t->c.t.arg);
+		assert(t->c.t.arg != NULL);
+		async_ref_up(t->c.t.arg);
+		break;
+	case ASYNC_TYPE_WHENALL:
+	case ASYNC_TYPE_WHENANY:
+		for (size_t i = 0; i < t->c.w.asyncs_cnt; ++i) {
+			dbgln("%p -> %p", (void*)t, (void*)t->c.w.asyncs[i]);
+			assert(t->c.w.asyncs[i] != NULL);
+			async_ref_up(t->c.w.asyncs[i]);
+		}
+	}
+}
+
+static void async_refref_down(async_t *t)
+{
+	assert(t != NULL);
+	switch(t->type) {
+	case ASYNC_TYPE_VOID:
+		break;
+	case ASYNC_TYPE_THEN:
+		dbgln("%p -> %p", (void*)t, (void*)t->c.t.arg);
+		assert(t->c.t.arg != NULL);
+		async_ref_down(t->c.t.arg);
+		break;
+	case ASYNC_TYPE_WHENALL:
+	case ASYNC_TYPE_WHENANY:
+		for (size_t i = 0; i < t->c.w.asyncs_cnt; ++i) {
+			dbgln("%p -> %p", (void*)t, (void*)t->c.w.asyncs[i]);
+			assert(t->c.w.asyncs[i] != NULL);
+			async_ref_down(t->c.w.asyncs[i]);
+		}
+	}
+}
+
+static int async_start(async_t *t)
+{
+	async_ref_up_in(t);
+	t->started = true;
+
+	if (pthread_create(&t->thread, NULL, async_thread, t)) {
+		goto PTHREAD_CREATE_FAIL;
+	}
+
+	dbgln("%p thread=%ld waiting for startup", (void*)t, (unsigned long)t->thread);
+	{
+		const struct timespec timeout = ASYNC_THREAD_STARTUP_TIME_TIMESPEC;
+		struct timespec abstime = { .tv_sec = 1, };
+		try(clock_gettime(CLOCK_REALTIME, &abstime) == 0);
+		abstime.tv_sec += timeout.tv_sec;
+		abstime.tv_nsec += timeout.tv_nsec;
+		const int ret = pthread_mutex_timedlock(&t->mutex, &timeout);
+		try(ret == 0 || ret == ETIMEDOUT);
+	}
+	try(pthread_mutex_unlock(&t->mutex) == 0);
+	dbgln("%p thread=%ld started up", (void*)t, (unsigned long)t->thread);
+
+	return 0;
+
+	try(pthread_cancel(t->thread) == 0);
+	try(pthread_detach(t->thread) == 0);
+	PTHREAD_CREATE_FAIL:
+	return -1;
+}
+
+static async_t *async_create_ex_in(enum async_attr_e attr, enum async_type_e type, union async_call_u call)
+{
+	assert(!(attr & ~1));
+	assert(0 <= type && type <= (int)ASYNC_TYPE_MAX);
+	switch(type) {
+	case ASYNC_TYPE_VOID:
+		assert(call.v.f != NULL);
+		break;
+	case ASYNC_TYPE_THEN:
+		assert(call.t.f != NULL);
+		assert(call.t.arg != NULL);
+		break;
+	case ASYNC_TYPE_WHENALL:
+	case ASYNC_TYPE_WHENANY:
+		assert(call.w.f != NULL);
+		for (size_t i = 0; i < call.w.asyncs_cnt; ++i) {
+			assert(call.w.asyncs[i] != NULL);
+		}
+		break;
+	}
+
 	async_t *t = malloc(sizeof(*t));
 	if (t == NULL) {
 		goto MALLOC_FAIL;
 	}
-
 	memset(t, 0, sizeof(*t));
 	if ((t->readyfd = eventfd(0, 0)) < 0) {
 		goto EVENTFD_FAIL;
@@ -47,9 +313,39 @@ static inline async_t *async_alloc(void)
 	if (pthread_mutex_init(&t->mutex, NULL)) {
 		goto PTHREAD_MUTEX_INIT_MUTEX_FAIL;
 	}
-	dbgln("%p", (void*)t);
+	try(pthread_mutex_lock(&t->mutex) == 0);
+
+	t->refcnt = 1;
+	t->attr = attr;
+	t->type = type;
+	t->c = call;
+	if (t->type == ASYNC_TYPE_WHENALL || t->type == ASYNC_TYPE_WHENANY) {
+		// copy the array call.w.asyncs
+		async_t **asyncs = calloc(call.w.asyncs_cnt, sizeof(*asyncs));
+		if (asyncs == NULL) {
+			goto ASYNCS_CALLOC_FAIL;
+		}
+		memcpy(asyncs, call.w.asyncs, call.w.asyncs_cnt * sizeof(*asyncs));
+		t->c.w.asyncs = asyncs;
+	}
+
+	async_refref_up(t);
+
+	if (async_attr_isAsync(t->attr)) {
+		if (async_start(t)) {
+			goto ASYNC_START_FAIL;
+		}
+	}
+
 	return t;
 
+	ASYNC_START_FAIL:
+	async_refref_down(t);
+	ASYNCS_CALLOC_FAIL:
+	if (t->type == ASYNC_TYPE_WHENALL || t->type == ASYNC_TYPE_WHENANY) {
+		free(t->c.w.asyncs);
+	}
+	(void)pthread_mutex_unlock(&t->mutex);
 	try(pthread_mutex_destroy(&t->mutex) == 0);
 	PTHREAD_MUTEX_INIT_MUTEX_FAIL:
 	try(close(t->readyfd) == 0);
@@ -61,198 +357,96 @@ static inline async_t *async_alloc(void)
 
 static void async_free(async_t *t)
 {
-	if (t == NULL)
-		return;
+	assert(t != NULL);
+	assert((pthread_mutex_trylock(&t->mutex) == 0 ? pthread_mutex_unlock(&t->mutex), 1 : 0));
+	async_refref_down(t);
+	if (t->type == ASYNC_TYPE_WHENALL || t->type == ASYNC_TYPE_WHENANY) {
+		free(t->c.w.asyncs);
+	}
 	try(pthread_mutex_destroy(&t->mutex) == 0);
 	try(close(t->readyfd) == 0);
 	free(t);
+	return;
 }
-
-static int async_poll_ignore_signal(struct pollfd *fds, nfds_t nfds, int timeout)
-{
-    int ret;
-    while ((ret = poll(fds, nfds, timeout)) == -1 && errno == EINTR);
-    try(0 <= ret && (nfds_t)ret <= nfds);
-    return ret;
-}
-
-static inline void async_notify_ready(async_t *t)
-{
-    try(write(t->readyfd, (uint64_t[1]){1}, sizeof(uint64_t)) == sizeof(uint64_t));
-}
-
-static void async_thread_cleanup(void *arg0)
-{
-	async_t *t = arg0;
-	try(pthread_mutex_lock(&t->mutex) == 0);
-	if (t->do_free) {
-		dbgln("%p freeing myself", (void*)t);
-		try(pthread_mutex_unlock(&t->mutex) == 0);
-		async_free(t);
-		try(pthread_detach(pthread_self()) == 0);
-		return;
-	} else {
-		dbgln("%p no free myself, only readying", (void*)t);
-		async_notify_ready(t);
-		try(pthread_mutex_unlock(&t->mutex) == 0);
-	}
-}
-
-static void *async_thread(void *arg0) {
-	async_t *t = arg0;
-	assert(t != NULL);
-	pthread_cleanup_push(async_thread_cleanup, t);
-
-	dbgln("%p Running %p(%p)", (void*)t, (void*)t->f, t->arg);
-	t->returned = t->f_voidptr(t->arg);
-	dbgln("%p Running %p(%p) returned %p", (void*)t, (void*)t->f, t->arg, t->returned);
-
-	pthread_cleanup_pop(1);
-	return NULL;
-}
-
-static void *async_thread_when_all(void *arg0)
-{
-	async_t *t = arg0;
-	assert(t != NULL);
-	pthread_cleanup_push(async_thread_cleanup, t);
-
-	dbgln("%p asyncs_wait(%p, %zu)", (void*)t, (void*)t->asyncs, t->asyncs_cnt);
-	asyncs_wait(t->asyncs, t->asyncs_cnt);
-
-	dbgln("%p Running %p(%p, %zu)", (void*)t, (void*)t->f, (void*)t->asyncs, t->asyncs_cnt);
-	t->returned = t->f_asyncarr(t->asyncs, t->asyncs_cnt);
-	dbgln("%p Running %p(%p, %zu) returned %p", (void*)t, (void*)t->f, (void*)t->asyncs, t->asyncs_cnt, t->returned);
-
-	pthread_cleanup_pop(1);
-	return NULL;
-}
-
-static void *async_thread_when_any(void *arg0)
-{
-	async_t *t = arg0;
-	assert(t != NULL);
-	pthread_cleanup_push(async_thread_cleanup, t);
-
-    try(asyncs_anywait_for(t->asyncs, t->asyncs_cnt, -1) >= 0);
-
-	dbgln("%p Running %p(%p,%zu)", (void*)t, (void*)t->f, (void*)t->asyncs, t->asyncs_cnt);
-	t->returned = t->f_asyncarr(t->asyncs, t->asyncs_cnt);
-	dbgln("%p Running %p(%p,%zu) returned %p", (void*)t, (void*)t->f, (void*)t->asyncs, t->asyncs_cnt, t->returned);
-
-	pthread_cleanup_pop(1);
-	return NULL;
-}
-
 
 /* Exported Functions ------------------------------------------------------------- */
 
+async_t *async_create_ex(enum async_attr_e attr, enum async_type_e type, union async_call_u call)
+{
+	return async_create_ex_in(attr, type, call);
+}
+
 async_t *async_create(void *(*f)(void*), void *arg)
 {
-	assert(f != NULL);
-
-	async_t *t = async_alloc();
-	if (t == NULL) {
-		goto ASYNC_ALLOC_FAIL;
-	}
-
-	t->f_voidptr = f;
-	t->arg = arg;
-
-	if (pthread_create(&t->thread, NULL, async_thread, t)) {
-		goto PTHREAD_CREATE_FAIL;
-	}
-
-	return t;
-
-	pthread_cancel(t->thread);
-	PTHREAD_CREATE_FAIL:
-	async_free(t);
-	ASYNC_ALLOC_FAIL:
-	return NULL;
+	return async_create_ex(0, ASYNC_TYPE_VOID, (union async_call_u){ .v = {f, arg}});
 }
 
-async_t *async_create_arg_self(void *(*f)(async_t*))
+async_t *async_then(async_t *arg, void *(*f)(async_t*))
 {
-	assert(f != NULL);
-
-	async_t *t = async_alloc();
-	if (t == NULL) {
-		goto ASYNC_ALLOC_FAIL;
-	}
-
-	t->f_voidptr = (void *(*)(void*))f;
-	t->arg = t;
-
-	if (pthread_create(&t->thread, NULL, async_thread, t)) {
-		goto PTHREAD_CREATE_FAIL;
-	}
-
-	return t;
-
-	pthread_cancel(t->thread);
-	PTHREAD_CREATE_FAIL:
-	async_free(t);
-	ASYNC_ALLOC_FAIL:
-	return NULL;
-}
-
-async_t *async_then(async_t *t, void *(*f)(async_t*))
-{
-	return async_create((void*(*)(void*))f, (void*)t);
+	return async_create_ex(0, ASYNC_TYPE_THEN, (union async_call_u){ .t = {f, arg}});
 }
 
 async_t *async_when_all(async_t *asyncs[], size_t asyncs_cnt, void *(*f)(async_t *asyncs[], size_t asyncs_cnt))
 {
-	assert(f != NULL);
-
-	async_t *t = async_alloc();
-	if (t == NULL) {
-		goto ASYNC_ALLOC_FAIL;
-	}
-
-	t->f_asyncarr = f;
-	t->asyncs = asyncs;
-	t->asyncs_cnt = asyncs_cnt;
-
-	if (pthread_create(&t->thread, NULL, async_thread_when_all, t)) {
-		goto PTHREAD_CREATE_FAIL;
-	}
-
-	return t;
-
-	pthread_cancel(t->thread);
-	PTHREAD_CREATE_FAIL:
-	async_free(t);
-	ASYNC_ALLOC_FAIL:
-	return NULL;
+	return async_create_ex(0, ASYNC_TYPE_WHENALL, (union async_call_u){ .w = {f, asyncs, asyncs_cnt}});
 }
 
 async_t *async_when_any(async_t *asyncs[], size_t asyncs_cnt, void *(*f)(async_t *asyncs[], size_t asyncs_cnt))
 {
-	assert(f != NULL);
-
-	async_t *t = async_alloc();
-	if (t == NULL) {
-		goto ASYNC_ALLOC_FAIL;
-	}
-
-	t->f_asyncarr = f;
-	t->asyncs = asyncs;
-	t->asyncs_cnt = asyncs_cnt;
-
-	if (pthread_create(&t->thread, NULL, async_thread_when_any, t)) {
-		goto PTHREAD_CREATE_FAIL;
-	}
-
-	return t;
-
-	try(pthread_cancel(t->thread) == 0);
-	PTHREAD_CREATE_FAIL:
-	async_free(t);
-	ASYNC_ALLOC_FAIL:
-	return NULL;
+	return async_create_ex(0, ASYNC_TYPE_WHENANY, (union async_call_u){ .w = {f, asyncs, asyncs_cnt}});
 }
+
+async_t *async_create_chain(void *(*f)(void*), void *arg, ...)
+{
+	va_list va;
+	va_start(va, arg);
+	async_t *t = async_create_chain_va(f, arg, va);
+	va_end(va);
+	return t;
+}
+
+async_t *async_then_chain(async_t *t, void *(*f)(async_t *), ...)
+{
+	va_list va;
+	va_start(va, f);
+	t = async_then_chain_va(t, f, va);
+	va_end(va);
+	return t;
+}
+
+static async_t *async_chain_in(async_t *t, va_list va)
+{
+	if (t == NULL) {
+		return NULL;
+	}
+	void *(*f)(async_t*);
+	while ((f = va_arg(va, void *(*)(async_t*))) != NULL) {
+		async_t * const newt = async_then(t, f);
+		dbgln(" %p = async_then(%p, %p)", (void*)newt, (void*)t, (void*)(uintptr_t)f);
+		if (newt == NULL) {
+			async_cancel(&t);
+			return NULL;
+		}
+		async_detach(&t);
+		t = newt;
+	}
+	return t;
+}
+
+async_t *async_create_chain_va(void *(*f)(void*), void *arg, va_list va)
+{
+	async_t *t = async_create(f, arg);
+	dbgln(" %p = async_create(%p, %p)", (void*)t, (void*)(uintptr_t)f, arg);
+	return async_chain_in(t, va);
+}
+
+async_t *async_then_chain_va(async_t *t, void *(*f)(async_t *), va_list va)
+{
+	async_t *t2 = async_then(t, f);
+	dbgln(" %p = async_then(%p, %p)", (void*)t, (void*)t, (void*)(uintptr_t)f);
+	return async_chain_in(t2, va);
+}
+
 
 /* Destructors -------------------------------------------------------- */
 
@@ -261,17 +455,8 @@ void async_detach(async_t **t0)
 	assert(t0 != NULL);
 	async_t *t = *t0;
 	assert(t != NULL);
-    try(pthread_mutex_lock(&t->mutex) == 0);
-	try(pthread_detach(t->thread) == 0);
-	if (async_is_ready(t)) {
-		dbgln("%p %ld is ready, freeing", (void*)t, t->thread);
-	    try(pthread_mutex_unlock(&t->mutex) == 0);
-		async_free(t);
-	} else {
-		dbgln("%p %ld not ready, detaching", (void*)t, t->thread);
-		t->do_free = true;
-		try(pthread_mutex_unlock(&t->mutex) == 0);
-	}
+	dbgln("%p ref=%u", (void*)t, t->refcnt);
+	async_ref_down(t);
 	*t0 = NULL;
 }
 
@@ -280,31 +465,29 @@ void async_cancel(async_t **t0)
 	assert(t0 != NULL);
 	async_t *t = *t0;
 	assert(t != NULL);
-    try(pthread_mutex_lock(&t->mutex) == 0);
-	if (async_is_ready(t)) {
-		dbgln("%p %ld is ready, freeing", (void*)t, t->thread);
-		try(pthread_detach(t->thread) == 0);
-	    try(pthread_mutex_unlock(&t->mutex) == 0);
-		async_free(t);
-	} else {
-	    dbgln("%p %ld not ready, canceling", (void*)t, t->thread);
-	    try(pthread_cancel(t->thread) == 0);
-	    t->do_free = true;
-	    try(pthread_mutex_unlock(&t->mutex) == 0);
+	dbgln("%p ref=%u", (void*)t, t->refcnt);
+	try(pthread_mutex_lock(&t->mutex) == 0);
+	if (!async_is_ready(t)) {
+		try(pthread_cancel(t->thread) == 0);
+	}
+	if (!async_ref_down_in(t)) {
+		try(pthread_mutex_unlock(&t->mutex) == 0);
 	}
 	*t0 = NULL;
 }
 
 /* Methods ------------------------------------------------------------------- */
 
-bool async_is_ready(async_t *t) {
+int async_is_ready(async_t *t)
+{
 	assert(t != NULL);
-	const bool ret = async_wait_for(t, 0);
-	dbgln("%p ret=%d", (void*)t, ret);
+	const int ret = async_wait_for(t, 0);
+	dbgln("%p %sready", (void*)t, ret ? "" : "not ");
 	return ret;
 }
 
-void *async_get(async_t *t) {
+void *async_get(async_t *t)
+{
 	assert(t != NULL);
 	dbgln("%p thread=%ld", (void*)t, t->thread);
 	try(async_wait_for(t, -1) == true);
@@ -315,23 +498,26 @@ void *async_get(async_t *t) {
 	return ret;
 }
 
-void async_wait(async_t *t)
+int async_wait(async_t *t)
 {
-	try(async_wait_for(t, -1) == true);
+	const int ret = async_wait_for(t, -1);
+	assert(ret < 0 || ret == 1);
+	return ret;
 }
 
-bool async_wait_for(async_t *t, int timeout)
+int async_wait_for(async_t *t, int timeout)
 {
     struct pollfd fds[1];
     fds[0].events = POLLIN;
     fds[0].fd = t->readyfd;
-    return async_poll_ignore_signal(fds, 1, timeout) == 1;
+    return async_poll_ignore_signal(fds, 1, timeout);
 }
 
 /* Asyncs -------------------------------------------------------------- */
 
 void asyncs_detach(async_t *asyncs[], size_t asyncs_cnt)
 {
+	dbgln(" %p %zu", (void*)asyncs, asyncs_cnt);
 	for (size_t i = 0 ; i < asyncs_cnt; ++i) {
 		async_detach(&asyncs[i]);
 	}
@@ -339,26 +525,34 @@ void asyncs_detach(async_t *asyncs[], size_t asyncs_cnt)
 
 void asyncs_cancel(async_t *asyncs[], size_t asyncs_cnt)
 {
+	dbgln(" %p %zu", (void*)asyncs, asyncs_cnt);
 	for (size_t i = 0 ; i < asyncs_cnt; ++i) {
 		async_cancel(&asyncs[i]);
 	}
 }
 
-void asyncs_wait(async_t *asyncs[], size_t asyncs_cnt)
+int asyncs_wait(async_t *asyncs[], size_t asyncs_cnt)
 {
+	dbgln(" %p %zu", (void*)asyncs, asyncs_cnt);
 	for (size_t i = 0; i < asyncs_cnt; ++i) {
-		async_wait(asyncs[i]);
+		const int ret = async_wait(asyncs[i]);
+		if (ret <= 0) {
+			return ret;
+		}
 	}
+	return 0;
 }
 
 int asyncs_wait_for(async_t *asyncs[], size_t asyncs_cnt, int timeout)
 {
-	// TODO:
-	(void)asyncs;
-	(void)asyncs_cnt;
-	(void)timeout;
-	assert(0);
-	return -1;
+	dbgln(" %p %zu", (void*)asyncs, asyncs_cnt);
+	for (size_t i = 0; i < asyncs_cnt; ++i) {
+		const int ret = async_wait_for(asyncs[i], timeout);
+		if (ret <= 0) {
+			return ret;
+		}
+	}
+	return 0;
 }
 
 int asyncs_anywait_for(async_t *asyncs[], size_t asyncs_cnt, int timeout)
@@ -384,6 +578,10 @@ void async_fail_handler(const char file[], int line, const char func[], const ch
 	fprintf(stderr,
 			"%s:%d: Error: %s(): Expression '%s' failed\n",
 			file, line, func, expr);
-	abort();
+	if (errno) {
+		char buf[50];
+		strerror_r(errno, buf, sizeof(buf));
+		fprintf(stderr, "errno=%d %s\n", errno, buf);
+	}
 }
 
