@@ -176,14 +176,9 @@ static void async_thread_cleanup(void *arg0)
 	}
 }
 
-static void *async_thread(void *arg0)
+static void async_task_execute(async_t *t)
 {
-	async_t *t = arg0;
 	assert(t != NULL);
-	pthread_cleanup_push(async_thread_cleanup, t);
-	dbgln("%p startup", (void*)t);
-	try(async_mutex_unlock(t) == 0);
-
 	assert(0 <= t->type && t->type <= (int)ASYNC_TYPE_MAX);
 	switch(t->type) {
 	case ASYNC_TYPE_VOID:
@@ -218,6 +213,17 @@ static void *async_thread(void *arg0)
 		dbgln("%p Running %p(%p,%zu) returned %p", (void*)t, (void*)(uintptr_t)t->c.w.f, (void*)t->c.w.asyncs, t->c.w.asyncs_cnt, t->returned);
 		break;
 	}
+}
+
+static void *async_thread(void *arg0)
+{
+	async_t *t = arg0;
+	assert(t != NULL);
+	pthread_cleanup_push(async_thread_cleanup, t);
+	dbgln("%p startup", (void*)t);
+	try(async_mutex_unlock(t) == 0);
+
+	async_task_execute(t);
 
 	pthread_cleanup_pop(1);
 	return NULL;
@@ -265,12 +271,11 @@ static void async_refref_down(async_t *t)
 	}
 }
 
-static int async_start(async_t *t)
+static int async_start_pthread(async_t *t)
 {
-	if (t->started == true) return 0;
+	async_ref_up(t);
 
-	async_ref_up_in(t);
-	t->started = true;
+	try(async_mutex_lock(t) == 0);
 
 	if (pthread_create(&t->thread, NULL, async_thread, t)) {
 		goto PTHREAD_CREATE_FAIL;
@@ -297,14 +302,16 @@ static int async_start(async_t *t)
 	try(pthread_cancel(t->thread) == 0);
 	try(pthread_detach(t->thread) == 0);
 	PTHREAD_CREATE_FAIL:
+	try(async_mutex_unlock(t) == 0);
+	async_ref_down(t);
 	return -1;
 }
 
 /* Alloc and Free Functions ------------------------------------------------------------- */
 
-async_t *async_create_ex(enum async_attr_e attr, enum async_type_e type, union async_call_u call)
+async_t *async_create_ex(enum async_policy_e policy, enum async_type_e type, union async_call_u call)
 {
-	assert(!(attr & ~1));
+	assert((policy & ASYNC_POLICY_ASYNC) != 0 || (policy & ASYNC_POLICY_DEFERRED) != 0);
 	assert(0 <= type && type <= (int)ASYNC_TYPE_MAX);
 	switch(type) {
 	case ASYNC_TYPE_VOID:
@@ -334,10 +341,9 @@ async_t *async_create_ex(enum async_attr_e attr, enum async_type_e type, union a
 	if (pthread_mutex_init(&t->mutex, NULL)) {
 		goto PTHREAD_MUTEX_INIT_MUTEX_FAIL;
 	}
-	try(async_mutex_lock(t) == 0);
 
 	t->refcnt = 1;
-	t->attr = attr;
+	t->policy = policy;
 	t->type = type;
 	t->c = call;
 	if (t->type == ASYNC_TYPE_WHENALL || t->type == ASYNC_TYPE_WHENANY) {
@@ -352,8 +358,8 @@ async_t *async_create_ex(enum async_attr_e attr, enum async_type_e type, union a
 
 	async_refref_up(t);
 
-	if (async_attr_isAsync(t->attr)) {
-		if (async_start(t)) {
+	if ((t->policy & ASYNC_POLICY_ASYNC) != 0) {
+		if (async_start_pthread(t)) {
 			goto ASYNC_START_FAIL;
 		}
 	}
@@ -466,7 +472,7 @@ void async_cancel(async_t **t0)
 	assert(t != NULL);
 	dbgln("%p ref=%u", (void*)t, t->refcnt);
 	try(async_mutex_lock(t) == 0);
-	if (!async_is_ready(t)) {
+	if ((t->policy & ASYNC_POLICY_ASYNC) != 0 && !async_is_ready(t)) {
 		try(pthread_cancel(t->thread) == 0);
 	}
 	if (!async_ref_down_in(t)) {
@@ -507,6 +513,11 @@ int async_wait(async_t *t)
 int async_wait_for(async_t *t, int timeout)
 {
 	assert(t != NULL);
+	if (timeout == -1 && ((t->policy & ASYNC_POLICY_DEFERRED) != 0) && !async_is_ready(t)) {
+		dbgln("%p deferred executing", (void*)t);
+		async_task_execute(t);
+		async_notify_ready(t);
+	}
     struct pollfd fds[1];
     fds[0].events = POLLIN;
     fds[0].fd = t->readyfd;

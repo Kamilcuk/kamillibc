@@ -26,9 +26,25 @@ typedef void *(*async_funcptr_void_t)(void *arg);
 typedef void *(*async_funcptr_then_t)(async_t *async);
 typedef void *(*async_funcptr_when_t)(async_t *asyncs[], size_t asyncs_len);
 
-enum async_attr_e {
-	ASYNC_ATTR_ASYNC        = 0<<0,
-	ASYNC_ATTR_DEFERRED     = 1<<0
+/**
+ * Specifies the launch policy for a task executed by the async
+ */
+enum async_policy_e {
+	/*
+	 * If the async flag is set, then async executes the callable object f
+	 * on a new thread of execution (with all thread-locals initialized) as if spawned by pthread_create,
+	 * except that if the function f returns a value, it is stored in the shared
+	 * state accessible through the async_get that async returns to the caller.
+	 */
+	ASYNC_POLICY_ASYNC        = 1<<0,
+	/**
+	 * If the deferred flag is set (i.e. (t->policy & ASYNC_POLICY_DEFERRED) != 0),
+	 * then async does not spawn a new thread of execution. Instead, lazy evaluation is performed:
+	 * the first call to a non-timed wait function on the async that async returned to the caller
+	 * in the current thread. The result is placed in the shared state associated with the future
+	 * and only then it is made ready. All further accesses to the same async will return the result immediately.
+	 */
+	ASYNC_POLICY_DEFERRED     = 1<<1,
 };
 
 enum async_type_e {
@@ -73,13 +89,11 @@ struct async_s {
 		void *returned;
 		// Reference count
 		unsigned int refcnt;
-		// thread started?
-		bool started;
 		// user cleanup function
 		void (*cleanup)(async_t*);
 	};
 
-	enum async_attr_e attr;
+	enum async_policy_e policy;
 
 	// public:
 	enum async_type_e type;
@@ -97,7 +111,7 @@ struct async_s {
  * @return NULL on error, otherwise a valid aynchronous object to be detached or canceled
  */
 __attribute__((__warn_unused_result__))
-async_t *async_create_ex(enum async_attr_e attr, enum async_type_e type, union async_call_u call);
+async_t *async_create_ex(enum async_policy_e policy, enum async_type_e type, union async_call_u call);
 
 /**
  * Create new async object. Run function f with argument arg.
@@ -106,7 +120,7 @@ async_t *async_create_ex(enum async_attr_e attr, enum async_type_e type, union a
 __attribute__((__nonnull__(1), __warn_unused_result__))
 static inline async_t *async_create(void *(*f)(void*), void *arg)
 {
-	return async_create_ex(0, ASYNC_TYPE_VOID, (union async_call_u){ .v = {f, arg}});
+	return async_create_ex(ASYNC_POLICY_ASYNC, ASYNC_TYPE_VOID, (union async_call_u){ .v = {f, arg}});
 }
 
 /**
@@ -116,7 +130,7 @@ static inline async_t *async_create(void *(*f)(void*), void *arg)
 __attribute__((__nonnull__, __warn_unused_result__))
 static inline async_t *async_then(async_t *t, void *(*f)(async_t*))
 {
-	return async_create_ex(0, ASYNC_TYPE_THEN, (union async_call_u){ .t = { .arg = t, .f = f }});
+	return async_create_ex(ASYNC_POLICY_ASYNC, ASYNC_TYPE_THEN, (union async_call_u){ .t = { .arg = t, .f = f }});
 }
 
 /**
@@ -126,17 +140,17 @@ static inline async_t *async_then(async_t *t, void *(*f)(async_t*))
 __attribute__((__nonnull__(3), __warn_unused_result__))
 static inline async_t *async_when_all(async_t *asyncs[], size_t asyncs_cnt, void *(*f)(async_t *asyncs[], size_t asyncs_cnt))
 {
-	return async_create_ex(0, ASYNC_TYPE_WHENALL, (union async_call_u){ .w = {f, asyncs, asyncs_cnt}});
+	return async_create_ex(ASYNC_POLICY_ASYNC, ASYNC_TYPE_WHENALL, (union async_call_u){ .w = {f, asyncs, asyncs_cnt}});
 }
 
 /**
  * Attach the continuation function f to when any of the asyncs object are ready
  * @return Valid async_t object on success. NULL on error.
  */
-__attribute__((__nonnull__(3), __warn_unused_result__))
+__attribute__((__nonnull__(3), __warn_unused_result__, __malloc__))
 static inline async_t *async_when_any(async_t *asyncs[], size_t asyncs_cnt, void *(*f)(async_t *asyncs[], size_t asyncs_cnt))
 {
-	return async_create_ex(0, ASYNC_TYPE_WHENANY, (union async_call_u){ .w = {f, asyncs, asyncs_cnt}});
+	return async_create_ex(ASYNC_POLICY_ASYNC, ASYNC_TYPE_WHENANY, (union async_call_u){ .w = {f, asyncs, asyncs_cnt}});
 }
 
 /**
@@ -222,20 +236,6 @@ int async_wait_for(async_t *t, int timeout_ms);
  */
 __attribute__((__nonnull__(1,2)))
 int async_cleanup_reg(async_t *t, void (*cleanup_func)(async_t *));
-/**
- * Check if deffered flag is set in attribute
- */
-static inline bool async_attr_isDefered(enum async_attr_e attr)
-{
-	return attr & ASYNC_ATTR_DEFERRED;
-}
-/**
- * Check if asynchronous flag is set in attribute
- */
-static inline bool async_attr_isAsync(enum async_attr_e attr)
-{
-	return !(async_attr_isDefered(attr));
-}
 /**
  * @}
  * @ Methods for multiple async objects
