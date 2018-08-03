@@ -373,7 +373,3 @@ int async_unittest(void) {
 	return 0;
 }
 
-int main(void) {
-	printf("async_test = %d\n", async_unittest());
-	return 0;
-}

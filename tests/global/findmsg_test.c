@@ -8,10 +8,17 @@
 #include <findmsg/conf/newline.h>
 #include <findmsg/conf/stub.h>
 #include <assert.h>
-#include <unity/unity.h>
 #include <try.h>
 #include <unistd.h>
 #include <string.h>
+
+static int findmsg_ret = 0;
+#define TEST_ASSERT_EQUAL(val, expr) do{ \
+	if ((val) != (expr)) { \
+		fprintf(stderr, "findmsg_unittest() error %s != %s\n", #val, #expr); \
+		findmsg_ret = 1; \
+	} \
+}while(0)
 
 static int create_tmpfile(char content[], size_t size)
 {
@@ -118,10 +125,9 @@ static void test_conf_returingNegative()
 
 int findmsg_unittest()
 {
-	UnityBegin(__func__);
-	RUN_TEST(test_new_free_init);
-	RUN_TEST(test_recv_newline);
-	RUN_TEST(test_ending_badFd);
-	RUN_TEST(test_conf_returingNegative);
-	return UnityEnd();
+	test_new_free_init();
+	test_recv_newline();
+	test_ending_badFd();
+	test_conf_returingNegative();
+	return findmsg_ret;
 }
