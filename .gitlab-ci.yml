@@ -1,26 +1,25 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
-build_gcc:
-  image: gcc
-  script:
-  - apt-get update -y
-  - apt-get install -y cmake make
-  - make all test
-  when: manual
-
-build_arm:
-  image: debian
-  script:
-  - apt-get update -y
-  - apt-get install -y cmake make gcc-arm-none-eabi
-  - make all test
-  when: manual 
-
-build_alpine:
+on_alpine:
   image: alpine
   script:
   - apk update
   - apk add gcc cmake musl-dev make bsd-compat-headers linux-headers
-  - make all test
+  - make gitlab-ci
+  
+on_gcc:
+  image: gcc
+  script:
+  - apt-get update -y
+  - apt-get install -y cmake make
+  - make gitlab-ci
+  when: manual
 
+on_arm:
+  image: debian
+  script:
+  - apt-get update -y
+  - apt-get install -y cmake make gcc-arm-none-eabi
+  - make gitlab-ci
+  when: manual 

@@ -621,7 +621,7 @@ void hd44780_assemblytest()
 	hd44780_write_inst(0, HD44780_CLRDISP);
 
 	uint8_t pos[] = { 0, 10, HD44780_DISP_COLS-1, HD44780_DISP_COLS+10, };
-	for(uint8_t j=0;j<5;j++) {
+	for(uint8_t j = 0; j < 4; j++) {
 		hd44780_write_curpos(0, pos[j]);
 		hd44780_foreach(c) {
 			for(uint8_t i=0;i<20;++i) {
