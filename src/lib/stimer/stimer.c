@@ -296,7 +296,7 @@ bool stimer_isRunning(struct stimer_s *t)
 	return ret;
 }
 
-void stimer_IRQHandler()
+void stimer_IRQHandler(void)
 {
 	_stimer_substract_elapsedTime(stimer_head);
 	if ( stimer_data.thread_running == true ) return;
@@ -311,7 +311,23 @@ void stimer_thread_async(bool running)
 	}
 }
 
-struct stimer_head_s *stimer_gethead()
+struct stimer_head_s *stimer_gethead(void)
 {
 	return stimer_head;
+}
+
+__attribute__((__weak__))
+void stimer_arm_Callback(clock_t value) {
+}
+
+__attribute__((__weak__))
+clock_t stimer_elapsedTimeSinceLastArm_Callback(void) {
+	return 0;
+}
+__attribute__((__weak__))
+void stimer_IRQDisable_Callback(void) {
+}
+
+__attribute__((__weak__))
+void stimer_IRQEnable_Callback() {
 }

@@ -24,7 +24,7 @@
 	} \
 }while(0)
 #else
-#define breakpoint() do{}while(0)
+#define breakpoint()  ((void)0)
 #endif
 
 #endif /* SRC_STM32_BREAKPOINT_H_ */

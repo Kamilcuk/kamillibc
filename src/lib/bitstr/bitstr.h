@@ -19,7 +19,7 @@ struct bitstr_s {
 	unsigned char bitpos;
 };
 
-#define BITSTR_INIT(_buf,_size) {.buf=(_buf),.size=(_size)}
+#define BITSTR_INIT(_buf,_size)  { .buf = (_buf), .size = (_size) }
 
 struct bitstr_s bitstr_init(char buf[], size_t size);
 
@@ -34,8 +34,6 @@ bool bitstr_getdec(struct bitstr_s *t);
 void bitstr_put(struct bitstr_s *t, bool val);
 void bitstr_putinc(struct bitstr_s *t, bool val);
 void bitstr_putdec(struct bitstr_s *t, bool val);
-
-int bitstr_unittest();
 
 static inline void bitstr_begin(struct bitstr_s *t)
 {
@@ -63,5 +61,6 @@ static inline bool bitstr_atEnd(struct bitstr_s *t)
 	return t->pos == t->size;
 }
 
+int bitstr_unittest(void);
 
 #endif /* SRC_LIB_BITSTR_BITSTR_H_ */

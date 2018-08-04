@@ -11,9 +11,10 @@
 #include <assert.h>
 
 struct bitstr_s bitstr_init(char buf[], size_t size) {
-	assert(buf);
+	assert(buf != NULL);
 	(void)memset(buf, 0, size);
-	return (struct bitstr_s)BITSTR_INIT(buf,size);
+	struct bitstr_s ret = BITSTR_INIT(buf,size);
+	return ret;
 }
 
 void bitstr_incbitpos(struct bitstr_s *t)
@@ -72,27 +73,27 @@ void bitstr_put(struct bitstr_s *t, bool val)
 	if (val) {
 		t->buf[t->pos] |= bitmask;
 	} else {
-		assert( (t->buf[t->pos]&bitmask) == 0 );
+		assert((t->buf[t->pos] & bitmask) == 0);
 		t->buf[t->pos] &= ~bitmask;
 	}
 }
 
 void bitstr_putinc(struct bitstr_s *t, bool val)
 {
-	bitstr_put(t,val);
+	bitstr_put(t, val);
 	bitstr_incbitpos(t);
 }
 
 void bitstr_putdec(struct bitstr_s *t, bool val)
 {
-	bitstr_put(t,val);
+	bitstr_put(t, val);
 	bitstr_decbitpos(t);
 }
 
-int bitstr_unittest()
+int bitstr_unittest(void)
 {
 #define TEST(expr) if(!(expr)) { assert(expr); return -__LINE__; }
-	struct bitstr_s t = BITSTR_INIT(((char[2]){0xAA,0xAA}),2);
+	struct bitstr_s t = BITSTR_INIT(((char*)(unsigned char[2]){0xAA, 0xAA}), 2);
 	TEST(bitstr_atBegin(&t) == true);
 	for(size_t i = 0; i < CHAR_BIT; ++i) {
 		TEST(bitstr_getinc(&t) == false);

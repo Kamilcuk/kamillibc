@@ -33,16 +33,16 @@ void stimer_settime(struct stimer_s *t, clock_t value, clock_t reload);
 clock_t stimer_gettime(struct stimer_s *t);
 bool stimer_isRunning(struct stimer_s *t);
 
-void stimer_IRQHandler();
+void stimer_IRQHandler(void);
 
 void stimer_thread_async(bool running);
 
 struct stimer_head_s *stimer_gethead();
-int stimer_unittest();
+int stimer_unittest(void);
 
 void stimer_arm_Callback(clock_t value);
-clock_t stimer_elapsedTimeSinceLastArm_Callback();
-void stimer_IRQDisable_Callback();
-void stimer_IRQEnable_Callback();
+clock_t stimer_elapsedTimeSinceLastArm_Callback(void);
+void stimer_IRQDisable_Callback(void);
+void stimer_IRQEnable_Callback(void);
 
 #endif /* SRC_MACHINE_HTIMER_H_ */

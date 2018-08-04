@@ -31,13 +31,4 @@
  */
 #define STATIC_ASSERT_IF(condition,true,false)  (sizeof(char[(condition)?1:-1])?(true):(false))
 
-/**
- * Check if pnt is declared as pointer or as array
- * Usage:
- * int a[5], *b = &a;
- * STATIC_ASSERT_STATIC_ARRAY(a); // ok
- * STATIC_ASSERT_STATIC_ARRAY(b); // error
- */
-#define STATIC_ASSERT_STATIC_ARRAY(pnt)  STATIC_ASSERT((void*)&(pnt)[0] == (void*)&(pnt)))
-
 #endif /* SRC_STATIC_ASSERT_H_ */
