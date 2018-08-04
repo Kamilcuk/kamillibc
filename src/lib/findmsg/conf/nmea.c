@@ -17,13 +17,13 @@ const struct findmsg_conf_s findmsg_conf_NMEA = {
 
 ssize_t findmsg_conf_NMEA_isBeginning(const char buf[], size_t bufsize, void *arg)
 {
-	assert(bufsize >= findmsg_conf_NMEA_minlength);
-	return buf[0] == '$' ? findmsg_MSG_VALID : findmsg_MSG_TOO_SHORT;
+	assert(bufsize == findmsg_conf_NMEA_minlength);
+	return buf[0] == '$' ? findmsg_MSG_BEGINNING : findmsg_NOT_MSG_BEGNNING;
 }
 
 int findmsg_conf_NMEA_isEnding(const char buf[], size_t bufsize, void *arg)
 {
-	assert(bufsize >= 2);
+	assert(bufsize >= findmsg_conf_NMEA_minlength);
 	if (bufsize > findmsg_conf_NMEA_maxlength) return findmsg_MSG_INVALID;
 	if (buf[bufsize-2] != '\r' && buf[bufsize-1] != '\n') return findmsg_MSG_TOO_SHORT;
 	int checksum = 0;

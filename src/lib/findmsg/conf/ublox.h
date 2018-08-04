@@ -14,11 +14,12 @@
 
 enum {
 	findmsg_ublox_minlength = 8,
-	findmsg_ublox_maxlength = 512,
+	findmsg_ublox_maxlength = 8 + 512,
 };
 
 extern const struct findmsg_conf_s findmsg_conf_ublox;
 
+unsigned int findmsg_ublox_crc(const char buf[], size_t len);
 ssize_t findmsg_ublox_checkBeginning(const char buf[], size_t size, void *arg);
 int findmsg_ublox_checkEnding(const char buf[], size_t size, void *arg);
 

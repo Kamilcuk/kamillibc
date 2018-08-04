@@ -17,23 +17,43 @@ const struct findmsg_conf_s findmsg_conf_ublox = {
 		.checkEnding = &findmsg_ublox_checkEnding,
 };
 
-__attribute__((__weak__))
-bool findmsg_ublox_isValid(const char buf[], size_t len)
+unsigned int findmsg_ublox_crc(const char buf[], size_t len)
 {
-	return true;
+	assert(buf != NULL);
+	assert(len >= 4);
+	buf += 2;
+	len -= 4;
+	unsigned int crc_a = 0;
+	unsigned int crc_b = 0;
+	while (len--) {
+		crc_a += *buf++;
+		crc_b += crc_a;
+	}
+	crc_a &= 0xff;
+	crc_b &= 0xff;
+	return crc_a << 8 | crc_b;
 }
 
 ssize_t findmsg_ublox_checkBeginning(const char buf[], size_t size, void *arg)
 {
-	assert(size >= 6);
-	return ( buf[0] == 0xB5 && buf[1] == 0x62 ) ? (buf[4]<<8 | buf[5]) : findmsg_MSG_TOO_SHORT;
+	assert(size >= findmsg_ublox_minlength);
+	if (!(buf[0] == 0xB5 && buf[1] == 0x62)) {
+		return findmsg_NOT_MSG_BEGNNING;
+	}
+	const unsigned int len = (buf[4]<<8 | buf[5]);
+	if (!(findmsg_ublox_minlength <= len && len <= findmsg_ublox_maxlength)) {
+		return findmsg_NOT_MSG_BEGNNING;
+	}
+	return len;
 }
 
 int findmsg_ublox_checkEnding(const char buf[], size_t size, void *arg)
 {
 	assert(size >= 6);
-	const unsigned int len = buf[4]<<8 | buf[5];
-	if ( size < len ) return findmsg_MSG_TOO_SHORT;
-	const bool ret = findmsg_ublox_isValid(buf, size);
-	return ret == false ? findmsg_MSG_INVALID : findmsg_MSG_VALID;
+	assert(size >= (buf[4] << 8 | buf[5]));
+	// check crc
+	if ((buf[size - 2] << 8 | buf[size - 1]) != findmsg_ublox_crc(buf, size)) {
+		return findmsg_MSG_INVALID;
+	}
+	return findmsg_MSG_VALID;
 }

@@ -98,7 +98,7 @@ static ssize_t findmsg_beginning_started(struct findmsg_s *t, size_t minlength,
 	return ret;
 }
 
-ssize_t findmsg_ending_started(struct findmsg_s *t, size_t startlen, size_t maxlength,
+static ssize_t findmsg_ending_started(struct findmsg_s *t, size_t startlen, size_t maxlength,
 		int (*checkEnding)(const char buf[], size_t len, void *arg), void *arg,
 		clock_t *start, clock_t *timeout)
 {
@@ -110,11 +110,14 @@ ssize_t findmsg_ending_started(struct findmsg_s *t, size_t startlen, size_t maxl
 	int ret;
 	for(; (ret = findmsg_readAtLeastChars(t, startlen, start, timeout)) >= 0 && t->pos >= startlen; ++startlen ) {
 		const int retcheckEnding = checkEnding(t->buf, startlen, arg);
-		if ( retcheckEnding < 0 ) { // error in checkEnding
+		if (retcheckEnding < 0 || retcheckEnding == findmsg_MSG_INVALID) {
 			return retcheckEnding;
 		}
-		if ( retcheckEnding > 0 ) { // ending found!
+		if (retcheckEnding == findmsg_MSG_VALID) {
 			return startlen;
+		}
+		if (retcheckEnding != 0) {
+			assert(!"checkEnding function returned bad value");
 		}
 		if ( startlen >= maxlength ) { // buffer too short
 			return -ENOBUFS;

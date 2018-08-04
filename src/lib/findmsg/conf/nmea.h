@@ -11,7 +11,7 @@
 #include <findmsg/types.h>
 
 enum {
-	findmsg_conf_NMEA_minlength  = (sizeof("$,99\r\n")-1),
+	findmsg_conf_NMEA_minlength = sizeof("$,99\r\n") - 1,
 	findmsg_conf_NMEA_maxlength = 82,
 };
 
