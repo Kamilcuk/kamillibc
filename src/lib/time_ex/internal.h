@@ -9,15 +9,6 @@
 #define SRC_LIB_TIME_EX_INTERNAL_H_
 
 #include <time_ex/types.h>
-#include <time_ex/check_overflow.h>
-
-#ifndef __pure2
-#ifdef __GNUC__
-#define __pure2 __attribute__((__const__))
-#else
-#define __pure2
-#endif
-#endif
 
 /* Conversion from RATIO to seconds */
 

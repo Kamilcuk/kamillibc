@@ -14,6 +14,7 @@
 static inline void tm_normalize(struct tm *tm) {
 	(void)mktime(tm);
 }
+
 static inline void tm_add_tm(struct tm *tm, struct tm tm2) {
 	tm->tm_sec += tm2.tm_sec;
 	tm->tm_min += tm2.tm_min;
@@ -23,9 +24,10 @@ static inline void tm_add_tm(struct tm *tm, struct tm tm2) {
 	tm->tm_year += tm2.tm_year;
 	tm_normalize(tm);
 }
+
 static inline void tm_add_time_t(struct tm *tm, time_t t) {
 	struct tm tm2;
-#ifdef __USE_POSIX
+#ifdef _POSIX_C_SOURCE
 	(void)gmtime_r(&t, &tm2);
 #else
 	(void)memcpy(&tm2, gmtime(&t), sizeof(tm2));
