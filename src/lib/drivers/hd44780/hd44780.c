@@ -483,21 +483,21 @@ void hd44780_initialize_by_instruction(const uint8_t ctrl)
 	/* Wait for more then 15 ms after Vcc raises to 4.5V */
 	usleep(15*1000);
 	/* Function set (Interface is 8 bits long.) */
-	hd44780_write_8bit_op(ctrl, HD44780_FLAG_RS_INST, 0b00110000);
+	hd44780_write_8bit_op(ctrl, HD44780_FLAG_RS_INST, HD44780_FS_DATAWIDTH8BIT);
 	/* Wait for more then 4.1 ms */
 	usleep(5*1000);
 	/* Function set (Interface is 8 bits long.) */
-	hd44780_write_8bit_op(ctrl, HD44780_FLAG_RS_INST, 0b00110000);
+	hd44780_write_8bit_op(ctrl, HD44780_FLAG_RS_INST, HD44780_FS_DATAWIDTH8BIT);
 	/* Wait for more then 100 us */
 	usleep(200);
 	/* Function set (Interface is 8 bits long.) */
-	hd44780_write_8bit_op(ctrl, HD44780_FLAG_RS_INST, 0b00110000);
+	hd44780_write_8bit_op(ctrl, HD44780_FLAG_RS_INST, HD44780_FS_DATAWIDTH8BIT);
 	HD44780_LONG_DELAY();
 
 #if HD44780_MODE_4_BIT
 	/* Function set (Interface is 8 bits long.)
 	 * Set Interface to be 4 bits long*/
-	hd44780_write_8bit_op(ctrl, HD44780_FLAG_RS_INST, 0b00100000);
+	hd44780_write_8bit_op(ctrl, HD44780_FLAG_RS_INST, HD44780_FS_DATAWIDTH4BIT);
 	HD44780_LONG_DELAY();
 #endif
 
