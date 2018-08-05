@@ -3,7 +3,7 @@ B=build
 all:
 	cmake -H. -B${B} -DCMAKE_RULE_MESSAGES:BOOL=OFF -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
 	make -C ${B} --no-print-directory
-	cd ${B} && ctest -v
+	cd ${B} && ctest -v || { cat Testing/*/*.log; false; }
 gitlab-ci:
 	cmake -H. -B${B} -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
 	cmake --build ${B}

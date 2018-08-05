@@ -69,7 +69,6 @@ static void findmsg_flushN(struct findmsg_s * restrict t, size_t N)
 	assert(t != NULL && N <= t->pos);
 	memmove(&t->buf[0], &t->buf[N], t->pos - N);
 	t->pos -= N;
-	t->msgReceivedSize = 0;
 }
 
 static ssize_t findmsg_beginning_started(struct findmsg_s *t, size_t minlength,
@@ -154,75 +153,13 @@ void findmsg_init(struct findmsg_s *t, int fd, char buf[], size_t size)
 {
 	assert(t != NULL);
 	assert(buf != NULL);
-	*t = (struct findmsg_s)findmsg_INIT(fd, buf, size);
+	struct findmsg_s set = findmsg_INIT(fd, buf, size);
+	*t = set;
 }
 
-/**
- * Prepare receive buffer to receive next message
- * @param t
- * @param msg
- * @param size
- */
-void findmsg_next(struct findmsg_s *t)
-{
-	assert(t != NULL);
-	if(t->msgReceivedSize > 0) {
-		findmsg_flushN(t, t->msgReceivedSize);
-	}
-}
-
-/**
- * Calls checkBeggining for every position in receive buffer if it is at least minlen long in specified timeout.
- * @param t
- * @param minlength
- * @param checkBeginning  same function as described in (uartbufrx_findmsgconf_s)
- * @param arg
- * @param timeout
- * @return negative value on error, zero on timeout or message length
- *
- */
-ssize_t findmsg_beginning(struct findmsg_s *t, size_t minlen,
-		ssize_t (*checkBeginning)(const char buf[], size_t minlen, void *arg), void *arg,
-		clock_t *timeout)
-{
-	clock_t start;
-	clocktimeout_init(&start, timeout);
-	return findmsg_beginning_started(t, minlen, checkBeginning, arg, &start, timeout);
-}
-
-
-/**
- * Wait for more characters in buffer up until maxlen until checkending returns != 0 in specified timeout
- * @param t
- * @param startlen
- * @param maxlen maximum length of chars in buffer
- * @param checkEnding same function as described in (uartbufrx_findmsgconf_s)->checkEnding
- * @param arg
- * @param Timeout
- * @return negative value on error, zero on timeout or message length
- */
-ssize_t findmsg_ending(struct findmsg_s *t, size_t startlen, size_t maxlen,
-		int (*checkEnding)(const char buf[], size_t len, void *arg), void *arg,
-		clock_t *timeout)
-{
-	clock_t start;
-	clocktimeout_init(&start, timeout);
-	return findmsg_ending_started(t, startlen, maxlen, checkEnding, arg, &start, timeout);
-}
-
-/**
- * Find message in receive buffer
- * @param t
- * @param msg filled with pointer to message beginning
- * @param conf specifies functions for message finding
- * @param arg argument passed to conf-> functions
- * @param Timeout
- * @return negative value on error, zero on timeout or message length
- */
 ssize_t findmsg_findmsg(struct findmsg_s *t,
 		const struct findmsg_conf_s *conf, void *arg,
-		clock_t *timeout,
-		char *msg[])
+		clock_t *timeout)
 {
 	assert(conf != NULL);
 	clock_t start;
@@ -253,8 +190,41 @@ ssize_t findmsg_findmsg(struct findmsg_s *t,
 		t->msgReceivedSize = ret;
 		break;
 	}
-	if ( msg != NULL ) *msg = t->buf;
 	return t->msgReceivedSize;
+}
+
+void *findmsg_msgpnt(struct findmsg_s *t)
+{
+	assert(t != NULL);
+	assert(t->msgReceivedSize > 0);
+	return t->msgReceivedSize == 0 ? NULL : t->buf;
+}
+
+void findmsg_next(struct findmsg_s *t)
+{
+	assert(t != NULL);
+	if (t->msgReceivedSize > 0) {
+		findmsg_flushN(t, t->msgReceivedSize);
+		t->msgReceivedSize = 0;
+	}
+}
+
+ssize_t findmsg_beginning(struct findmsg_s *t, size_t minlen,
+		ssize_t (*checkBeginning)(const char buf[], size_t minlen, void *arg), void *arg,
+		clock_t *timeout)
+{
+	clock_t start;
+	clocktimeout_init(&start, timeout);
+	return findmsg_beginning_started(t, minlen, checkBeginning, arg, &start, timeout);
+}
+
+ssize_t findmsg_ending(struct findmsg_s *t, size_t startlen, size_t maxlen,
+		int (*checkEnding)(const char buf[], size_t len, void *arg), void *arg,
+		clock_t *timeout)
+{
+	clock_t start;
+	clocktimeout_init(&start, timeout);
+	return findmsg_ending_started(t, startlen, maxlen, checkEnding, arg, &start, timeout);
 }
 
 ssize_t findmsg_get(struct findmsg_s *t,
@@ -262,10 +232,13 @@ ssize_t findmsg_get(struct findmsg_s *t,
 		clock_t *timeout,
 		/*out*/ char buf[], size_t bufsize)
 {
-	assert(buf != NULL && conf->minlength <= bufsize);
-	char *msg;
-	const ssize_t msgsize = findmsg_findmsg(t, conf, arg, timeout, &msg);
-	if (msgsize <= 0) return msgsize;
+	assert(buf != NULL);
+	const ssize_t msgsize = findmsg_findmsg(t, conf, arg, timeout);
+	if (msgsize <= 0) {
+		return msgsize;
+	}
+	const char *msg = findmsg_msgpnt(t);
+	assert(msg != NULL);
 	const size_t cpysize = MIN(bufsize, (size_t)msgsize);
 	memcpy(buf, msg, cpysize);
 	findmsg_next(t);

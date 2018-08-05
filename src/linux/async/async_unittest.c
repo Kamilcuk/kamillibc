@@ -29,7 +29,7 @@
 #ifndef dbgln
 #define dbgln(str, ...)  fprintf(stderr, "%s:%d: " str "\n", __func__, __LINE__, ##__VA_ARGS__)
 #endif
-#define TEST(expr) do{ if (!(expr)) { fprintf(stderr, "%s:%d: %s failed!\n", __func__, __LINE__, #expr); return -__LINE__; } }while(0)
+#define TEST_EQ(expr) do{ if (!(expr)) { fprintf(stderr, "%s:%d: %s failed!\n", __func__, __LINE__, #expr); return -__LINE__; } }while(0)
 #define try(expr) do{ if (!(expr)) { fprintf(stderr, "%s:%d: %s failed!\n", __func__, __LINE__, #expr); abort(); } }while(0)
 
 static void *f_ret_1(void *arg) {
@@ -80,7 +80,7 @@ static struct timespec measure_start(void) {
 }
 static long long measure_stop_ms(struct timespec tm1) {
 	struct timespec tm2;
-	TEST(clock_gettime(CLOCK_MONOTONIC, &tm2) == 0);
+	TEST_EQ(clock_gettime(CLOCK_MONOTONIC, &tm2) == 0);
 	return timespec_sub_ms(&tm1, &tm2);
 }
 static void *f_mul_2_void(void *arg) {
@@ -146,13 +146,13 @@ static void *async_unittest_f2(void *arg)
 
 int async_unittest(void) {
 	for (int i = 0; i < 10; ++i) {
-		TEST(async_unittest_f2(NULL) == NULL);
+		TEST_EQ(async_unittest_f2(NULL) == NULL);
 	}
 
 	async_t *t_f2[5];
 	for (size_t i = 0; i < sizeof(t_f2)/sizeof(t_f2[0]); ++i) {
 		t_f2[i] = async_create(async_unittest_f2, NULL);
-		TEST(t_f2[i] != NULL);
+		TEST_EQ(t_f2[i] != NULL);
 	}
 	for (size_t i = 0; i < sizeof(t_f2)/sizeof(t_f2[0]); ++i) {
 		async_detach(&t_f2[i]);
@@ -162,38 +162,38 @@ int async_unittest(void) {
 	pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 	dbgln("-- %d ---------------------------------", __LINE__);
 	{
-		TEST(pthread_mutex_lock(&mutex) == 0);
+		TEST_EQ(pthread_mutex_lock(&mutex) == 0);
 		async_t *t = async_create(f_lock_mutex, &mutex);
-		TEST(t != NULL);
+		TEST_EQ(t != NULL);
 		async_detach(&t);
 		pthread_mutex_unlock(&mutex);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
 	for (int i = 0; i < 50; ++i) {
 		async_t *t = async_create(f_mul_2_void, (void*)(uintptr_t)i);
-		TEST(t != NULL);
-		TEST((uintptr_t)async_get(t) == (uintptr_t)i * 2);
+		TEST_EQ(t != NULL);
+		TEST_EQ((uintptr_t)async_get(t) == (uintptr_t)i * 2);
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
 	for (int i = 0; i < 50; ++i) {
 		async_t *t = async_create(f_mul_2_void, (void*)(uintptr_t)i);
-		TEST(t != NULL);
-		TEST((uintptr_t)async_get(t) == (uintptr_t)i * 2);
+		TEST_EQ(t != NULL);
+		TEST_EQ((uintptr_t)async_get(t) == (uintptr_t)i * 2);
 		async_detach(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
 	{
-		TEST(pthread_mutex_lock(&mutex) == 0);
+		TEST_EQ(pthread_mutex_lock(&mutex) == 0);
 		async_t *t = async_create(f_lock_mutex, &mutex);
-		TEST(t != NULL);
-		TEST(async_is_ready(t) == false);
-		TEST(async_is_ready(t) == false);
-		TEST(pthread_mutex_unlock(&mutex) == 0);
-		TEST((uintptr_t)async_get(t) == 1);
-		TEST(async_is_ready(t) == true);
-		TEST(async_is_ready(t) == true);
-		TEST((uintptr_t)async_get(t) == 1);
+		TEST_EQ(t != NULL);
+		TEST_EQ(async_is_ready(t) == false);
+		TEST_EQ(async_is_ready(t) == false);
+		TEST_EQ(pthread_mutex_unlock(&mutex) == 0);
+		TEST_EQ((uintptr_t)async_get(t) == 1);
+		TEST_EQ(async_is_ready(t) == true);
+		TEST_EQ(async_is_ready(t) == true);
+		TEST_EQ((uintptr_t)async_get(t) == 1);
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
@@ -203,7 +203,7 @@ int async_unittest(void) {
 				async_then(t[0], f_mul_2),
 				async_then(t[1], f_mul_2),
 		};
-		TEST((uintptr_t)async_get(t[2]) == 4);
+		TEST_EQ((uintptr_t)async_get(t[2]) == 4);
 		asyncs_cancel(t, sizeof(t)/sizeof(t[0]));
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
@@ -215,7 +215,7 @@ int async_unittest(void) {
 			{ PTHREAD_MUTEX_INITIALIZER, 4 },
 		};
 		for (size_t i = 0; i < sizeof(at)/sizeof(at[0]); ++i) {
-			TEST(pthread_mutex_lock(&at[i].mutex) == 0);
+			TEST_EQ(pthread_mutex_lock(&at[i].mutex) == 0);
 		}
 		async_t *t[] = {
 				async_create(f_args2, &at[0]),
@@ -224,14 +224,14 @@ int async_unittest(void) {
 				async_create(f_args2, &at[3]),
 				async_when_any(t, 4, f_return_any),
 		};
-		TEST(pthread_mutex_unlock(&at[1].mutex) == 0);
-		TEST((uintptr_t)async_get(t[4]) == 2);
+		TEST_EQ(pthread_mutex_unlock(&at[1].mutex) == 0);
+		TEST_EQ((uintptr_t)async_get(t[4]) == 2);
 		for (size_t i = 0; i < sizeof(at)/sizeof(at[0]); ++i) {
 			if (i != 1) {
-				TEST(pthread_mutex_unlock(&at[i].mutex) == 0);
+				TEST_EQ(pthread_mutex_unlock(&at[i].mutex) == 0);
 			}
-			TEST((uintptr_t)async_get(t[i]) == i + 1);
-			TEST(pthread_mutex_destroy(&at[i].mutex) == 0);
+			TEST_EQ((uintptr_t)async_get(t[i]) == i + 1);
+			TEST_EQ(pthread_mutex_destroy(&at[i].mutex) == 0);
 		}
 		asyncs_cancel(t, sizeof(t)/sizeof(t[0]));
 	}
@@ -244,7 +244,7 @@ int async_unittest(void) {
 				async_create(f_args1, &(args1_t){40000, 4}),
 				async_when_all(t, 4, f_sum),
 		};
-		TEST((uintptr_t)async_get(t[4]) == 1 + 2 + 3 + 4);
+		TEST_EQ((uintptr_t)async_get(t[4]) == 1 + 2 + 3 + 4);
 		asyncs_cancel(t, sizeof(t)/sizeof(t[0]));
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
@@ -256,7 +256,7 @@ int async_unittest(void) {
 				async_create(f_args1, &(args1_t){100000, 1}),
 				async_when_any(t, 4, f_return_any),
 		};
-		TEST((uintptr_t)async_get(t[4]) == 1);
+		TEST_EQ((uintptr_t)async_get(t[4]) == 1);
 		asyncs_detach(t, sizeof(t)/sizeof(t[0]));
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
@@ -268,20 +268,20 @@ int async_unittest(void) {
 				async_create(f_args1, &(args1_t){40000, 4}),
 				async_when_all(t, 4, f_sum),
 		};
-		TEST((uintptr_t)async_get(t[4]) == 1 + 2 + 3 + 4);
+		TEST_EQ((uintptr_t)async_get(t[4]) == 1 + 2 + 3 + 4);
 		asyncs_detach(t, sizeof(t)/sizeof(t[0]));
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
 
 	async_t *t0 = async_create(f_ret_1, NULL);
-	TEST(t0 != NULL);
+	TEST_EQ(t0 != NULL);
 
 	for (int i = 0; i < 50; ++i) {
 		async_t *t = async_create_chain(
 				f_ret_1, (void*)(uintptr_t)1,
 				NULL
 		);
-		TEST((uintptr_t)async_get(t) == 1);
+		TEST_EQ((uintptr_t)async_get(t) == 1);
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
@@ -291,7 +291,7 @@ int async_unittest(void) {
 				f_mul_2,
 				NULL
 		);
-		TEST((uintptr_t)async_get(t) == 2);
+		TEST_EQ((uintptr_t)async_get(t) == 2);
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
@@ -299,7 +299,7 @@ int async_unittest(void) {
 		async_t *t = async_create(f_ret_1, (void*)(uintptr_t)1);
 		async_t *t2 = async_then(t, f_mul_2);
 		async_detach(&t);
-		TEST((uintptr_t)async_get(t2) == 2);
+		TEST_EQ((uintptr_t)async_get(t2) == 2);
 		async_cancel(&t2);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
@@ -309,7 +309,7 @@ int async_unittest(void) {
 				f_mul_2,
 				NULL
 		);
-		TEST((uintptr_t)async_get(t) == 2);
+		TEST_EQ((uintptr_t)async_get(t) == 2);
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
@@ -320,7 +320,7 @@ int async_unittest(void) {
 				f_mul_2,
 				NULL
 		);
-		TEST((uintptr_t)async_get(t) == 4);
+		TEST_EQ((uintptr_t)async_get(t) == 4);
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
@@ -331,7 +331,7 @@ int async_unittest(void) {
 				f_mul_2,
 				NULL
 		);
-		TEST((uintptr_t)async_get(t) == 4);
+		TEST_EQ((uintptr_t)async_get(t) == 4);
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
@@ -344,13 +344,13 @@ int async_unittest(void) {
 				f_add_2,
 				NULL
 		);
-		TEST((uintptr_t)async_get(t) == 14);
+		TEST_EQ((uintptr_t)async_get(t) == 14);
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
 	for (int i = 0; i < 50; ++i) {
 		async_t *t1 = async_create(f_ret_1, NULL);
-		TEST(t1 != NULL);
+		TEST_EQ(t1 != NULL);
 		async_t *t = async_then_chain(
 				t1,
 				f_add_2,
@@ -359,15 +359,15 @@ int async_unittest(void) {
 				f_add_2,
 				NULL
 		);
-		TEST(t != NULL);
-		TEST((uintptr_t)async_get(t) == 14);
+		TEST_EQ(t != NULL);
+		TEST_EQ((uintptr_t)async_get(t) == 14);
 		async_cancel(&t1);
 		async_cancel(&t);
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
 
 	async_cancel(&t0);
-	TEST(pthread_mutex_destroy(&mutex) == 0);
+	TEST_EQ(pthread_mutex_destroy(&mutex) == 0);
 	usleep(500*1000);
 
 	return 0;

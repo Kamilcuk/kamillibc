@@ -14,4 +14,10 @@ extern const struct findmsg_conf_s findmsg_conf_newline;
 
 int findmsg_conf_newline_checkEnding(const char buf[], size_t size, void *arg);
 
+static inline
+ssize_t findmsg_newline(struct findmsg_s *t, clock_t *timeout)
+{
+	return findmsg_findmsg(t, &findmsg_conf_newline, NULL, timeout);
+}
+
 #endif /* SRC_findmsg_NEWLINE_H_ */

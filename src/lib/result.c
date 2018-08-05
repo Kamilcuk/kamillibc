@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#define TEST(expr)  do { \
+#define TEST_EQ(expr)  do { \
 	if (!(expr)) { \
 		fprintf(stderr, "%s:%d: error %s: expr '%s' failed\n", __FILE__, __LINE__, __func__, #expr); \
 		return -__LINE__; \
@@ -30,39 +30,39 @@ int _res_unittest(void)
 	int var;
 	int save;
 
-	TEST(RES_isOk(res) == true);
-	TEST(RES_isErr(res) == false);
-	TEST(RES_getOk(res, var) == true);
-	TEST(var == 10);
+	TEST_EQ(RES_isOk(res) == true);
+	TEST_EQ(RES_isErr(res) == false);
+	TEST_EQ(RES_getOk(res, var) == true);
+	TEST_EQ(var == 10);
 	save = var;
-	TEST(RES_getErr(res, var) == false);
-	TEST(var == save);
+	TEST_EQ(RES_getErr(res, var) == false);
+	TEST_EQ(var == save);
 
 	RES_setErr(res, -20);
-	TEST(RES_isOk(res) == false);
-	TEST(RES_isErr(res) == true);
+	TEST_EQ(RES_isOk(res) == false);
+	TEST_EQ(RES_isErr(res) == true);
 	save = var;
-	TEST(RES_getOk(res, var) == false);
-	TEST(save == var);
-	TEST(RES_getErr(res, var) == true);
-	TEST(var == -20);
+	TEST_EQ(RES_getOk(res, var) == false);
+	TEST_EQ(save == var);
+	TEST_EQ(RES_getErr(res, var) == true);
+	TEST_EQ(var == -20);
 
-	TEST(RES_isOk(res2) == false);
-	TEST(RES_isErr(res2) == true);
+	TEST_EQ(RES_isOk(res2) == false);
+	TEST_EQ(RES_isErr(res2) == true);
 	save = var;
-	TEST(RES_getOk(res2, var) == false);
-	TEST(save == var);
-	TEST(RES_getErr(res2, var) == true);
-	TEST(var == -10);
+	TEST_EQ(RES_getOk(res2, var) == false);
+	TEST_EQ(save == var);
+	TEST_EQ(RES_getErr(res2, var) == true);
+	TEST_EQ(var == -10);
 
 	RES_setOk(res2, 20);
-	TEST(RES_isOk(res2) == true);
-	TEST(RES_isErr(res2) == false);
-	TEST(RES_getOk(res2, var) == true);
-	TEST(var == 20);
+	TEST_EQ(RES_isOk(res2) == true);
+	TEST_EQ(RES_isErr(res2) == false);
+	TEST_EQ(RES_getOk(res2, var) == true);
+	TEST_EQ(var == 20);
 	save = var;
-	TEST(RES_getErr(res2, var) == false);
-	TEST(var == save);
+	TEST_EQ(RES_getErr(res2, var) == false);
+	TEST_EQ(var == save);
 
 	// example usage
 	{

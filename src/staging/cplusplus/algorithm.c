@@ -57,44 +57,44 @@ static char T_transform2_op_transform2(const int *el1, const int *el2, void *arg
 }
 int algo_unittest()
 {
-#define TEST(expr) do{ if (!(expr)) { assert(expr); return -__LINE__; } }while(0)
+#define TEST_EQ(expr) do{ if (!(expr)) { assert(expr); return -__LINE__; } }while(0)
 	{
 		const int a[] = {1,2,3,4};
 		const int b = 3;
 		const int * const it = TESTfind_find(a, a+4, &b);
-		TEST(it == a+2);
+		TEST_EQ(it == a+2);
 	}
 	{
 		const int a[] = {1,2,3,4};
 		int sum = 0;
 		TEST_for_each(a, a+4, TEST_for_each_fn, &sum);
-		TEST(sum == 10);
+		TEST_EQ(sum == 10);
 	}
 	{
 		const int a[] = {1,2,3,4};
 		const int b[] = {2,3};
 		const int * const it = TEST1_search1(a, a+4, b, b+2);
-		TEST(it == a+1);
+		TEST_EQ(it == a+1);
 	}
 	{
 		const int a[] = {1,2,3,4};
 		const int b[] = {2,3};
 		const int * const it = TEST2_search2(a, a+4, b, b+2, TEST_serach2_mypredicate, NULL);
-		TEST(it == a+1);
+		TEST_EQ(it == a+1);
 	}
 	{
 		const int a[] = {1,2,3,4};
 		char buf[5];
 
 		T_transform1(a, a+4, buf, T_transform1_op_transform1, NULL);
-		TEST(!memcmp(buf, "1234", 4));
+		TEST_EQ(!memcmp(buf, "1234", 4));
 	}
 	{
 		const int a[] = {1,2,3,4};
 		const int b[] = {0,1,2,3};
 		char buf[5];
 		T_transform2(a, a+4, b, buf, T_transform2_op_transform2, NULL);
-		TEST(!memcmp(buf, "1357", 4));
+		TEST_EQ(!memcmp(buf, "1357", 4));
 	}
 	return 0;
 }

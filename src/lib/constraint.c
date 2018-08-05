@@ -70,25 +70,23 @@ void constraint_ignore_handler(const char * restrict msg, int error,
 		const char * restrict assertion, const char * restrict file,
 		unsigned int line, const char * restrict function)
 {
-
 }
 
-void constraint_set_handler(constraint_handler_t handler)
+constraint_handler_t constraint_set_handler(constraint_handler_t handler)
 {
+	constraint_handler_t ret = constraint_handler;
 	constraint_handler = handler;
+	return ret;
 }
 
 constraint_handler_t contraint_get_handler()
 {
-	return constraint_handler;
+	return constraint_handler != NULL ? constraint_handler : constraint_abort_handler;
 }
-
 
 void _constraint_failed(const char * restrict msg, int error,
 		const char * restrict assertion, const char * restrict file,
 		unsigned int line, const char * restrict function)
 {
-	(
-		constraint_handler != NULL ? constraint_handler : constraint_abort_handler
-	)(msg, error, assertion, file, line, function);
+	contraint_get_handler()(msg, error, assertion, file, line, function);
 }

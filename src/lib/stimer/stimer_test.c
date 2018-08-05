@@ -7,16 +7,16 @@
 #include <stimer/stimer.h>
 #include <assert.h>
 
-#define TEST(expr) assert(expr)
+#define TEST_EQ(expr) assert(expr)
 
 #define TEST_LIST_MEMB(memb, ...) do{ \
 	const struct stimer_s *_t_onstack[] = { memb, ##__VA_ARGS__ }; \
 	const struct stimer_s **_t = &_t_onstack[0]; \
 	struct stimer_s *_i; \
 	SLIST_FOREACH(_i, stimer_gethead(), list) { \
-		TEST( *_t++ == _i ); \
+		TEST_EQ( *_t++ == _i ); \
 	} \
-	TEST(_i == NULL); \
+	TEST_EQ(_i == NULL); \
 }while(0)
 
 #define TEST_LIST_VALS(vals, ...) do { \
@@ -24,7 +24,7 @@
 	const clock_t *_t = &_t_onstack[0]; \
 	struct stimer_s *_i; \
 	SLIST_FOREACH(_i, stimer_gethead(), list) { \
-		TEST( *_t++ == _i->value ); \
+		TEST_EQ( *_t++ == _i->value ); \
 	} \
 }while(0)
 
@@ -42,12 +42,12 @@ static struct stimer_test_s stimer_test;
 }while(0)
 
 #define TEST_ARMED(value)  do{ \
-	TEST(stimer_test.armedchanged == true); \
-	TEST(stimer_test.armedfor == value); \
+	TEST_EQ(stimer_test.armedchanged == true); \
+	TEST_EQ(stimer_test.armedfor == value); \
 	stimer_test.armedchanged = false; \
 }while(0);
 
-#define TEST_ARMED_NOTCHANGED()  TEST(stimer_test.armedchanged == false);
+#define TEST_ARMED_NOTCHANGED()  TEST_EQ(stimer_test.armedchanged == false);
 
 static inline void stimer_arm_Callback_test(clock_t value)
 {

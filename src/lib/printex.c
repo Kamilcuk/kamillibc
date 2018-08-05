@@ -70,35 +70,35 @@ char *printint64(int64_t v, char result[21])
 
 int printex_unittest()
 {
-#define TEST(expr) do{ if(!(expr)) { assert(0); return -__LINE__; } }while(0)
+#define TEST_EQ(expr) do{ if(!(expr)) { assert(0); return -__LINE__; } }while(0)
 	char *tmp, buf[65];
 
 	tmp = printuint64(1234567654321, buf);
-	TEST(tmp >= &buf[0] && tmp < &buf[21]);
-	TEST(!strcmp(tmp, "1234567654321"));
+	TEST_EQ(tmp >= &buf[0] && tmp < &buf[21]);
+	TEST_EQ(!strcmp(tmp, "1234567654321"));
 
 	tmp = printint64(1234567654321, buf);
-	TEST(tmp >= &buf[0] && tmp < &buf[21]);
-	TEST(!strcmp(tmp, "1234567654321"));
+	TEST_EQ(tmp >= &buf[0] && tmp < &buf[21]);
+	TEST_EQ(!strcmp(tmp, "1234567654321"));
 
 	tmp = printint64(-1234567654321, buf);
-	TEST(tmp >= &buf[0] && tmp < &buf[21]);
-	TEST(!strcmp(tmp, "-1234567654321"));
+	TEST_EQ(tmp >= &buf[0] && tmp < &buf[21]);
+	TEST_EQ(!strcmp(tmp, "-1234567654321"));
 
 	tmp = printbinary(2, 0x2, buf);
-	TEST(tmp == buf);
-	TEST(!strcmp(buf, "10"));
+	TEST_EQ(tmp == buf);
+	TEST_EQ(!strcmp(buf, "10"));
 
 	tmp = printbinary(64, 0xcd0aa5f8cc389648, buf);
-	TEST(tmp == buf);
-	TEST(!strcmp(tmp, "1100110100001010101001011111100011001100001110001001011001001000"));
+	TEST_EQ(tmp == buf);
+	TEST_EQ(!strcmp(tmp, "1100110100001010101001011111100011001100001110001001011001001000"));
 
-	TEST(!strcmp(PRINTUINT64(18446744073709551615ull), "18446744073709551615"));
+	TEST_EQ(!strcmp(PRINTUINT64(18446744073709551615ull), "18446744073709551615"));
 
-	TEST(!strcmp(PRINTINT64( 9223372036854775807ll),  "9223372036854775807"));
-	TEST(!strcmp(PRINTINT64(-9223372036854775807ll), "-9223372036854775807"));
+	TEST_EQ(!strcmp(PRINTINT64( 9223372036854775807ll),  "9223372036854775807"));
+	TEST_EQ(!strcmp(PRINTINT64(-9223372036854775807ll), "-9223372036854775807"));
 
-	TEST(!strcmp(PRINTBINARY(64, 0xcd0aa5f8cc389648),
+	TEST_EQ(!strcmp(PRINTBINARY(64, 0xcd0aa5f8cc389648),
 			"1100110100001010101001011111100011001100001110001001011001001000")
 	);
 

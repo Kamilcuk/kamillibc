@@ -23,7 +23,10 @@ unsigned int findmsg_ublox_crc(const char buf[], size_t len);
 ssize_t findmsg_ublox_checkBeginning(const char buf[], size_t size, void *arg);
 int findmsg_ublox_checkEnding(const char buf[], size_t size, void *arg);
 
-// isValid should be defined in different transaction unit
-bool findmsg_ublox_isValid(const char buf[], size_t len);
+static inline
+ssize_t findmsg_ublox(struct findmsg_s *t, clock_t *timeout)
+{
+	return findmsg_findmsg(t, &findmsg_conf_ublox, NULL, timeout);
+}
 
 #endif /* SRC_FINDMSG_CONFS_UBLOX_H_ */

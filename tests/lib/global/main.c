@@ -19,7 +19,7 @@ MACROPRINT(__GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__)
 #endif
 MACROPRINT(__VERSION__)
 
-#define TEST(ret, expr) do{ \
+#define TEST_EQ(ret, expr) do{ \
 	if (!(expr)) { \
 		fprintf(stderr, "Test '%s' failed\n", #expr); \
 		ret = 1; \
@@ -30,13 +30,13 @@ MACROPRINT(__VERSION__)
 int main() {
 	int ret = 0;
 	int findmsg_unittest();
-	TEST(ret, findmsg_unittest() == 0);
-	TEST(ret, rb_unittest() == 0);
-	TEST(ret, MINMAX(1,0,3) == 1);
-	TEST(ret, MINMAX(-1,0,3) == 0);
-	TEST(ret, MINMAX(4,0,3) == 3);
-	TEST(ret, printex_unittest() == 0);
-	TEST(ret, _time_ex_unittest() == 0);
-	TEST(ret, bitstr_unittest() == 0);
+	TEST_EQ(ret, findmsg_unittest() == 0);
+	TEST_EQ(ret, rb_unittest() == 0);
+	TEST_EQ(ret, MINMAX(1,0,3) == 1);
+	TEST_EQ(ret, MINMAX(-1,0,3) == 0);
+	TEST_EQ(ret, MINMAX(4,0,3) == 3);
+	TEST_EQ(ret, printex_unittest() == 0);
+	TEST_EQ(ret, _time_ex_unittest() == 0);
+	TEST_EQ(ret, bitstr_unittest() == 0);
 	return ret;
 }

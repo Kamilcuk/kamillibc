@@ -92,13 +92,13 @@ void bitstr_putdec(struct bitstr_s *t, bool val)
 
 int bitstr_unittest(void)
 {
-#define TEST(expr) if(!(expr)) { assert(expr); return -__LINE__; }
+#define TEST_EQ(expr) if(!(expr)) { assert(expr); return -__LINE__; }
 	struct bitstr_s t = BITSTR_INIT(((char*)(unsigned char[2]){0xAA, 0xAA}), 2);
-	TEST(bitstr_atBegin(&t) == true);
+	TEST_EQ(bitstr_atBegin(&t) == true);
 	for(size_t i = 0; i < CHAR_BIT; ++i) {
-		TEST(bitstr_getinc(&t) == false);
-		TEST(bitstr_getinc(&t) == true);
+		TEST_EQ(bitstr_getinc(&t) == false);
+		TEST_EQ(bitstr_getinc(&t) == true);
 	}
-	TEST(bitstr_atEnd(&t) == true);
+	TEST_EQ(bitstr_atEnd(&t) == true);
 	return 0;
 }

@@ -33,8 +33,7 @@ static inline ssize_t findmsg_memcmp(struct findmsg_s *t, const char mem[], size
 	const struct findmsg_conf_s conf = findmsg_conf_memcmp(memsize);
 	return findmsg_findmsg(t,
 			&conf, (void*)mem,
-			timeout,
-			NULL);
+			timeout);
 }
 
 #endif /* SRC_FINDMSG_MEMCMP_H_ */
