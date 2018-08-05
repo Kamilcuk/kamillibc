@@ -8,13 +8,88 @@
 #ifndef SRC_findmsg_H_
 #define SRC_findmsg_H_
 
-#include <findmsg/types.h>
 #include <sys/types.h>
-#include <unistd.h>
-#include <errno.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <time.h>
+
+/* Exported constants -------------------------------------------- */
+
+/**
+ * Returned by checkBeginning functions
+ */
+enum findmsg_BEG_e {
+	findmsg_BEG_NOT_MSG_BEGNNING = 0,
+	findmsg_BEG_MSG_BEGINNING    = 1,
+};
+
+/**
+ * Returned by checkEnding functions
+ */
+enum findmsg_END_e {
+	findmsg_END_MSG_TOO_SHORT = 0,
+	findmsg_END_MSG_VALID     = 1,
+	findmsg_END_MSG_INVALID   = 2,
+};
+
+/* Exported types --------------------------------------------------- */
+
+struct findmsg_s {
+	// private:
+	/**
+	 * File descriptor to read from
+	 */
+	int fd;
+	/**
+	 * Pointer to allocated buffer of size size
+	 */
+	char * buf;
+	/**
+	 * Size of buf
+	 */
+	size_t size;
+	/**
+	 * Current position inside buf
+	 */
+	size_t pos;
+	/**
+	 * Then length of the last received message or zero
+	 */
+	size_t msgReceivedSize;
+};
+
+struct findmsg_conf_s {
+	/**
+	 * Minimum length of the message.
+	 */
+	size_t minlength;
+	/**
+	 * Maximum length of the message
+	 */
+	size_t maxlength;
+	/**
+	 * Checks if the bytes pointed by buf contain message beginning
+	 * @param buf
+	 * @param bufsize is equal to minlength (always)
+	 * @param arg pointer to context variable
+	 * @return positive value that is presumed length of the message or 1, when
+	 * 	          a message starts in bytes pointed to by buf
+	 *         0 or findmsg_NOT_MSG_BEGNNING when message beginning is not in buf
+	 *         negative value on error
+	 */
+	ssize_t (*checkBeginning)(const char buf[], size_t bufsize, void *arg);
+	/**
+	 * Checks
+	 * @param buf
+	 * @param bufsize
+	 * @param arg
+	 * @return findmsg_MSG_VALID if buf contains valid message with the length bufsize
+	 *         findmgs_MSG_TOO_SHOFT if bufsize is too small
+	 *         findmsg_MSG_INVALID if buf contains an invalid message (for ex. CRC failed)
+	 *         negative value on internal error
+	 */
+	int (*checkEnding)(const char buf[], size_t bufsize, void *arg);
+};
 
 /* Weak functions --------------------------------------------------------- */
 
@@ -26,7 +101,7 @@
  * @param timeout
  * @return number of read characters or negative on error
  */
-ssize_t findmsg_readtimeout(int fd, char buf[], size_t size, clock_t timeout);
+ssize_t findmsg_readtimeout(int fd, char buf[], size_t size, struct timespec *timeout);
 
 /* Exported Functions ----------------------------------------------------- */
 
@@ -77,7 +152,7 @@ void findmsg_init(struct findmsg_s *t, int fd, char buf[], size_t size);
  */
 ssize_t findmsg_findmsg(struct findmsg_s *t,
 		const struct findmsg_conf_s *conf, void *arg,
-		clock_t *timeout);
+		struct timespec *timeout);
 
 /**
  * After a message has been successfully found (ie. findmsg_findmsg returned 1)
@@ -107,7 +182,7 @@ void findmsg_next(struct findmsg_s *t);
  */
 ssize_t findmsg_beginning(struct findmsg_s *t, size_t minlen,
 		ssize_t (*checkBeginning)(const char buf[], size_t minlen, void *arg), void *arg,
-		clock_t *timeout);
+		struct timespec *timeout);
 
 /**
  * Wait for more characters in buffer up until maxlen until checkending returns != 0 in specified timeout
@@ -121,11 +196,11 @@ ssize_t findmsg_beginning(struct findmsg_s *t, size_t minlen,
  */
 ssize_t findmsg_ending(struct findmsg_s *t, size_t startlen, size_t maxlen,
 		int (*checkEnding)(const char buf[], size_t len, void *arg), void *arg,
-		clock_t *timeout);
+		struct timespec *timeout);
 
 ssize_t findmsg_get(struct findmsg_s *t,
 		const struct findmsg_conf_s *conf, void *arg,
-		clock_t *timeout,
+		struct timespec *timeout,
 		/*out*/ char buf[], size_t bufsize);
 
 #endif /* SRC_findmsg_H_ */

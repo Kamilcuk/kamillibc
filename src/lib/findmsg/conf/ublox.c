@@ -38,11 +38,11 @@ ssize_t findmsg_ublox_checkBeginning(const char buf[], size_t size, void *arg)
 {
 	assert(size >= findmsg_ublox_minlength);
 	if (!(buf[0] == 0xB5 && buf[1] == 0x62)) {
-		return findmsg_NOT_MSG_BEGNNING;
+		return findmsg_BEG_NOT_MSG_BEGNNING;
 	}
 	const unsigned int len = (buf[4]<<8 | buf[5]);
 	if (!(findmsg_ublox_minlength <= len && len <= findmsg_ublox_maxlength)) {
-		return findmsg_NOT_MSG_BEGNNING;
+		return findmsg_BEG_NOT_MSG_BEGNNING;
 	}
 	return len;
 }
@@ -53,7 +53,7 @@ int findmsg_ublox_checkEnding(const char buf[], size_t size, void *arg)
 	assert(size >= (buf[4] << 8 | buf[5]));
 	// check crc
 	if ((buf[size - 2] << 8 | buf[size - 1]) != findmsg_ublox_crc(buf, size)) {
-		return findmsg_MSG_INVALID;
+		return findmsg_END_MSG_INVALID;
 	}
-	return findmsg_MSG_VALID;
+	return findmsg_END_MSG_VALID;
 }

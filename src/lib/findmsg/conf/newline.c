@@ -5,9 +5,9 @@
  *      Author: kamil
  */
 
-#include "../conf/newline.h"
+#include "newline.h"
 
-#include "../conf/stub.h"
+#include "stub.h"
 
 #include <stdint.h>
 
@@ -20,5 +20,5 @@ const struct findmsg_conf_s findmsg_conf_newline = {
 
 int findmsg_conf_newline_checkEnding(const char buf[], size_t size, void *arg)
 {
-	return buf[size-1] == '\n' ? findmsg_MSG_VALID : findmsg_MSG_TOO_SHORT;
+	return buf[size-1] == '\n' ? findmsg_END_MSG_VALID : findmsg_END_MSG_TOO_SHORT;
 }

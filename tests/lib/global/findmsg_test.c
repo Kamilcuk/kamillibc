@@ -52,7 +52,7 @@ static inline int test_recv_newline(void)
 	int fd = CREATE_TMPFILE(c);
 	struct findmsg_s f = findmsg_INIT_ON_STACK(fd, 16);
 
-	clock_t timeout = 30;
+	struct timespec timeout = { 0, .tv_nsec = 30*1000*1000, };
 	ssize_t linelen;
 	char *in = strchr(c, '\n');
 	for(int i = 0; (linelen = findmsg_findmsg(&f, &findmsg_conf_newline, NULL, &timeout)) > 0; ++i) {

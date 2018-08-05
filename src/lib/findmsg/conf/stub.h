@@ -8,7 +8,7 @@
 #ifndef SRC_FINDMSG_STUB_H_
 #define SRC_FINDMSG_STUB_H_
 
-#include <findmsg/types.h>
+#include <findmsg/findmsg.h>
 
 extern const struct findmsg_conf_s findmsg_conf_stub;
 

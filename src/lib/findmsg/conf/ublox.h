@@ -8,9 +8,7 @@
 #ifndef SRC_FINDMSG_CONFS_UBLOX_H_
 #define SRC_FINDMSG_CONFS_UBLOX_H_
 
-#include <findmsg/types.h>
-
-#include <stdbool.h>
+#include <findmsg/findmsg.h>
 
 enum {
 	findmsg_ublox_minlength = 8,
@@ -24,7 +22,7 @@ ssize_t findmsg_ublox_checkBeginning(const char buf[], size_t size, void *arg);
 int findmsg_ublox_checkEnding(const char buf[], size_t size, void *arg);
 
 static inline
-ssize_t findmsg_ublox(struct findmsg_s *t, clock_t *timeout)
+ssize_t findmsg_ublox(struct findmsg_s *t, struct timespec *timeout)
 {
 	return findmsg_findmsg(t, &findmsg_conf_ublox, NULL, timeout);
 }

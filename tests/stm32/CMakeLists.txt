@@ -1,2 +1,8 @@
 include(${CMAKE_CURRENT_SOURCE_DIR}/../../cmake/kcuk_common.cmake)
 kcuk_tests_common()
+add_library(kcuk_stm32_posix STATIC posix.c)
+subdirlist(dirs ${CMAKE_CURRENT_SOURCE_DIR}/../lib)
+foreach(dir ${dirs})
+	target_link_libraries(kcuk_lib_${dir}_test PUBLIC kcuk_stm32_posix)
+	target_link_libraries(kcuk_lib_${dir}_test PUBLIC -specs=nosys.specs -specs=nano.specs)
+endforeach()

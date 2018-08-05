@@ -7,7 +7,6 @@
 
 #include <constraint.h>
 
-#include <sys/cdefs.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
