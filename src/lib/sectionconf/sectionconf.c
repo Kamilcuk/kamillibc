@@ -8,7 +8,6 @@
 #include <endian.h>
 #include <inttypes.h>
 #include <limits.h>
-#include <sys/cdefs.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>

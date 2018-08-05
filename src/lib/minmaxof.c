@@ -5,11 +5,10 @@
  *      Author: kamil
  */
 #include <minmaxof.h>
-#include <static_assert.h>
+#include <assert.h>
 #include <limits.h>
 #include <inttypes.h>
 #include <stdio.h>
-#include <sys/cdefs.h>
 
 #define _(type,how,max,min) do{ \
 		printf("MAX_OF("#type") = %"how" == %"how"\n", MAX_OF(type), (type)max); \

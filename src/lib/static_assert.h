@@ -8,18 +8,7 @@
 #ifndef SRC_STATIC_ASSERT_H_
 #define SRC_STATIC_ASSERT_H_
 
-#include <sys/cdefs.h>
-
-#if __STDC_VERSION__ >= 201112L
 #include <assert.h>
-#undef static_assert
-#define _static_assert_2(expr, msg)       _Static_assert(expr, msg)
-#define _static_assert_1(expr)            _static_assert_2(expr, "")
-#define _static_assert_N(_1, _2, N, ...)  _static_assert_##N
-#define static_assert(expr, ...)          _static_assert_N(expr, ##__VA_ARGS__, 2, 1)(expr, ##__VA_ARGS__)
-#else
-#define static_assert(expr, ...)  ((void)sizeof(char[1 - 2*!!(expr)]))
-#endif
 
 /**
  * Compile time assertion, same as __CTASSERT in cdefs.h

@@ -8,7 +8,6 @@
 #include "../conf/ublox.h"
 
 #include <assert.h>
-#include <sys/cdefs.h>
 
 const struct findmsg_conf_s findmsg_conf_ublox = {
 		.minlength = findmsg_ublox_minlength,
