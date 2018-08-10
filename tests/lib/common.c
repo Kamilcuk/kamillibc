@@ -15,6 +15,7 @@
 #include <macroprint.h>
 #include <array_size.h>
 #include <cdefs.h>
+#include <typecheck.h>
 
 #ifdef __GNUC__
 MACROPRINT(__GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__)
@@ -41,9 +42,11 @@ int main() {
 	BUILD_BUG_ON(ARRAY_SIZE(b) != 5);
 	BUILD_BUG_ON(ARRAY_SIZE((char[5]){0}) != 5);
 
+	BUILD_BUG_ON(typecheck(char, char) != 1);
+	BUILD_BUG_ON(typecheck((char[5]){0}, b) != 1);
+	BUILD_BUG_ON(typecheck(char, b[0]) != 1);
+
 	int ret = 0;
-	int findmsg_unittest();
-	TEST_EQ(ret, findmsg_unittest() == 0);
 	TEST_EQ(ret, rb_unittest() == 0);
 	TEST_EQ(ret, MINMAX(1,0,3) == 1);
 	TEST_EQ(ret, MINMAX(-1,0,3) == 0);

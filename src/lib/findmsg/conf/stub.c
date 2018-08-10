@@ -19,7 +19,7 @@ const struct findmsg_conf_s findmsg_conf_stub = {
 
 ssize_t findmsg_stub_checkBeginning(const char buf[], size_t bufsize, void *arg)
 {
-	return findmsg_END_MSG_VALID;
+	return findmsg_BEG_MSG_BEGINNING;
 }
 
 int findmsg_stub_checkEnding(const char buf[], size_t bufsize, void *arg)

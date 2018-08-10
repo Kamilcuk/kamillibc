@@ -1,7 +1,7 @@
 B=build
 
 all:
-	cmake -H. -B${B} -DCMAKE_RULE_MESSAGES:BOOL=OFF -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+	cmake -H. -B${B} -DCMAKE_BUILD_TYPE=Debug -DCMAKE_RULE_MESSAGES:BOOL=OFF -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
 	$(MAKE) --no-print-directory make_silenttest
 arm:
 	cmake -H. -B${B} \

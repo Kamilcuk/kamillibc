@@ -13,9 +13,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#define TEST_EQ(val, expr) do{ \
-	if ((val) != (expr)) { \
-		fprintf(stderr, "findmsg_unittest() error %s != %s\n", #val, #expr); \
+#define TEST(expr)  do{ \
+	if (!(expr)) { \
+		fprintf(stderr, "%s:%d: error: %s() expr %s failed\n", __FILE__, __LINE__, __func__, #expr); \
 		return -1; \
 	} \
 }while(0)
@@ -30,7 +30,7 @@ static int create_tmpfile(char content[], size_t size)
 	curb(fd > 0);
 	return fd;
 }
-#define CREATE_TMPFILE(str)  create_tmpfile(str, sizeof(str))
+#define CREATE_TMPFILE(str)  create_tmpfile(str, sizeof(str) - 1)
 
 static inline int test_new_free_init(void)
 {
@@ -58,14 +58,15 @@ static inline int test_recv_newline(void)
 	char *in = strchr(c, '\n');
 	for(int i = 0; (linelen = findmsg_findmsg(&f, &findmsg_conf_newline, NULL, &timeout)) > 0; ++i) {
 		const char * const line = findmsg_msgpnt(&f);
-		TEST_EQ(4, linelen);
-		TEST_EQ(in[0], line[linelen-1]);
-		TEST_EQ(in[-1], line[linelen-2]);
-		TEST_EQ(in[-2], line[linelen-3]);
-		TEST_EQ(in[-3], line[linelen-4]);
+		TEST(NULL != line);
+		TEST(4 == linelen);
+		TEST(in[0] == line[linelen-1]);
+		TEST(in[-1] == line[linelen-2]);
+		TEST(in[-2] == line[linelen-3]);
+		TEST(in[-3] == line[linelen-4]);
 		in = strchr(&in[1], '\n');
 	}
-	TEST_EQ(0, linelen);
+	TEST(0 == linelen);
 	return 0;
 }
 
@@ -73,12 +74,12 @@ static inline int test_ending_badFd(void)
 {
 	struct findmsg_s f = findmsg_INIT_ON_STACK(-1, 16);
 	ssize_t ret;
-	ret = findmsg_beginning(&f, 1, findmsg_stub_checkBeginning, NULL, NULL);
-	TEST_EQ(-1, ret);
-	ret = findmsg_ending(&f, 1, 2, findmsg_stub_checkEnding, NULL, NULL);
-	TEST_EQ(-1, ret);
+	ret = findmsg_beginning(&f, &findmsg_conf_stub, NULL, NULL);
+	TEST(-1 == ret);
+	ret = findmsg_ending(&f, &findmsg_conf_stub, NULL, 1, NULL);
+	TEST(-1 == ret);
 	ret = findmsg_findmsg(&f, &findmsg_conf_stub, NULL, NULL);
-	TEST_EQ(-1, ret);
+	TEST(-1 == ret);
 	return 0;
 }
 
@@ -106,16 +107,16 @@ static inline int test_conf_returingNegative(void)
 		char c[] = "aaa\nbbb\nccc\n";
 		int fd = CREATE_TMPFILE(c);
 		struct findmsg_s f = findmsg_INIT_ON_STACK(fd, 32);
-		ret = findmsg_beginning(&f, 1, test_conf_returingNegative_checkBeginning, &val, NULL);
-		TEST_EQ(-2000, ret);
+		ret = findmsg_beginning(&f, &conf, &val, NULL);
+		TEST(-2000 == ret);
 	}
 	{
 		struct test_conf_returingNegative_s val = {0};
 		char c[] = "aaa\nbbb\nccc\n";
 		int fd = CREATE_TMPFILE(c);
 		struct findmsg_s f = findmsg_INIT_ON_STACK(fd, 32);
-		ret = findmsg_ending(&f, 1, 2, test_conf_returingNegative_checkEnding, &val, NULL);
-		TEST_EQ(-2000, ret);
+		ret = findmsg_ending(&f, &conf, &val, 1, NULL);
+		TEST(-2000 == ret);
 	}
 	{
 		struct test_conf_returingNegative_s val = {0};
@@ -123,12 +124,12 @@ static inline int test_conf_returingNegative(void)
 		int fd = CREATE_TMPFILE(c);
 		struct findmsg_s f = findmsg_INIT_ON_STACK(fd, 32);
 		ret = findmsg_findmsg(&f, &conf, &val, NULL);
-		TEST_EQ(-2000, ret);
+		TEST(-2000 == ret);
 	}
 	return 0;
 }
 
-int findmsg_unittest()
+int main()
 {
 	return test_new_free_init() ||
 			test_recv_newline()  ||

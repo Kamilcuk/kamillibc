@@ -10,6 +10,6 @@
 
 #include <string.h>
 
-#define __FILENAME__  (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
+#define FILENAME  (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
 #endif /* SRC_FILENAME_H_ */

@@ -4,7 +4,7 @@
  *  Created on: 8 sie 2018
  *      Author: kamil
  */
-#include "../../../src/lib/curb.h"
+#include <curb.h>
 
 #include <assert.h>
 #include <stdlib.h>

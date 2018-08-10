@@ -15,8 +15,8 @@ typedef int pwm_t;
 #define __pwm_t_defined 1
 #endif
 
-void pwm_set_dutycycle(pwm_t t, float dutycycle);
-void pwm_set_frequency(pwm_t t, unsigned int frequency);
-void pwm_set_period(pwm_t t, unsigned int period);
+void pwm_setDutycycle(pwm_t t, float dutycycle);
+void pwm_setFrequency(pwm_t t, unsigned int frequency);
+void pwm_setPeriod(pwm_t t, unsigned int period);
 
 #endif /* SRC_LIB_UNI_PWM_H_ */

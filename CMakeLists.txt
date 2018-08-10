@@ -8,7 +8,7 @@ endif()
 
 project(kcuk C)
 
-string(APPEND CMAKE_C_FLAGS " -Wall -pedantic")
+string(APPEND CMAKE_C_FLAGS " -g3 -Wall -pedantic")
 
 enable_testing()
 

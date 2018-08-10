@@ -21,19 +21,29 @@ macro(kcuk_src_common)
 	
 endmacro()
 
+function(_kcuk_test_common_in target srcs)
+	add_executable(${target} ${srcs})
+	target_link_libraries(${target} kcuk_lib_static)
+	target_link_libraries(${target} ${name}_static)
+	add_test(${target} ${target})
+endfunction()
+
 function(kcuk_tests_common)
 
 	kcuk_getname(name)
 	
 	include(${CMAKE_CURRENT_LIST_DIR}/../../cmake/subdirlist.cmake)
+	
 	subdirlist(dirs ${CMAKE_CURRENT_LIST_DIR})
 	foreach(dir ${dirs})
-		file(GLOB tmp ${dir}/*.c)
-		set(target ${name}_test_${dir})
-		add_executable(${target} ${tmp})
-		target_link_libraries(${target} kcuk_lib_static)
-		target_link_libraries(${target} ${name}_static)
-		add_test(${target} ${target})
+		file(GLOB srcs ${dir}/*.c)
+		_kcuk_test_common_in(${name}_test_${dir} "${srcs}")
+	endforeach()
+	
+	file(GLOB files ${CMAKE_CURRENT_LIST_DIR}/*.c)
+	foreach(file ${files})
+		get_filename_component(n ${file} NAME_WE)
+		_kcuk_test_common_in(${name}_test_${n}_c ${file})
 	endforeach()
 	
 endfunction()

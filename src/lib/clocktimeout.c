@@ -9,16 +9,9 @@
 #include <assert.h>
 #include <limits.h>
 
-clock_t clocktimeout_start() {
-	return clock();
-}
-
-void clocktimeout_init(clock_t * restrict start, clock_t * restrict timeout)
+clock_t clocktimeout_start(clock_t *timeout)
 {
-	assert(start != NULL);
-	if (timeout != NULL) {
-		*start = clocktimeout_start();
-	}
+	return timeout != NULL ? clock() : 0;
 }
 
 bool clocktimeout_expired(clock_t * restrict start, clock_t * restrict timeout)

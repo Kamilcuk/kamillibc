@@ -21,12 +21,13 @@
  * maximum timeout is equal to MAX_OF(clock_t)
  */
 
-clock_t clocktimeout_start(clock_t *timeout);
-bool clocktimeout_expired(clock_t * restrict start, clock_t * restrict timeout);
+struct timespec timespectimeout_start(void);
+void timespectimeout_init(struct timespec *start, struct timespec *timeout);
+bool timespectimeout_expired(struct timespec *start, struct timespec *timeout);
 
-static inline void clocktimeout_update(clock_t * restrict start, clock_t * restrict timeout)
+static inline void timespectimeout_update(struct timespec *start, struct timespec *timeout)
 {
-	(void)clocktimeout_expired(start, timeout);
+	(void)timespectimeout_expired(start, timeout);
 }
 
 #endif /* SRC_CLOCKTIMEOUT_H_ */

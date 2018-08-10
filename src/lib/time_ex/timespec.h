@@ -56,6 +56,11 @@
 	.tv_nsec = TIMESPEC_FROM_INT_RATIO_NSEC(value, numerator, denominator), \
 	}
 
+static inline bool timespec_isValid(struct timespec ts)
+{
+	return ts.tv_sec >= 0 && (0 <= ts.tv_nsec || ts.tv_nsec <= 1000000000);
+}
+
 static inline struct timespec timespec_normalize(struct timespec ts)
 {
 	while (ts.tv_nsec < 0) {
@@ -129,18 +134,37 @@ static inline struct timespec timespec_from_s_d(double s)
 	return timespec_normalize(ret);
 }
 
+static inline struct timespec timespec_init(time_t tv_sec, long int tv_nsec)
+{
+	assert(0 <= tv_nsec && tv_nsec <= 1000000000);
+	struct timespec ret = { tv_sec, tv_nsec };
+	return ret;
+}
+
 static inline struct timespec timespec_add(struct timespec a, struct timespec b)
 {
 	a.tv_sec += b.tv_sec;
 	a.tv_nsec += b.tv_nsec;
-	return timespec_normalize(a);
+	if (a.tv_nsec >= 1000000000) {
+		a.tv_nsec -= 1000000000;
+		++a.tv_sec;
+	}
+	return a;
 }
 
 static inline struct timespec timespec_sub(struct timespec a, struct timespec b)
 {
+	assert(timespec_isValid(a));
+	assert(timespec_isValid(b));
+	assert(a.tv_sec > b.tv_sec);
 	a.tv_sec -= b.tv_sec;
+	if (a.tv_nsec < b.tv_nsec) {
+		assert(a.tv_sec > 0);
+		--a.tv_sec;
+		a.tv_nsec += 1000000000;
+	}
 	a.tv_nsec -= b.tv_nsec;
-	return timespec_normalize(a);
+	return a;
 }
 
 static inline struct timespec timespec_mul(struct timespec a, int i)
@@ -185,6 +209,36 @@ static inline struct timespec timespec_div_d(struct timespec a, double i)
 	a.tv_nsec /= i;
 	a.tv_nsec += (tmp - a.tv_sec) * 1e9;
 	return timespec_normalize(a);
+}
+
+static inline bool timespec_cmp_eq(struct timespec a, struct timespec b)
+{
+	return a.tv_sec == b.tv_sec && a.tv_nsec == b.tv_nsec;
+}
+
+static inline bool timespec_cmp_ge(struct timespec a, struct timespec b)
+{
+	return a.tv_sec > b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec >= b.tv_nsec);
+}
+
+static inline bool timespec_cmp_gt(struct timespec a, struct timespec b)
+{
+	return a.tv_sec > b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec > b.tv_nsec);
+}
+
+static inline bool timespec_cmp_le(struct timespec a, struct timespec b)
+{
+	return a.tv_sec < b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec <= b.tv_nsec);
+}
+
+static inline bool timespec_cmp_lt(struct timespec a, struct timespec b)
+{
+	return a.tv_sec < b.tv_sec || (a.tv_sec == b.tv_sec && a.tv_nsec < b.tv_nsec);
+}
+
+static inline bool timespec_cmp_ne(struct timespec a, struct timespec b)
+{
+	return a.tv_sec != b.tv_sec && a.tv_nsec != b.tv_nsec;
 }
 
 #endif /* SRC_LIB_TIME_EX_TIMESPEC_H_ */

@@ -162,6 +162,13 @@ ssize_t findmsg_findmsg(struct findmsg_s *t,
 void *findmsg_msgpnt(struct findmsg_s *t);
 
 /**
+ * Return received message length
+ * @param t
+ * @return
+ */
+size_t findmsg_msglen(struct findmsg_s *t);
+
+/**
  * Prepare receive buffer to receive next message
  * This function must be called before next findmsg_findmsg function to receive next message
  * @param t
@@ -173,30 +180,28 @@ void findmsg_next(struct findmsg_s *t);
 /**
  * Calls checkBeggining for every position in receive buffer if it is at least minlen long in specified timeout.
  * @param t
- * @param minlength
- * @param checkBeginning  same function as described in (uartbufrx_findmsgconf_s)
+ * @param c
  * @param arg
  * @param timeout
  * @return negative value on error, zero on timeout or message length
  *
  */
-ssize_t findmsg_beginning(struct findmsg_s *t, size_t minlen,
-		ssize_t (*checkBeginning)(const char buf[], size_t minlen, void *arg), void *arg,
+ssize_t findmsg_beginning(struct findmsg_s *t,
+		const struct findmsg_conf_s *c, void *arg,
 		struct timespec *timeout);
 
 /**
  * Wait for more characters in buffer up until maxlen until checkending returns != 0 in specified timeout
  * @param t
- * @param startlen
- * @param maxlen maximum length of chars in buffer
- * @param checkEnding same function as described in (uartbufrx_findmsgconf_s)->checkEnding
+ * @param c
  * @param arg
+ * @param startlen
  * @param Timeout
  * @return negative value on error, zero on timeout or message length
  */
-ssize_t findmsg_ending(struct findmsg_s *t, size_t startlen, size_t maxlen,
-		int (*checkEnding)(const char buf[], size_t len, void *arg), void *arg,
-		struct timespec *timeout);
+ssize_t findmsg_ending(struct findmsg_s *t,
+		const struct findmsg_conf_s *c, void *arg,
+		size_t startlen, struct timespec *timeout);
 
 ssize_t findmsg_get(struct findmsg_s *t,
 		const struct findmsg_conf_s *conf, void *arg,
