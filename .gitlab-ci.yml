@@ -1,5 +1,11 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
+
+on_archlinux:
+  image: base/archlinux
+  script:
+  - pacman --noconfirm -Suy cmake gcc cppcheck make
+  - make gitlab-ci
   
 on_gcc:
   image: gcc
@@ -15,6 +21,7 @@ on_arm:
   - apt-get update -y
   - apt-get install -y cmake make gcc-arm-none-eabi
   - make gitlab-ci
+  when: manual
   
 on_alpine:
   image: alpine
