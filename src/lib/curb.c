@@ -1,11 +1,11 @@
 /*
- * constraint.c
+ * curb.c
  *
  *  Created on: 19 mar 2018
  *      Author: kamil
  */
 
-#include <constraint.h>
+#include "curb.h"
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,11 +23,11 @@ thread_local
 #if __GNUC__
 __thread
 #endif
-constraint_handler_t constraint_handler;
+curb_handler_t curb_handler;
 
 /* Exported Functions --------------------------------------------------------- */
 
-void constraint_printf_handler(const char * restrict msg, int error,
+void curb_printf_handler(const char * restrict msg, int error,
 		const char * restrict assertion, const char * restrict file,
 		unsigned int line, const char * restrict function)
 {
@@ -45,7 +45,7 @@ void constraint_printf_handler(const char * restrict msg, int error,
 		errnostr = strerror(errno);
 #endif
 	(void)fprintf(stderr,
-			"%s:%u: %s%sConstraint `%s' failed.\n"
+			"%s:%u: %s%scurb `%s' failed.\n"
 			"%s%s%s\n"
 			,
 			file, line,
@@ -57,35 +57,35 @@ void constraint_printf_handler(const char * restrict msg, int error,
 	);
 }
 
-void constraint_abort_handler(const char * restrict msg, int error,
+void curb_abort_handler(const char * restrict msg, int error,
 		const char * restrict assertion, const char * restrict file,
 		unsigned int line, const char * restrict function)
 {
-	constraint_printf_handler(msg, error, assertion, file, line, function);
+	curb_printf_handler(msg, error, assertion, file, line, function);
 	abort();
 }
 
-void constraint_ignore_handler(const char * restrict msg, int error,
+void curb_ignore_handler(const char * restrict msg, int error,
 		const char * restrict assertion, const char * restrict file,
 		unsigned int line, const char * restrict function)
 {
 }
 
-constraint_handler_t constraint_set_handler(constraint_handler_t handler)
+curb_handler_t curb_get_handler(void)
 {
-	constraint_handler_t ret = constraint_handler;
-	constraint_handler = handler;
+	return curb_handler != NULL ? curb_handler : curb_abort_handler;
+}
+
+curb_handler_t curb_set_handler(curb_handler_t handler)
+{
+	curb_handler_t ret = curb_handler;
+	curb_handler = handler;
 	return ret;
 }
 
-constraint_handler_t contraint_get_handler()
-{
-	return constraint_handler != NULL ? constraint_handler : constraint_abort_handler;
-}
-
-void _constraint_failed(const char * restrict msg, int error,
+void _curb_failed_func(const char * restrict msg, int error,
 		const char * restrict assertion, const char * restrict file,
 		unsigned int line, const char * restrict function)
 {
-	contraint_get_handler()(msg, error, assertion, file, line, function);
+	curb_get_handler()(msg, error, assertion, file, line, function);
 }

@@ -9,8 +9,14 @@
 #define SRC_LIB_TIME_EX_INTERNAL_H_
 
 #include <time_ex/types.h>
+#include <assert.h>
+#include <limits.h>
+#include <minmaxof.h>
 
 /* Conversion from RATIO to seconds */
+
+#define EXTIME_ASSERT_MUL(a, b) \
+	assert( b > 0 && a > maxof(b) / b )
 
 #define EXTIME_SEC_TO_INT_RATIO(sec, numerator, denominator) \
 	( (sec) * (denominator) / (numerator) )
@@ -19,7 +25,7 @@
 	( (sec) * (numerator) / (denominator) )
 
 #define EXTIME_SUBSEC_TO_INT_RATIO(subsec, subsecdenominator, numerator, denominator) \
-	( EXTIME_SEC_TO_INT_RATIO((subsec),(numerator),(denominator)) / (subsecdenominator) )
+	( EXTIME_SEC_TO_INT_RATIO((subsec), (numerator), (denominator)) / (subsecdenominator) )
 
 #define EXTIME_SUBSEC_FROM_INT_RATIO(value, subsecdenominator, numerator, denominator) \
 	( (value) % (denominator) * (numerator) * (subsecdenominator) / (denominator) )

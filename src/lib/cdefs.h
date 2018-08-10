@@ -7,23 +7,10 @@
 #ifndef SRC_LIB_UNI_CDEFS_H_
 #define SRC_LIB_UNI_CDEFS_H_
 
+#include <build_bug.h>
+#include <array_size.h>
+
 #include <stdint.h>
-
-#ifndef __is_array_of_constant_known_size
-#if __GNUC__
-#define __is_array_of_constant_known_size(x)  (__builtin_constant_p((void*)x == &x))
-#else
-#define __is_array_of_constant_known_size(x)  ((void*)&x[0] == &x)
-#endif
-#endif
-
-#ifndef __arraycount
-#if __GNUC__
-#define __arraycount(x)  (sizeof(x) / sizeof((x)[0]) + sizeof(struct { int:-!(__is_array_of_constant_known_size(x)); }))
-#else
-#define __arraycount(x)  (sizeof(x) / sizeof((x)[0]))
-#endif
-#endif
 
 #ifndef __USE
 #define __USE(x)  ((void)(x))
@@ -38,7 +25,7 @@
 #endif
 
 #ifndef __P
-#define	__P(protos)	protos		/* full-blown ANSI C */
+#define	__P(protos)	 protos  /* full-blown ANSI C */
 #endif
 #ifndef __CONCAT1
 #define	__CONCAT1(x,y)	x ## y

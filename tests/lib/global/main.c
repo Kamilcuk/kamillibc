@@ -5,14 +5,16 @@
  *      Author: kamil
  */
 #include <ringbuffer.h>
-#include <try.h>
 #include <assert.h>
 #include <printex.h>
 #include <minmax.h>
 #include <time_ex.h>
 #include <filename.h>
 #include <bitstr/bitstr.h>
+#include <build_bug.h>
 #include <macroprint.h>
+#include <array_size.h>
+#include <cdefs.h>
 
 #ifdef __GNUC__
 MACROPRINT(__GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__)
@@ -28,6 +30,17 @@ MACROPRINT(__VERSION__)
 
 
 int main() {
+
+	BUILD_BUG_ON_MSG(0 == 1, "This should not fail");
+	if (0 == 1) {
+		BUILD_BUG();
+	}
+	BUILD_BUG_ON(BUILD_BUG_ON_ZERO(0 == 1) != 0);
+
+	char b[5];
+	BUILD_BUG_ON(ARRAY_SIZE(b) != 5);
+	BUILD_BUG_ON(ARRAY_SIZE((char[5]){0}) != 5);
+
 	int ret = 0;
 	int findmsg_unittest();
 	TEST_EQ(ret, findmsg_unittest() == 0);

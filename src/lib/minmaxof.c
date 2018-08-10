@@ -17,7 +17,6 @@
 		static_assert(MIN_OF(type) == min, ""); \
 	}while(0)
 
-__attribute__((__unused__))
 static inline void minmaxof_static_assert()
 {
 	_(char, "d", CHAR_MAX, CHAR_MIN);

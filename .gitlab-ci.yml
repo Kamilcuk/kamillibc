@@ -1,12 +1,5 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
-
-on_alpine:
-  image: alpine
-  script:
-  - apk update
-  - apk add gcc cmake musl-dev make bsd-compat-headers linux-headers
-  - make gitlab-ci
   
 on_gcc:
   image: gcc
@@ -21,5 +14,12 @@ on_arm:
   script:
   - apt-get update -y
   - apt-get install -y cmake make gcc-arm-none-eabi
+  - make gitlab-ci
+  
+on_alpine:
+  image: alpine
+  script:
+  - apk update
+  - apk add gcc cmake musl-dev make bsd-compat-headers linux-headers
   - make gitlab-ci
   when: manual 

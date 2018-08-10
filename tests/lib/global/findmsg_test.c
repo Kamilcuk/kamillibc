@@ -8,8 +8,9 @@
 #include <findmsg/conf/newline.h>
 #include <findmsg/conf/stub.h>
 #include <assert.h>
-#include <try.h>
+#include <curb.h>
 #include <unistd.h>
+#include <stdio.h>
 #include <string.h>
 
 #define TEST_EQ(val, expr) do{ \
@@ -22,11 +23,11 @@
 static int create_tmpfile(char content[], size_t size)
 {
 	FILE * const file = tmpfile();
-	assert(file);
-	try(fwrite(content, 1, size, file) == size);
-	try(fseek(file,  0, SEEK_SET) == 0);
+	curb(file != NULL);
+	curb(fwrite(content, 1, size, file) == size);
+	curb(fseek(file,  0, SEEK_SET) == 0);
 	const int fd = fileno(file);
-	assert(fd > 0);
+	curb(fd > 0);
 	return fd;
 }
 #define CREATE_TMPFILE(str)  create_tmpfile(str, sizeof(str))
