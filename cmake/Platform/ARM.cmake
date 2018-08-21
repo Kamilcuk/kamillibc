@@ -1,4 +1,4 @@
-message(STATUS "Configuring for ARM platform using arm-none-eabi-gcc compiler")
+message(STATUS "Configuring for ARM platform")
 
 set(CMAKE_SHARED_LIBRARY_C_FLAGS "")
 set(CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS "")
