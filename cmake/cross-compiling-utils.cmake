@@ -1,32 +1,24 @@
 
+include(CMakeFindBinUtils)
+
 function(add_bin_target target)
-	if(NOT CMAKE_OBJCOPY)
-		message(FATAL_ERROR "CMAKE_OBJCOPY not defined")
-	endif()
-    add_custom_target("${target}.bin" ALL
-		COMMAND "${CMAKE_OBJCOPY}" -O binary "${target}${CMAKE_EXECUTABLE_SUFFIX}" "${target}.bin"
-    	DEPENDS "${target}"
-        COMMENT "Generating ${target}.bin")
+    add_custom_target(${exetarget}.hex ALL
+		COMMAND "${CMAKE_OBJCOPY}" -O ihex "$<TARGET_FILE:${exetarget}>" "${exetarget}.hex"
+		WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+    	DEPENDS "${exetarget}"
+        COMMENT "Generating ${CMAKE_CURRENT_BINARY_DIR}/${exetarget}.hex")
 endfunction()
 
-function(add_hex_target target)
-	if(NOT CMAKE_OBJCOPY)
-		message(FATAL_ERROR "CMAKE_OBJCOPY not defined")
-	endif()
-    add_custom_target("${target}.hex" ALL
-		COMMAND "${CMAKE_OBJCOPY}" -O ihex "${target}${CMAKE_EXECUTABLE_SUFFIX}" "${target}.hex"
-    	DEPENDS "${target}"
-        COMMENT "Generating ${target}.hex")
+function(add_hex_target exetarget)
+    add_custom_target(${exetarget}.hex ALL
+		COMMAND "${CMAKE_OBJCOPY}" -O ihex "$<TARGET_FILE:${exetarget}>" "${exetarget}.hex"
+		WORKING_DIRECTORY "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}"
+    	DEPENDS "${exetarget}"
+        COMMENT "Generating ${CMAKE_CURRENT_BINARY_DIR}/${exetarget}.hex")
 endfunction()
 
-function(print_executable_size target)
-	if(NOT CMAKE_SIZE_UTIL)
-		find_program(CMAKE_SIZE_UTIL ${_CMAKE_TOOLCHAIN_PREFIX}size HINTS ${_CMAKE_TOOLCHAIN_LOCATION})
-		if(NOT CMAKE_SIZE_UTIL)
-			message(FATAL_ERROR "CMAKE_SIZE_UTIL not found")
-		endif()
-	endif()
-    add_custom_command(TARGET "${target}" POST_BUILD
-        COMMAND "${CMAKE_SIZE_UTIL}" -B "${CMAKE_BINARY_DIR}/${target}${CMAKE_EXECUTABLE_SUFFIX}"
-        COMMENT "Priting ${target}${CMAKE_EXECUTABLE_SUFFIX} size information")
-endfunction()
+macro(print_executable_size exetarget)
+    add_custom_command(TARGET "${exetarget}" POST_BUILD
+        COMMAND "${CMAKE_SIZE_UTIL}" -B "$<TARGET_FILE:${exetarget}>"
+        COMMENT "Priting ${exetarget} size information")
+endmacro()
