@@ -1,6 +1,9 @@
 message(STATUS "Configuring for ARM platform, GNU-C compiler")
 
 if(NOT ARM_PROCESSOR_FLAGS)
+	if(NOT CMAKE_SYSTEM_PROCESSOR)
+		return()
+	endif()
 	include(ARM-GNU-C-${CMAKE_SYSTEM_PROCESSOR})
 	if (NOT ARM_PROCESSOR_FLAGS)
 		message(FATAL_ERROR "ARM_PROCESSOR_FLAGS is not set")
