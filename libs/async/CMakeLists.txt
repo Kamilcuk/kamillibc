@@ -1,6 +1,11 @@
 get_filename_component(name ${CMAKE_CURRENT_SOURCE_DIR} NAME)
 project(kamcuk_${name})
 
+if (NOT ${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+	# currently it is using eventfd available only on Linux
+	return()
+endif()
+
 file(GLOB_RECURSE srcs src/*.c src/*.cpp)
 add_library(${PROJECT_NAME} ${srcs})
 target_include_directories(${PROJECT_NAME}
