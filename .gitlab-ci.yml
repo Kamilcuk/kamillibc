@@ -2,7 +2,7 @@ variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
 on_archlinux:
-  image: base/archlinux
+  image: archlinux/base
   script:
   - pacman --noconfirm -Suy cmake gcc cppcheck make
   - make gitlab-ci
