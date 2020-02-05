@@ -17,11 +17,6 @@
 #include <cdefs.h>
 #include <typecheck.h>
 
-#ifdef __GNUC__
-MACROPRINT(__GNUC__.__GNUC_MINOR__.__GNUC_PATCHLEVEL__)
-#endif
-MACROPRINT(__VERSION__)
-
 #define TEST_EQ(ret, expr) do{ \
 	if (!(expr)) { \
 		fprintf(stderr, "Test '%s' failed\n", #expr); \
