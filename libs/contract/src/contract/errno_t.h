@@ -10,9 +10,6 @@
 
 #include <stddef.h>
 
-#ifndef __error_t_defined
 typedef int errno_t;
-# define __error_t_defined 1
-#endif
 
 #endif /* QQ_ERRNO_T_H_ */
