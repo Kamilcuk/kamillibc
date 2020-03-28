@@ -10,6 +10,7 @@
 
 #include <limits.h>
 
+#pragma GCC diagnostic ignored "-Wtype-limits"
 #define IS_SIGNED(t)  (((t)(-1)) < ((t)0))
 
 #define MAX_OF(t)     (IS_SIGNED(t) ? (t)((1LLU<<((sizeof(t)*CHAR_BIT)-1))-1LLU) : (t)(~0))
