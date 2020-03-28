@@ -15,14 +15,19 @@ int func(int a) {
 	return a;
 }
 
+#undef CURB_SEVERITY
+#define CURB_SEVERITY warning
+
 int main() {
 	void *a = malloc(1);
+	curb(a != NULL);
 	free(a);
+
 	(void)curb(1);
 
-	curb_handler_t curb_handler = curb_set_handler(curb_ignore_handler);
-	func(-5);
-	(void)curb((printf("a"), 0));
+	curb_handler_t curb_handler = curb_set_handler(curb_handler_ignore);
+	func(5);
+	(void)curb((printf("a"), 1));
 	curb_set_handler(curb_handler);
 
 	curb(printf("b") > 0);
