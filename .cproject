@@ -5,7 +5,7 @@
 			<storageModule buildSystemId="org.eclipse.cdt.managedbuilder.core.configurationDataProvider" id="cdt.managedbuild.toolchain.gnu.base.1012768498" moduleId="org.eclipse.cdt.core.settings" name="debug">
 				<externalSettings/>
 				<extensions>
-					<extension id="org.eclipse.cdt.core.GNU_ELF" point="org.eclipse.cdt.core.BinaryParser"/>
+					<extension id="org.eclipse.cdt.core.Cygwin_PE64" point="org.eclipse.cdt.core.BinaryParser"/>
 					<extension id="org.eclipse.cdt.core.GASErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GmakeErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
 					<extension id="org.eclipse.cdt.core.GLDErrorParser" point="org.eclipse.cdt.core.ErrorParser"/>
@@ -14,37 +14,32 @@
 				</extensions>
 			</storageModule>
 			<storageModule moduleId="cdtBuildSystem" version="4.0.0">
-				<configuration artifactName="${ProjName}" buildProperties="" description="" id="cdt.managedbuild.toolchain.gnu.base.1012768498" name="debug" optionalBuildProperties="" parent="org.eclipse.cdt.build.core.emptycfg">
+				<configuration artifactName="${ProjName}" buildProperties="" description="" id="cdt.managedbuild.toolchain.gnu.base.1012768498" name="debug" optionalBuildProperties="org.eclipse.cdt.docker.launcher.containerbuild.property.volumes=,org.eclipse.cdt.docker.launcher.containerbuild.property.selectedvolumes=" parent="org.eclipse.cdt.build.core.emptycfg">
 					<folderInfo id="cdt.managedbuild.toolchain.gnu.base.1012768498.1985971727" name="/" resourcePath="">
-						<toolChain id="cdt.managedbuild.toolchain.gnu.base.1185314882" name="Linux GCC" superClass="cdt.managedbuild.toolchain.gnu.base">
-							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.GNU_ELF" id="cdt.managedbuild.target.gnu.platform.base.953542186" name="Debug Platform" osList="linux,hpux,aix,qnx" superClass="cdt.managedbuild.target.gnu.platform.base"/>
-							<builder enabledIncrementalBuild="true" id="cdt.managedbuild.target.gnu.builder.base.614205023" incrementalBuildTarget="all" keepEnvironmentInBuildfile="false" managedBuildOn="false" name="Gnu Make Builder" superClass="cdt.managedbuild.target.gnu.builder.base"/>
-							<tool id="cdt.managedbuild.tool.gnu.archiver.base.1925697247" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.base"/>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.base.1965592109" name="GCC C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.base">
-								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.600083718" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
+						<toolChain id="cdt.managedbuild.toolchain.gnu.cygwin.base.1235058581" name="Cygwin GCC" superClass="cdt.managedbuild.toolchain.gnu.cygwin.base">
+							<targetPlatform archList="all" binaryParser="org.eclipse.cdt.core.Cygwin_PE64" id="cdt.managedbuild.target.gnu.platform.cygwin.base.1063262564" name="Debug Platform" osList="win32" superClass="cdt.managedbuild.target.gnu.platform.cygwin.base"/>
+							<builder id="cdt.managedbuild.target.gnu.builder.cygwin.base.281661149" managedBuildOn="false" name="Gnu Make Builder.debug" superClass="cdt.managedbuild.target.gnu.builder.cygwin.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.assembler.cygwin.base.1908881461" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.cygwin.base">
+								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.620677807" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.c.compiler.base.1260466495" name="GCC C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.base">
-								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.1575807275" name="Include paths (-I)" superClass="gnu.c.compiler.option.include.paths" useByScannerDiscovery="false" valueType="includePath">
+							<tool id="cdt.managedbuild.tool.gnu.archiver.cygwin.base.756087951" name="GCC Archiver" superClass="cdt.managedbuild.tool.gnu.archiver.cygwin.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.compiler.cygwin.base.1509812465" name="Cygwin C++ Compiler" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.cygwin.base">
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.cygwin.1490253686" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input.cygwin"/>
+							</tool>
+							<tool id="cdt.managedbuild.tool.gnu.c.compiler.cygwin.base.627426969" name="Cygwin C Compiler" superClass="cdt.managedbuild.tool.gnu.c.compiler.cygwin.base">
+								<option IS_BUILTIN_EMPTY="false" IS_VALUE_EMPTY="false" id="gnu.c.compiler.option.include.paths.255863769" superClass="gnu.c.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="&quot;D:\programy\cygwin64\lib\gcc\x86_64-pc-cygwin\7.4.0\include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;D:\programy\cygwin64\usr\include&quot;"/>
 									<listOptionValue builtIn="false" value="&quot;D:\programy\cygwin64\usr\include\w32api&quot;"/>
 								</option>
-								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.80867076" superClass="cdt.managedbuild.tool.gnu.c.compiler.input"/>
+								<inputType id="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin.171061006" superClass="cdt.managedbuild.tool.gnu.c.compiler.input.cygwin"/>
 							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.c.linker.base.752097772" name="GCC C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.base">
-								<inputType id="cdt.managedbuild.tool.gnu.c.linker.input.1389000682" superClass="cdt.managedbuild.tool.gnu.c.linker.input">
+							<tool id="cdt.managedbuild.tool.gnu.c.linker.cygwin.base.211702757" name="Cygwin C Linker" superClass="cdt.managedbuild.tool.gnu.c.linker.cygwin.base"/>
+							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.cygwin.base.1808571116" name="Cygwin C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.cygwin.base">
+								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.1008229740" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
 									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
 									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
 								</inputType>
-							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.cpp.linker.base.931568388" name="GCC C++ Linker" superClass="cdt.managedbuild.tool.gnu.cpp.linker.base">
-								<inputType id="cdt.managedbuild.tool.gnu.cpp.linker.input.393466122" superClass="cdt.managedbuild.tool.gnu.cpp.linker.input">
-									<additionalInput kind="additionalinputdependency" paths="$(USER_OBJS)"/>
-									<additionalInput kind="additionalinput" paths="$(LIBS)"/>
-								</inputType>
-							</tool>
-							<tool id="cdt.managedbuild.tool.gnu.assembler.base.1069593710" name="GCC Assembler" superClass="cdt.managedbuild.tool.gnu.assembler.base">
-								<inputType id="cdt.managedbuild.tool.gnu.assembler.input.1454346624" superClass="cdt.managedbuild.tool.gnu.assembler.input"/>
 							</tool>
 						</toolChain>
 					</folderInfo>
