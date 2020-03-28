@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.11)
 project(kamcuk C)
 
-if(CMAKE_COMPILER_IS_GNUC)
+if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 add_compile_options(
-	-ggdb3
+	$<$<CONFIG:DEBUG>:-O0>
+	$<$<CONFIG:DEBUG>:-ggdb3>
 	-Wall
 	-Wextra
 	-Wno-unused-parameter
