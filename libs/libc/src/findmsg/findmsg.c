@@ -249,7 +249,7 @@ ssize_t findmsg_get(struct findmsg_s *t,
 		msgsize = findmsg_findmsg(t, c, arg, timeout);
 		if (msgsize <= 0) return msgsize;
 	}
-	if (bufsize < msgsize) return -ENOBUFS;
+	if (bufsize < (size_t)msgsize) return -ENOBUFS;
 	const char *msg = findmsg_msgpnt(t);
 	assert(msg != NULL);
 	memcpy(buf, msg, msgsize);
