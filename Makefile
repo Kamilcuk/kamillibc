@@ -1,44 +1,86 @@
+# Makefile
 
-CMAKE_BUILD_TYPE := Debug
+define NL
 
-B := _build/${CMAKE_BUILD_TYPE}
 
-CMAKEFLAGS :=
-CMAKEFLAGS += $(if $(shell which ninja 2>/dev/null),-GNinja,)
-CMAKEFLAGS += -DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}
-CMAKEFLAGS += -DBUILD_TESTING:BOOL=ON
-CMAKEFLAGS += -DCMAKE_RULE_MESSAGES:BOOL=OFF
-CMAKEFLAGS += -DCMAKE_VERBOSE_MAKEFILE:BOOL=ON
+endef
 
-NICE += $(if $(shell which nice 2>/dev/null),nice,)
-NICE += $(if $(shell which ionice 2>/dev/null),ionice,)
+.SUFFIXES:
+MAKEFLAGS += --no-builtin-rules
+MAKEFLAGS += --no-builtin-variables
+MAKEFLAGS += --warn-undefined-variables
+MAKEFLAGS += --no-print-directories
+unexport MAKEFLAGS
+
+CMAKE_BUILD_TYPE ?= Debug
+# CMAKE_BUILD_TYPE ?= Release
+ 
+B_SUFFIX ?=
+B ?= _build/$(CMAKE_BUILD_TYPE)$(B_SUFFIX)
+
+NICE += $(shell hash nice 2>/dev/null >/dev/null && echo nice)
+NICE += $(shell hash ionice 2>/dev/null >/dev/null && echo ionice)
+
+CTEST := $(NICE) ctest
+CTESTFLAGS += --output-on-failure 
+CTESTFLAGS += -j $(shell nproc) # --verbose --rerun-failed
+
+CMAKE_C_FLAGS ?= 
 
 CMAKE := $(NICE) cmake
+CMAKEFLAGS += -S .
+CMAKEFLAGS_GENERATOR ?= $(shell hash ninja 2>/dev/null >/dev/null && echo -GNinja)
+CMAKEFLAGS += $(CMAKEFLAGS_GENERATOR)
+CMAKEFLAGS += -D CMAKE_BUILD_TYPE=$(CMAKE_BUILD_TYPE)
+CMAKEFLAGS += -D CMAKE_RUNTIME_OUTPUT_DIRECTORY=bin
+CMAKEFLAGS += -D CMAKE_LIBRARY_OUTPUT_DIRECTORY=lib
+CMAKEFLAGS += -D CMAKE_EXECUTABLE_SUFFIX=.out
+CMAKEFLAGS += -D CMAKE_VERBOSE_MAKEFILE=ON
+CMAKEFLAGS += -D CMAKE_C_FLAGS="$(CMAKE_C_FLAGS)"
+CMAKEFLAGS += -D BUILD_TESTING=ON
 
-all: build test
+all: gitlab-ci
 
-gitlab-ci: build test memcheck
-
-build:
-	$(CMAKE) -H. -B${B} $(CMAKEFLAGS)
-	$(CMAKE) --build ${B} --target all
-
-ifneq ($(OS),Windows_NT)
-memcheck: build
-	cd ${B} && $(NICE) ctest --output-on-failure -v -T memcheck
-else
-memcheck: build ;
-endif
-
+configure:
+	$(CMAKE) -B $(B) $(CMAKEFLAGS)
+build: configure
+	$(CMAKE) --build $(B)
 test: build
-	cd ${B} && \
-	$(NICE) ctest --output-on-failure -v \
-	# || { cat Testing/*/*.log; false; }
+	cd $(B) && $(CTEST) $(CTESTFLAGS)
 
-test1: build
-	cd ${B} && \
-	$(NICE) ctest --output-on-failure -v -R kamcuk_curb_runtime_ \
-	|| { cat Testing/*/*.log; false; }
+gitlab-ci:
+	+$(MAKE) -k CMAKE_BUILD_TYPE=Release memcheck sanitize coverage cdash
+
+memcheck: build
+	cd $(B) && $(CTEST) -T memcheck $(CTESTFLAGS)
+
+sanitize:
+	+$(MAKE) B_SUFFIX=_sanitize CMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer" test
+
+doxygen: ./doc/Doxyfile
+	doxygen ./doc/Doxyfile
+	mv ./public/html/* ./public/
+
+coverage:
+	+$(MAKE) B_SUFFIX=_coverage CMAKE_C_FLAGS="--coverage -g" .coverage
+
+.coverage: test
+	gcovr -r . -e test -e _build $(B)
+
+cdash: D=_build/cdash
+cdash:
+	mkdir -p "$(D)"
+	find . -maxdepth 1 -mindepth 1 '!' -name _build | xargs -t -d'\n' cp -at $(D)
+	+$(MAKE) -C "$(D)" B=$(D) CMAKE_BUILD_TYPE=Release CMAKEFLAGS_GENERATOR="" CMAKE_C_FLAGS="--coverage -O" .cdash
+.cdash: configure
+	cd "$(B)" && pwd && ctest -T all
 
 clean:
-	rm -vr $(B)
+	if [ -e _build ]; then rm -rf _build; fi
+
+distclean: clean
+	if [ -e public ]; then rm -r public; fi
+
+.PHONY: all $(MAKECMDGOALS)
+
+
