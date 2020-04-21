@@ -22,15 +22,14 @@
 #include <string.h>
 #include <time.h>
 
+typedef struct {
+	int tkn_ct;
+	char **tkn_list;
+} token_list_t;
+extern token_list_t * ao_string_tokenize(char *);
+
 static inline int ses_tokenize_ao_string_tokenize(char *argv[restrict], size_t argvsize, char arg[restrict])
 {
-#if !SES_USE_ao_string_tokenize
-	typedef struct {
-		int tkn_ct;
-		char **tkn_list;
-	} token_list_t;
-	extern token_list_t * ao_string_tokenize(char *);
-#endif
 	int argc;
 	const token_list_t * const p = ao_string_tokenize(arg);
 	if (p == NULL) {
@@ -59,7 +58,7 @@ static inline int ses_tokenize_ao_string_tokenize(char *argv[restrict], size_t a
 static inline int ses_tokenize_strtok(char *argv[restrict], size_t argvsize, char line[restrict])
 {
 	int argc = 0;
-	const char * delim = " \t\n";
+	const char delim[] = " \t\n";
 #if __POSIX_VISIBLE >= 200809
 	for(char *tok = line, *ptrptr; (tok = strtok_r(tok, delim, &ptrptr)); tok = NULL)
 #else
