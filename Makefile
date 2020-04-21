@@ -39,7 +39,7 @@ CMAKEFLAGS += -D CMAKE_VERBOSE_MAKEFILE=ON
 CMAKEFLAGS += -D CMAKE_C_FLAGS="$(CMAKE_C_FLAGS)"
 CMAKEFLAGS += -D BUILD_TESTING=ON
 
-all: gitlab-ci
+all: test
 
 configure:
 	$(CMAKE) -B $(B) $(CMAKEFLAGS)
@@ -70,7 +70,7 @@ coverage:
 cdash: D=_build/cdash
 cdash:
 	mkdir -p "$(D)"
-	find . -maxdepth 1 -mindepth 1 '!' -name _build | xargs -t -d'\n' cp -at $(D)
+	find . -maxdepth 1 -mindepth 1 '!' -name _build | xargs -t -d'\n' cp -fat $(D)
 	+$(MAKE) -C "$(D)" B=$(D) CMAKE_BUILD_TYPE=Release CMAKEFLAGS_GENERATOR="" CMAKE_C_FLAGS="--coverage -O" .cdash
 .cdash: configure
 	cd "$(B)" && pwd && ctest -T all
