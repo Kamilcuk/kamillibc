@@ -245,7 +245,8 @@ int async_unittest(void) {
 				async_when_all(t, 4, f_sum),
 		};
 		TEST_EQ((uintptr_t)async_get(t[4]) == 1 + 2 + 3 + 4);
-		asyncs_cancel(t, sizeof(t)/sizeof(t[0]));
+		asyncs_wait(t, sizeof(t)/sizeof(t[0]));
+		asyncs_detach(t, sizeof(t)/sizeof(t[0]));
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
 	{
@@ -257,6 +258,7 @@ int async_unittest(void) {
 				async_when_any(t, 4, f_return_any),
 		};
 		TEST_EQ((uintptr_t)async_get(t[4]) == 1);
+		asyncs_wait(t, sizeof(t)/sizeof(t[0]));
 		asyncs_detach(t, sizeof(t)/sizeof(t[0]));
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
@@ -269,6 +271,7 @@ int async_unittest(void) {
 				async_when_all(t, 4, f_sum),
 		};
 		TEST_EQ((uintptr_t)async_get(t[4]) == 1 + 2 + 3 + 4);
+		asyncs_wait(t, sizeof(t)/sizeof(t[0]));
 		asyncs_detach(t, sizeof(t)/sizeof(t[0]));
 	}
 	dbgln("-- %d ---------------------------------", __LINE__);
