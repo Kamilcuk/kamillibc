@@ -19,14 +19,18 @@ struct ses_cmds_s cmds[] = {
 };
 
 int main() {
+	char str[] = "print_hello\n";
+	FILE *in = fmemopen(str, sizeof(str), "r");
+
 	char *line = NULL;
 	size_t size = 0;
-	while (getline(&line, &size, stdin) > 0) {
+	while (getline(&line, &size, in) > 0) {
 		char *argv_space[20];
 		ses_run_line(cmds, sizeof(cmds)/sizeof(*cmds),
 				argv_space, sizeof(argv_space)/sizeof(*argv_space),
 				line);
-		return -1;
 	}
 	free(line);
+
+	fclose(in);
 }
