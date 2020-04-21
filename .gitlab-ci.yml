@@ -1,32 +1,10 @@
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
-on_archlinux:
-  image: archlinux/base
-  script:
-  - pacman --noconfirm -Suy cmake gcc cppcheck make
-  - make gitlab-ci
-  
 on_gcc:
   image: gcc
   script:
   - apt-get update -y
-  - apt-get install -y cmake make
+  - apt-get install -y cmake make gcc cppcheck valgrind m4 ninja-build gcovr
   - make gitlab-ci
-  when: manual
 
-on_arm:
-  image: debian
-  script:
-  - apt-get update -y
-  - apt-get install -y cmake make gcc-arm-none-eabi
-  - make gitlab-ci
-  when: manual
-  
-on_alpine:
-  image: alpine
-  script:
-  - apk update
-  - apk add gcc cmake musl-dev make bsd-compat-headers linux-headers
-  - make gitlab-ci
-  when: manual
