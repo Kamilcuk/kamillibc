@@ -58,6 +58,7 @@ sanitize:
 	+$(MAKE) B_SUFFIX=_sanitize CMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer" test
 
 doxygen: ./doc/Doxyfile
+	rm -r ./public
 	doxygen ./doc/Doxyfile
 	mv ./public/html/* ./public/
 

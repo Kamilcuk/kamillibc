@@ -8,3 +8,14 @@ on_gcc:
   - apt-get install -y cmake make gcc cppcheck valgrind m4 ninja-build gcovr
   - make gitlab-ci
 
+
+pages:
+  image: alpine
+  script:
+  - apk update
+  - apk add make doxygen
+  - make doxygen
+  artifacts:
+    paths:
+    - public
+
