@@ -18,6 +18,5 @@ target_link_libraries(${PROJECT_NAME}
 set(tmp ${PROJECT_NAME}_example)
 add_executable(${tmp} tests/example.c)
 target_link_libraries(${tmp} ${PROJECT_NAME})
-add_test(NAME ${tmp}
-	COMMAND sh -c "echo print_hello | $1" -- $<TARGET_FILE:${tmp}>)
+add_test(NAME ${tmp} COMMAND ${tmp})
 set_tests_properties(${tmp} PROPERTIES PASS_REGULAR_EXPRESSION "Hello world!")
