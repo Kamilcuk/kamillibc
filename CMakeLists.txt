@@ -9,8 +9,9 @@ add_compile_options(
 	-Wextra
 	-Wno-unused-parameter
 	-Wno-missing-field-initializers
+	-Wno-type-limits
 )
 endif()
 
-enable_testing()
+include(CTest)
 add_subdirectory(libs)
