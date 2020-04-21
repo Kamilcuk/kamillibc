@@ -15,15 +15,15 @@
 #include <stdlib.h>
 #include <assert.h>
 
-static inline void printbinary_in_char(int width, const char *v, char *result[-width])
-{
-	for(unsigned int i = 0; i < width; ++i) {
+static inline
+void printbinary_in_char(unsigned width, const char *v, char *result[-width]) {
+	for(unsigned i = 0; i < width; ++i) {
 		const char res = ( ( *v >> i ) & 1 ) + '0';
 		(--(*result))[0] = res;
 	}
 }
 
-static char *printbinary_in(int width, const char *v, char result[width+1])
+static char *printbinary_in(unsigned width, const char *v, char result[width + 1])
 {
 	result = &result[width];
 	result[0] = '\0';
@@ -34,7 +34,7 @@ static char *printbinary_in(int width, const char *v, char result[width+1])
     return result;
 }
 
-char *printbinary(int width, uintmax_t v, char result[width+1])
+char *printbinary(unsigned width, uintmax_t v, char result[width + 1])
 {
 	assert(result != NULL);
 	return printbinary_in(width, (const char *)&v, result);
@@ -45,21 +45,21 @@ char *printuint64(uint64_t v, char result[21])
 	assert(result != NULL);
 	result = &result[20];
 	result[0] = '\0';
-	for (bool first = true; v || first; first = false) {
+	do {
 #if printuint64_USE_DIV
-		div_t d = div(v, 10);
-		const char c = d.qout + '0';
+		const div_t d = div(v, 10);
+		const char c = d.qout;
 		v = d.rem;
 #else
-		const char c = v % 10 + '0';
+		const char c = v % 10;
 		v /= 10;
 #endif
-		(--result)[0] = c;
-	}
+		(--result)[0] = c + '0';
+	} while(v);
 	return result;
 }
 
-char *printint64(int64_t v, char result[21])
+char *printint64(int64_t v, char result[22])
 {
 	result = printuint64(llabs(v), &result[1]);
 	if ( v < 0 ) {

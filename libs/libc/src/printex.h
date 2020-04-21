@@ -11,15 +11,15 @@
 #include <limits.h>
 #include <stdint.h>
 
-char *printbinary(int width, uintmax_t v, char result[width+1]);
+char *printbinary(unsigned width, uintmax_t v, char result[width+1]);
 #define PRINTBINARY(width, v)  printbinary((width), (v), (char[(width)+1]){0})
 #define PRINTBINARY_t(v)        PRINTBINARY(sizeof(v) * CHAR_BIT, (v))
 
 char *printuint64(uint64_t v, char result[21]);
 #define PRINTUINT64(v)  printuint64((v), (char[21]){0})
 
-char *printint64(int64_t v, char result[21]);
-#define PRINTINT64(v)  printint64((v), (char[21]){0})
+char *printint64(int64_t v, char result[22]);
+#define PRINTINT64(v)  printint64((v), (char[22]){0})
 
 #define PRINTARRAY(fmt_arr, arr, arrsize, ...) do{ \
 	const size_t _end = (arrsize); \
