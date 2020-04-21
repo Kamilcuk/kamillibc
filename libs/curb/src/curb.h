@@ -35,27 +35,27 @@ extern "C" {
 
 #define curb_ex(expr, exprstr, error, msg) \
 		_curb_PRE_CURB_FAIL(expr, exprstr, ": " #error, ": " msg) \
-		_curb_fail(); \
+		_curb_fail() \
 		_curb_POST_CURB_FAIL(expr, exprstr, error, msg)
 
 #define curb_msgerrno(expr, msg, error) \
 		_curb_PRE_CURB_FAIL(expr, #expr, ": " #error, ": " msg) \
-		_curb_fail(); \
+		_curb_fail() \
 		_curb_POST_CURB_FAIL(expr, #expr, error, msg)
 
 #define curb_msg(expr, msg) \
 		_curb_PRE_CURB_FAIL(expr, #expr, "", ": " msg) \
-		_curb_fail(); \
+		_curb_fail() \
 		_curb_POST_CURB_FAIL(expr, #expr, 0, msg)
 
 #define curb_errno(expr, error) \
 		_curb_PRE_CURB_FAIL(expr, #expr, ": " #error, "") \
-		_curb_fail(); \
+		_curb_fail() \
 		_curb_POST_CURB_FAIL(expr, #expr, error, "")
 
 #define curb(expr) \
 		_curb_PRE_CURB_FAIL(expr, #expr, "", "") \
-		_curb_fail(); \
+		_curb_fail() \
 		_curb_POST_CURB_FAIL(expr, #expr, 0, "")
 
 /* Exported Types ----------------------------------------------------- */
@@ -131,27 +131,37 @@ curb_handler_t curb_set_handler(curb_handler_t handler);
 #define _curb_STRING(x)   #x
 #define _curb_XSTRING(x)  _curb_STRING(x)
 
+#if defined(__OPTIMIZE__) && defined(__GNUC__) || 1
+
 #define _curb_PRE_CURB_FAIL(expr, exprstr, errorstr, msg) \
-	(__builtin_expect((expr), 1) ? 1 : \
-		__extension__({ \
-			if (__builtin_constant_p(expr)) { \
-				if (!(expr)) { \
-					__attribute__((__noinline__)) \
-					__attribute__(( CURB_SEVERITY ( \
-						"\n" \
-						__FILE__ ":" _curb_XSTRING(__LINE__) ": " \
-						_curb_XSTRING(CURB_SEVERITY) \
-							": curb(" exprstr ") will fail" msg errorstr \
-					))) \
-					void _curb_fail(void) { __asm__(""); }
+	((void)__extension__({ \
+		if (__builtin_constant_p(expr)) { \
+			if (expr) {} else { \
+				__attribute__((__noinline__)) \
+				__attribute__(( CURB_SEVERITY ( \
+					"\n" \
+					__FILE__ ":" _curb_XSTRING(__LINE__) ": " \
+					_curb_XSTRING(CURB_SEVERITY) \
+					": curb(" exprstr ") will fail" ""  "" \
+				))) \
+				void _curb_fail() { __asm__(""); }
 
 #define _curb_POST_CURB_FAIL(expr, exprstr, error, msg) \
-				} \
+				/*_curb_fail()*/; \
 			} \
-			_curb_failed_func(msg, error, exprstr, __FILE__, __LINE__, __func__); \
-			0; \
-		}) \
+		} \
+	}), \
+		(__builtin_expect((expr), 1) ? 1 : (_curb_failed_func(msg, error, exprstr, __FILE__, __LINE__, __func__), 0)) \
 	)
+
+#else
+
+#define _curb_PRE_CURB_FAIL(expr, exprstr, errorstr, msg)
+#define _curb_fail()
+#define _curb_POST_CURB_FAIL(expr, exprstr, error, msg) \
+	(__builtin_expect((expr), 1) ? 1 : (_curb_failed_func(msg, error, exprstr, __FILE__, __LINE__, __func__), 0)) \
+
+#endif
 
 /* Private Exported Variables ---------------------------------------------- */
 
