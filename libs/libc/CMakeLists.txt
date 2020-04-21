@@ -28,14 +28,15 @@ foreach(testf IN LISTS tests)
 	target_link_libraries(${PROJECT_NAME}_${test} ${PROJECT_NAME})
 endforeach()
 
+if(0)
 add_test(NAME ${PROJECT_NAME}_macroprint
-	COMMAND sh -x -c 
-		"\"$1\" -I\"$2\"/src -DTEST \"$2\"/tests/macroprint.c 2>&1"
-		--
-		${CMAKE_C_COMPILER}
-		${CMAKE_CURRENT_SOURCE_DIR}
+	COMMAND
+		${CMAKE_C_COMPILER} 
+		-I${CMAKE_CURRENT_SOURCE_DIR}/src
+		${CMAKE_CURRENT_SOURCE_DIR}/tests/macroprint.c
 )
 set_tests_properties(${PROJECT_NAME}_macroprint PROPERTIES
 	PASS_REGULAR_EXPRESSION "A\\\(\\\)=42"
 )
+endif()
 
