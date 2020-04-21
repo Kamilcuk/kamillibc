@@ -20,6 +20,18 @@
 	} \
 }while(0)
 
+static FILE **tempfiles = NULL;
+static size_t tempfilescnt = 0;
+
+static void tempfiles_cleanup(void) {
+	for (size_t i = 0; i < tempfilescnt; ++i) {
+		fclose(tempfiles[i]);
+	}
+	free(tempfiles);
+	tempfiles = NULL;
+	tempfilescnt = 0;
+}
+
 static int create_tmpfile(char content[], size_t size)
 {
 	FILE * const file = tmpfile();
@@ -28,6 +40,14 @@ static int create_tmpfile(char content[], size_t size)
 	curb(fseek(file,  0, SEEK_SET) == 0);
 	const int fd = fileno(file);
 	curb(fd > 0);
+
+	if (tempfilescnt == 0) {
+		atexit(tempfiles_cleanup);
+	}
+	tempfiles = realloc(tempfiles, sizeof(*tempfiles) * ++tempfilescnt);
+	curb(tempfiles != NULL);
+	tempfiles[tempfilescnt - 1] = file;
+
 	return fd;
 }
 #define CREATE_TMPFILE(str)  create_tmpfile(str, sizeof(str) - 1)
