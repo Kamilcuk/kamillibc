@@ -1,3 +1,6 @@
 [submodule "third-party/pt"]
 	path = third_party/pt
 	url = https://github.com/zserge/pt
+[submodule "third_party/optional"]
+	path = third_party/optional
+	url = https://github.com/TartanLlama/optional
