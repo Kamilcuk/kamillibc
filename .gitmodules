@@ -4,3 +4,6 @@
 [submodule "third_party/optional"]
 	path = third_party/optional
 	url = https://github.com/TartanLlama/optional
+[submodule "third_party/invoke.hpp"]
+	path = third_party/invoke.hpp
+	url = https://github.com/BlackMATov/invoke.hpp

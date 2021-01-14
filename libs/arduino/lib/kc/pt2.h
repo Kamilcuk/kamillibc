@@ -25,10 +25,7 @@ class Pt {
 public:
 	Pt() { PT_INIT(pt()); }
 
-	struct pt *pt() {
-		return &_pt;
-	}
-
+	struct pt *pt() { return &_pt; }
 	const struct pt *pt() const { return &_pt; }
 	void thread_restart() { PT_INIT(pt()); }
 
