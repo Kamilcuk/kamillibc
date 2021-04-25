@@ -1,5 +1,6 @@
 #pragma once
 
+#include "make_array.h"
 #include "aligned_storage.h"
 #include "ringbuffer.h"
 #include "sbuffer.h"

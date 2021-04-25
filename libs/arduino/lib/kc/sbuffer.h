@@ -76,7 +76,7 @@ public:
 	}
 
 	constexpr const TYPE &back() const noexcept { return *(i() - 1); }
-	TYPE &back() noexcept { return as_mutable(as_const(*this).back()); }
+	TYPE &back() noexcept { return *(i() - 1); }
 
 	constexpr size_t size() const noexcept { return i() - begin(); }
 	constexpr bool full() const { return i() == reserved_end(); }

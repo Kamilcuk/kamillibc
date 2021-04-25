@@ -12,7 +12,7 @@ namespace kc {
 using Print = ::Print;
 using Stream = ::Stream;
 
-static std::string vpformat(const char *format, va_list va) {
+static inline std::string vpformat(const char *format, va_list va) {
 	std::string buffer;
 	buffer.resize(64);
 	va_list va2;
@@ -26,7 +26,7 @@ static std::string vpformat(const char *format, va_list va) {
 	return buffer;
 }
 
-static std::string pformat(const char *format, ...) {
+static inline std::string pformat(const char *format, ...) {
 	va_list arg;
 	va_start(arg, format);
 	const auto ret = vpformat(format, arg);
