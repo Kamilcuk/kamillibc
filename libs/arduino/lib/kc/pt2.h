@@ -37,15 +37,21 @@ struct PtTimed : Pt {
 };
 
 class PtPeriodic {
-	unsigned long now;
+	unsigned long next;
 	unsigned int _period_ms : 15;
 	bool _enabled : 1;
 
 public:
 	PtPeriodic(unsigned int period_ms = 1000, bool enabled = 1)
-	    : _period_ms(period_ms), _enabled(enabled) {}
+			: _period_ms(period_ms), _enabled(enabled) {
+		assert(period_ms < std::numeric_limits<uint16_t>::max() / 2);
+		next = pt_millis() + get_period_ms();
+	}
 
-	void set_period_ms(unsigned period_ms) { _period_ms = period_ms; }
+	void set_period_ms(unsigned period_ms) { 
+		if (period_ms == 0) { set_enabled(false); }
+		else { _period_ms = period_ms; }
+	}
 	unsigned get_period_ms() const { return _period_ms; }
 
 	void set_enabled(bool enabled) { _enabled = enabled; }
@@ -57,9 +63,8 @@ public:
 		if (!is_enabled()) {
 			return PT_ENDED;
 		}
-		unsigned long next;
-		if ((next = pt_millis()) - now > get_period_ms()) {
-			now = next;
+		if (pt_millis() > next) {
+			next += get_period_ms();
 			periodic();
 		}
 		return PT_WAITING;
