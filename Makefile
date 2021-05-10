@@ -49,7 +49,7 @@ test: build
 	cd $(B) && $(CTEST) $(CTESTFLAGS)
 
 gitlab-ci:
-	+$(MAKE) -k CMAKE_BUILD_TYPE=Release memcheck sanitize coverage cdash
+	+$(MAKE) -k CMAKE_BUILD_TYPE=Release memcheck sanitize coverage # cdash
 
 memcheck: build
 	cd $(B) && $(CTEST) -T memcheck $(CTESTFLAGS)
@@ -77,10 +77,10 @@ cdash:
 	cd "$(B)" && pwd && ctest -T all
 
 clean:
-	if [ -e _build ]; then rm -rf _build; fi
+	rm -rf _build
 
 distclean: clean
-	if [ -e public ]; then rm -r public; fi
+	rm -fr public
 
 .PHONY: all $(MAKECMDGOALS)
 
