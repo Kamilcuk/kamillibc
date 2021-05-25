@@ -1,23 +1,33 @@
 cmake_minimum_required(VERSION 3.11)
-project(STC LANGUAGES C)
+project(stc LANGUAGES C)
 
-include(FetchContent)
-FetchContent_Declare(
-	stcrepo
+set(stcdir "${CMAKE_CURRENT_BINARY_DIR}/stcdir")
+file(MAKE_DIRECTORY "${stcdir}")
+
+include(ExternalProject)
+ExternalProject_Add(stcrepo
 	GIT_REPOSITORY "https://github.com/tylov/STC"
+	SOURCE_DIR "${stcdir}"
+	CONFIGURE_COMMAND ""
+	BUILD_COMMAND ""
+	INSTALL_COMMAND ""
 )
-FetchContent_GetProperties(stcrepo)
-if(NOT stcrepo_POPULATED)
-  FetchContent_Populate(stcrepo)
-endif()
 
-add_library(STC INTERFACE)
-target_include_directories(STC INTERFACE ${stcrepo_SOURCE_DIR})
+add_library(stc INTERFACE)
+add_dependencies(stc stcrepo)
+target_include_directories(stc INTERFACE
+	"${stcdir}/include"
+)
+
 
 include(CTest)
 if(BUILD_TESTING)
-	add_executable(example_from_docs tests/example_from_docs.c)
-	target_link_libraries(example_from_docs PUBLIC STC)
-	add_test(NAME example_from_docs COMMAND example_from_docs)
+	file(GLOB tests tests/*.c)
+	foreach(file IN LISTS tests)
+		get_filename_component(name ${file} NAME_WE)
+		add_executable(${name} ${file})
+		target_link_libraries(${name} PUBLIC stc)
+		add_test(NAME ${name} COMMAND ${name})
+	endforeach()
 endif()
 
