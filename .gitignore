@@ -1,6 +1,7 @@
 public
 build
 _build
+**/_build
 .tracecompass
 .settings
 vgcore*
