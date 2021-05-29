@@ -1,8 +1,13 @@
 all:
-	cmake -DCMAKE_C_FLAGS=-fsanitize=address -S. -B_build
+	cmake -DCMAKE_C_FLAGS=-fsanitize=address -S. -B_build -GNinja
 	cmake --build _build
 	( cd _build && ctest -V )
-
+testop:
+	cmake -DCMAKE_C_FLAGS="-fsanitize=address -Wno-multichar" -S. -B_build -GNinja
+	cmake --build _build --target kuint128_testop
+	( cd _build && ctest -V -R testop )
+clean:
+	rm -rf _build
 avr: mcu=atmega128
 avr: all
 	cmake -DCMAKE_C_COMPILER_WORKS=1 \

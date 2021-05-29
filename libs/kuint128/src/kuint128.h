@@ -81,7 +81,7 @@ static inline kuint128 kuint128_init_u(uint_fast64_t v) {
 }
 
 static inline kuint128 kuint128_init_d(int_fast64_t v) {
-	return v > 0 ? kuint128_init_u(v) : kuint128_init(UINT64_MAX, v);
+	return v >= 0 ? kuint128_init_u(v) : kuint128_init(UINT64_MAX, v);
 }
 
 kuint128 kuint128_init_str_hex(const char *s, const char **endptr);
@@ -138,16 +138,16 @@ static inline kuint128 kuint128_inv(kuint128 t) {
 }
 
 _kuint128_const()
-kuint128 kuint128_lshift(kuint128 t, kuint128 rhs);
+kuint128 kuint128_lshift(kuint128 t, unsigned rhs);
 
-static inline kuint128 kuint128_ilshift(kuint128 *t, kuint128 rhs) {
+static inline kuint128 kuint128_ilshift(kuint128 *t, unsigned rhs) {
 	return *t = kuint128_lshift(*t, rhs);
 }
 
 _kuint128_const()
-kuint128 kuint128_rshift(kuint128 t, kuint128 rhs);
+kuint128 kuint128_rshift(kuint128 t, unsigned rhs);
 
-static inline kuint128 kuint128_irshift(kuint128 *t, kuint128 rhs){
+static inline kuint128 kuint128_irshift(kuint128 *t, unsigned rhs){
 	return *t = kuint128_rshift(*t, rhs);
 }
 
@@ -234,8 +234,8 @@ static inline kuint128 kuint128_imod(kuint128 *t, kuint128 rhs){
 	return *t = kuint128_mod(*t, rhs);
 }
 
-static inline void kuint128_inc(kuint128 *t) {
-	kuint128_iadd(t, kuint128_1);
+static inline kuint128 kuint128_inc(kuint128 *t) {
+	return kuint128_iadd(t, kuint128_1);
 }
 
 static inline kuint128 kuint128_postinc(kuint128 *t) {
@@ -244,18 +244,14 @@ static inline kuint128 kuint128_postinc(kuint128 *t) {
 	return temp;
 }
 
-static inline void kuint128_dec(kuint128 *t){
-	kuint128_isub(t, kuint128_1);
+static inline kuint128 kuint128_dec(kuint128 *t){
+	return kuint128_isub(t, kuint128_1);
 }
 
 static inline kuint128 kuint128_postdec(kuint128 *t) {
     kuint128 temp = *t;
 	kuint128_dec(t);
 	return temp;
-}
-
-static inline kuint128 kuint128_neg(kuint128 t) {
-	return kuint128_add(kuint128_neg(t), kuint128_1);
 }
 
 static inline uint_fast64_t kuint128_upper(kuint128 t) {
@@ -272,6 +268,18 @@ static inline kuint128 kuint128_unsigned_to_signed(kuint128 t) {
 
 static inline kuint128 kuint128_signed_to_unsigned(kuint128 t) {
 	return kuint128_inv(kuint128_sub(t, kuint128_1));
+}
+
+static inline kuint128 kuint128_plus(kuint128 x) {
+	return x;
+}
+
+static inline kuint128 kuint128_minus(kuint128 t) {
+	return kuint128_unsigned_to_signed(t);
+}
+
+static inline kuint128 kuint128_neg(kuint128 t) {
+	return kuint128_unsigned_to_signed(t);
 }
 
 /* to string conversions ------------------------------------------------------------------------- */
@@ -352,8 +360,6 @@ _uint128_gen_u(sub)
 _uint128_gen_u(mul)
 _uint128_gen_u(div)
 _uint128_gen_u(mod)
-_uint128_gen_u(rshift)
-_uint128_gen_u(lshift)
 _uint128_gen_u(and)
 _uint128_gen_u(or)
 _uint128_gen_u(xor)
@@ -372,11 +378,51 @@ _uint128_gen_b(ge)
 // #define UINT128_DEBUGGING 1
 #ifdef UINT128_DEBUGGING
 #include <stdio.h>
+#include <stdarg.h>
 #include <inttypes.h>
-static inline void kuint128_println(kuint128 t) {
-	printf("(%llu,%llu)\n", (unsigned long long)t.UPPER, (unsigned long long)t.LOWER);
+static inline void _kuint128_printf(const char *func, int line, const char *fmt, ...) {
+	fflush(stdout);
+	fflush(stderr);
+	FILE *const fout = stdout;
+	va_list va;
+	va_start(va, fmt);
+	kuint128 t;
+	for (char c; (c = *fmt); fmt++) {
+		switch (c) {
+		case '%':
+			switch (fmt[1]) {
+			case 'L': case 'I':
+				fprintf(fout, "%35s:%-3d:", func, line);
+				break;
+			case 'K':
+				t = va_arg(va, kuint128);
+				fprintf(fout, "(%llu,%llu)", (unsigned long long)t.UPPER, (unsigned long long)t.LOWER);
+				break;
+			case 'U':
+				t = va_arg(va, kuint128);
+				fprintf(fout, "%s", KUINT128_STR(t));
+				break;
+			case 'D':
+				t = va_arg(va, kuint128);
+				fprintf(fout, "%s", KINT128_STR(t));
+				break;
+			default:
+
+			}
+			fmt++;
+			break;
+		default:
+			fputc(c, fout);
+			break;
+		}
+	}
+	va_end(va);
+	fflush(fout);
 }
+#define kuint128_printf(...)  _kuint128_printf(__func__, __LINE__, __VA_ARGS__)
+#define kuint128_println(t)  kuint128_printf("%L %K\n", t);
 #else
+static inline void kuint128_printf(const char *fmt, ...) {}
 static inline void kuint128_println(kuint128 t) {}
 #endif
 
@@ -388,11 +434,18 @@ static inline kuint128 _kuint128_g_str(const char *str) {
 static inline kuint128 _kuint128_g_identity(kuint128 x) {
 	return x;
 }
+void _kuint128_g_error_(void);
+#define _kuint128_g_error   (void*)_kuint128_g_error_
 #define _kuint128_init_g_1(x) _Generic((x), \
 		const char *: _kuint128_g_str, \
 		char *: _kuint128_g_str, \
 		kuint128: _kuint128_g_identity, \
 		const kuint128: _kuint128_g_identity, \
+		char: kuint128_init_d, \
+		short: kuint128_init_d, \
+		int: kuint128_init_d, \
+		long: kuint128_init_d, \
+		long long: kuint128_init_d, \
 		default: kuint128_init_u)(x)
 #define _kuint128_init_g_2(x,y) _Generic((x), \
 		const char *: kuint128_init_str, \
@@ -400,6 +453,239 @@ static inline kuint128 _kuint128_g_identity(kuint128 x) {
 		default: kuint128_init)(x, y)
 #define _kuint128_init_g_N(_1,_2,N,...) _kuint128_init_g_##N
 #define kuint128_n(...) _kuint128_init_g_N(__VA_ARGS__,2,1)(__VA_ARGS__)
+
+// kuint128 a = kuint128_n(1)
+// kuint128 b = kuint128_n(-1)
+// kuint128 c = kuint128_n("0x123")
+// kuint128 d = kuint128_n("567")
+
+/* ------------------------------------------------------------------------- */
+
+#if KUINT128_WANT_OP
+
+static inline kuint128 _kuint128_op_inc(int c, kuint128 *t) { return kuint128_inc(t); }
+static inline bool _kuint128_op_not(const kuint128 *t) { return kuint128_not(*t); }
+#define _kuint128_d(var, type, func, a, ...)  \
+		_Generic((var), type: func, default: (void(*)(__typeof__(a), ...))_kuint128_g_error)(a, ##__VA_ARGS__)
+#define _kuint128_tc(a, b)  __builtin_types_compatible_p(__typeof__(a), b)
+#define _kuint128_op_1(a)  _kuint128_init_g_1(a)
+#include <stdarg.h>
+#define _kuint128_va_get(first, type)  __extension__({va_list va; va_start(va, first); type var = va_arg(va, type); va_end(va); var; })
+kuint128 _kuint128_op_error(int a, ...);
+static inline kuint128 _kuint128_op_2_in_modify_pointer(int a, ...)  {
+	kuint128 *t = _kuint128_va_get(a, kuint128*);
+	switch (a) {
+	case '++': return kuint128_inc(t);
+    case '--': return kuint128_dec(t); 
+	case '~': return kuint128_inv(*t);
+	case '+': return _kuint128_g_identity(*t);
+	case '-': return kuint128_minus(*t);
+	default: assert(0); return *t;
+	}
+}
+static inline bool _kuint128_op_2_in_pointer_bool(int a, ...)  {
+	kuint128 *t = _kuint128_va_get(a, kuint128*);
+	switch (a) {
+	case '!': return kuint128_not(*t);
+	case '!!': return kuint128_bool(*t);
+	default: assert(0); return false;
+	}
+}
+static inline kuint128 _kuint128_op_2_in_value(int a, ...)  {
+	kuint128 t = _kuint128_va_get(a, kuint128);
+	return _kuint128_op_2_in_modify_pointer(a, &t);
+}
+
+static inline bool _kuint128_op_2_in_value_bool(int a, ...)  {
+	kuint128 t = _kuint128_va_get(a, kuint128);
+	return _kuint128_op_2_in_pointer_bool(a, &t);
+}
+#define _kuint128_op_2_modify(sign, a, b) \
+		a == sign, _Generic((b), \
+				kuint128       : _kuint128_op_error, \
+				kuint128*      : _kuint128_op_2_in_modify_pointer, \
+				const kuint128*: _kuint128_op_error)
+#define _kuint128_op_2_bool(sign, a, b) \
+		a == sign, _Generic((b), \
+				kuint128       : _kuint128_op_2_in_value_bool, \
+				kuint128*      : _kuint128_op_2_in_pointer_bool, \
+				const kuint128*: _kuint128_op_2_in_pointer_bool)
+#define _kuint128_op_2_value(sign, a, b) \
+		a == sign, _Generic((b), \
+				kuint128       : _kuint128_op_2_in_value, \
+				kuint128*      : _kuint128_op_2_in_modify_pointer, \
+				const kuint128*: _kuint128_op_2_in_modify_pointer)
+#define _kuint128_op_2(a, b)  ( \
+	__builtin_choose_expr(_kuint128_op_2_modify('++', a, b), \
+	__builtin_choose_expr(_kuint128_op_2_modify('--', a, b), \
+	__builtin_choose_expr(_kuint128_op_2_bool('!', a, b), \
+	__builtin_choose_expr(_kuint128_op_2_bool('!!', a, b), \
+	__builtin_choose_expr(_kuint128_op_2_value('~', a, b), \
+	__builtin_choose_expr(_kuint128_op_2_value('-', a, b), \
+	__builtin_choose_expr(_kuint128_op_2_value('+', a, b), \
+		(void)0)))))))(a, b))
+#define _kuint128_op_3_va_get(type1, var1, type2, var2) \
+	va_list va; va_start(va, a); \
+	type1 var1 = va_arg(va, type1); \
+	type2 var2 = va_arg(va, type2); \
+	va_end(va)
+static inline kuint128 _kuint128_op_3_in_kuint128_in(int a, kuint128 *l, kuint128 r) {
+	kuint128_println(r);
+	switch (a) {
+	case '+': return kuint128_add(*l, r);
+	case '+=': return kuint128_iadd(l, r);
+	case '-': return kuint128_sub(*l, r);
+	case '-=': return kuint128_isub(l, r);
+	case '*': return kuint128_mul(*l, r);
+	case '*=': return kuint128_imul(l, r);
+	case '/': return kuint128_div(*l, r);
+	case '/=': return kuint128_idiv(l, r);
+	case '<<': return kuint128_lshift(*l, kuint128_uint8(r));
+	case '<<=': return kuint128_ilshift(l, kuint128_uint8(r));
+	case '>>': return kuint128_rshift(*l, kuint128_uint8(r));
+	case '>>=': return kuint128_irshift(l, kuint128_uint8(r));
+	case '^': return kuint128_xor(*l, r);
+	case '^=': return kuint128_ixor(l, r);
+	case '&': return kuint128_and(*l, r);
+	case '&=': return kuint128_iand(l, r);
+	case '|': return kuint128_or(*l, r);
+	case '|=': return kuint128_ior(l, r);
+	default: assert(0); return kuint128_max;
+	}
+}
+static inline bool _kuint128_op_3_in_bool_in(int a, kuint128 l, kuint128 r) {
+	switch (a) {
+	case '==': return kuint128_eq(l, r);
+	case '!=': return kuint128_ne(l, r);
+	case '<': return kuint128_lt(l, r);
+	case '<=': return kuint128_le(l, r);
+	case '>': return kuint128_gt(l, r);
+	case '>=': return kuint128_ge(l, r);
+	default: assert(0); return false;
+	}
+}
+static inline kuint128 _kuint128_op_3_in_modify_pointer_pointer(int a, ...) {
+	_kuint128_op_3_va_get(kuint128*, l, kuint128*, r);
+	kuint128_println(*r);
+	return _kuint128_op_3_in_kuint128_in(a, l, *r);
+}
+static inline kuint128 _kuint128_op_3_in_modify_pointer_value(int a, ...) {
+	_kuint128_op_3_va_get(kuint128*, l, kuint128, r);
+	kuint128_println(r);
+	return _kuint128_op_3_in_kuint128_in(a, l, r);
+}
+static inline kuint128 _kuint128_op_3_in_value_pointer_pointer(int a, ...) {
+	_kuint128_op_3_va_get(kuint128 *, tmp, kuint128 *, r);
+	kuint128 l = *tmp;
+	kuint128_printf("%I l=%U r=%U\n", r, l);
+	return _kuint128_op_3_in_kuint128_in(a, &l, *r);
+}
+static inline kuint128 _kuint128_op_3_in_value_pointer_value(int a, ...) {
+	_kuint128_op_3_va_get(kuint128 *, tmp, kuint128, r);
+	kuint128 l = *tmp;
+	kuint128_printf("%I l=%U r=%U\n", r, l);
+	return _kuint128_op_3_in_kuint128_in(a, &l, r);
+}
+static inline kuint128 _kuint128_op_3_in_value_value(int a, ...) {
+	_kuint128_op_3_va_get(kuint128, l, kuint128, r);
+	kuint128_printf("%I l=%U r=%U\n", r, l);
+	return _kuint128_op_3_in_kuint128_in(a, &l, r);
+}
+static inline kuint128 _kuint128_op_3_in_value_pointer(int a, ...) {
+	_kuint128_op_3_va_get(kuint128, l, kuint128 *, r);
+	return _kuint128_op_3_in_kuint128_in(a, &l, *r);
+}
+static inline bool _kuint128_op_3_in_bool_pointer_pointer(int a, ...) {
+	_kuint128_op_3_va_get(kuint128 *, l, kuint128 *, r);
+	return _kuint128_op_3_in_bool_in(a, *l, *r);
+}
+static inline bool _kuint128_op_3_in_bool_pointer_value(int a, ...) {
+	_kuint128_op_3_va_get(kuint128 *, l, kuint128, r);
+	return _kuint128_op_3_in_bool_in(a, *l, r);
+}
+static inline bool _kuint128_op_3_in_bool_value_pointer(int a, ...) {
+	_kuint128_op_3_va_get(kuint128, l, kuint128 *, r);
+	return _kuint128_op_3_in_bool_in(a, l, *r);
+}
+static inline bool _kuint128_op_3_in_bool_value_value(int a, ...) {
+	_kuint128_op_3_va_get(kuint128, l, kuint128, r);
+	return _kuint128_op_3_in_bool_in(a, l, r);
+}
+#define _kuint128_op_3_choser(x, fun1, fun2) \
+		_Generic((x), \
+				kuint128: fun1, \
+				kuint128*: fun2, \
+				const kuint128*: fun2) \
+
+#define _kuint128_op_3_modify(sign, a, b, c) \
+		b == sign, _Generic((a), \
+				kuint128 : _kuint128_op_error, \
+				kuint128*: _kuint128_op_3_choser(c, \
+					_kuint128_op_3_in_modify_pointer_value, \
+					_kuint128_op_3_in_modify_pointer_pointer), \
+				const kuint128*: _kuint128_op_error)
+#define _kuint128_op_3_value(sign, a, b, c) \
+		b == sign, _Generic((a), \
+				kuint128: _Generic((c), \
+					kuint128: _kuint128_op_3_in_value_value, \
+					kuint128*: _kuint128_op_3_in_value_pointer, \
+					const kuint128*: _kuint128_op_3_in_value_pointer), \
+				kuint128*: _Generic((c), \
+					kuint128:  _kuint128_op_3_in_value_pointer_value, \
+					kuint128*: _kuint128_op_3_in_value_pointer_pointer, \
+					const kuint128*: _kuint128_op_3_in_value_pointer_pointer), \
+				const kuint128*: _Generic((c), \
+					kuint128:  _kuint128_op_3_in_value_pointer_value, \
+					kuint128*: _kuint128_op_3_in_value_pointer_pointer, \
+					const kuint128*: _kuint128_op_3_in_value_pointer_pointer))
+#define _kuint128_op_3_bool(sign, a, b, c) \
+		b == sign, _Generic((a), \
+				kuint128: _Generic((c), \
+					kuint128: _kuint128_op_3_in_bool_value_value, \
+					kuint128*: _kuint128_op_3_in_bool_pointer_value, \
+					const kuint128*: _kuint128_op_3_in_bool_pointer_value), \
+				kuint128*: _Generic((c), \
+					kuint128: _kuint128_op_3_in_bool_pointer_value, \
+					kuint128*: _kuint128_op_3_in_bool_pointer_pointer, \
+					const kuint128*: _kuint128_op_3_in_bool_pointer_pointer), \
+				const kuint128*: _Generic((c), \
+					kuint128: _kuint128_op_3_in_bool_pointer_value, \
+					kuint128*: _kuint128_op_3_in_bool_pointer_pointer, \
+					const kuint128*: _kuint128_op_3_in_bool_pointer_pointer))
+
+
+#define _kuint128_op_3(a, b, c)  ( \
+	__builtin_choose_expr(_kuint128_tc(b, int), \
+			__builtin_choose_expr(_kuint128_op_3_value('+', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_modify('+=', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_value('-', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_modify('-=', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_value('*', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_modify('*=', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_value('/', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_modify('/=', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_value('<<', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_modify('<<=', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_value('>>', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_modify('>>=', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_value('^', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_modify('^=', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_value('&', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_modify('&=', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_value('|', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_modify('|=', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_bool('==', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_bool('!=', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_bool('>', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_bool('>=', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_bool('<', a, b, c), \
+			__builtin_choose_expr(_kuint128_op_3_bool('<=', a, b, c), \
+					(void)0)))))))))))))))))))))))), \
+					(void)0)(b, a, c))
+#define _kuint128_op_N(_1,_2,_3,N,...) _kuint128_op_##N
+#define kuint128_op(...)  _kuint128_op_N(__VA_ARGS__,3,2,1)(__VA_ARGS__)
+
+#endif
 
 /* ------------------------------------------------------------------------- */
 

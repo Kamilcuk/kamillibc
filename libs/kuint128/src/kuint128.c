@@ -47,7 +47,7 @@ to do a general rewrite of this class.
 
 kuint128 kuint128_init_str_hex(const char *s, const char **endptr) {
 	if (s == NULL || !s[0]) {
-		if (*endptr)
+		if (endptr)
 			*endptr = s;
 		return kuint128_init(0, 0);
 	}
@@ -81,14 +81,14 @@ kuint128 kuint128_init_str_hex(const char *s, const char **endptr) {
 			break;
 		}
 	}
-	if (*endptr)
+	if (endptr)
 		*endptr = s;
 	return t;
 }
 
 kuint128 kuint128_init_str_dec(const char *s, const char **endptr) {
 	if (s == NULL || !s[0]) {
-		if (*endptr)
+		if (endptr)
 			*endptr = s;
 		return kuint128_init(0, 0);
 	}
@@ -98,14 +98,14 @@ kuint128 kuint128_init_str_dec(const char *s, const char **endptr) {
 		kuint128_imul_u(&t, 10);
 		kuint128_iadd_u(&t, *s - '0');
 	}
-	if (*endptr)
+	if (endptr)
 		*endptr = s;
 	return t;
 }
 
 kuint128 kuint128_init_str_oct(const char *s, const char **endptr) {
 	if (s == NULL || !s[0]) {
-		if (*endptr)
+		if (endptr)
 			*endptr = s;
 		return kuint128_init(0, 0);
 	}
@@ -115,14 +115,14 @@ kuint128 kuint128_init_str_oct(const char *s, const char **endptr) {
 		kuint128_imul_u(&t, 8);
 		kuint128_iadd_u(&t, *s - '0');
 	}
-	if (*endptr)
+	if (endptr)
 		*endptr = s;
 	return t;
 }
 
 kuint128 kuint128_init_str(const char *s, const char **endptr) {
 	if (s == NULL || !s[0]) {
-		if (*endptr)
+		if (endptr)
 			*endptr = s;
 		return kuint128_init(0, 0);
 	}
@@ -138,11 +138,9 @@ kuint128 kuint128_init_str(const char *s, const char **endptr) {
 
 /* ------------------------------------------------------------------------- */
 
-kuint128 kuint128_lshift(kuint128 t, kuint128 rhs) {
-	const uint_fast64_t shift = rhs.LOWER;
-	if (rhs.UPPER || (shift >= 128)) {
-		return kuint128_0;
-	} else if (shift == 64) {
+kuint128 kuint128_lshift(kuint128 t, unsigned shift) {
+	assert(shift < 128);
+	if (shift == 64) {
 		return kuint128_init(t.LOWER, 0);
 	} else if (shift == 0) {
 		return t;
@@ -155,11 +153,9 @@ kuint128 kuint128_lshift(kuint128 t, kuint128 rhs) {
 	return kuint128_0;
 }
 
-kuint128 kuint128_rshift(kuint128 t, kuint128 rhs) {
-	const uint_fast64_t shift = rhs.LOWER;
-	if (rhs.UPPER || (shift >= 128)) {
-		return kuint128_0;
-	} else if (shift == 64) {
+kuint128 kuint128_rshift(kuint128 t, unsigned shift) {
+	assert(shift < 128);
+	if (shift == 64) {
 		return kuint128_init(0, t.UPPER);
 	} else if (shift == 0) {
 		return t;
@@ -168,9 +164,8 @@ kuint128 kuint128_rshift(kuint128 t, kuint128 rhs) {
 				     (t.UPPER << (64 - shift)) + (t.LOWER >> shift));
 	} else if ((128 > shift) && (shift > 64)) {
 		return kuint128_init(0, (t.UPPER >> (shift - 64)));
-	} else {
-		return kuint128_0;
 	}
+	return kuint128_0;
 }
 
 kuint128 kuint128_mul(kuint128 t, kuint128 rhs) {
@@ -269,10 +264,10 @@ kuint128div kuint128_divmod(kuint128 lhs, kuint128 rhs) {
 	}
 	kuint128div qr = kuint128div_init(kuint128_0, kuint128_0);
 	for (uint8_t x = kuint128_bits(lhs); x > 0; x--) {
-		kuint128_ilshift(&qr.qout, kuint128_1);
-		kuint128_ilshift(&qr.rem, kuint128_1);
+		kuint128_ilshift(&qr.qout, 1);
+		kuint128_ilshift(&qr.rem, 1);
 
-		if (kuint128_bool(kuint128_and(kuint128_rshift_u(lhs, x - 1U), kuint128_1))) {
+		if (kuint128_bool(kuint128_and(kuint128_rshift(lhs, x - 1U), kuint128_1))) {
 			kuint128_inc(&qr.rem);
 		}
 
