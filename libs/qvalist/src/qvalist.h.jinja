@@ -1,0 +1,253 @@
+/*
+ * qvalist.h
+ *
+ *  Created on: 30.06.2021
+ *      Author: Kamil Cukrowski
+ */
+#ifndef LIB_QVALIST_H_
+#define LIB_QVALIST_H_
+
+#include <assert.h>
+#include <stdlib.h>
+#include <string.h>
+#if QVA_EXT
+#include <stdio.h>
+#endif
+
+#if QVA_DEBUG
+#include <stdio.h>
+#define _qva_dbg(...)  fprintf(stderr, __VA_ARGS__)
+#else
+#define _qva_dbg(...)  do{}while(0)
+#endif
+
+// When QVA_CHECK_LEN is defined then:
+// - qva_list::buf additionally stores a size_t with arguments size
+// - the agrument size is checked in qva_arg and asserted on.
+#if QVA_CHECK_LEN && !defined(NDEBUG)
+#define _qva_ifcheck(...) __VA_ARGS__
+#else
+// The macro is empty!
+#define _qva_ifcheck(...)
+#endif
+
+// Assert on the expression and if on the expressin.
+#define _qva_assertif(expr)  if (assert(!(expr)), expr)
+
+typedef struct qva_list {
+	// Stores memcpy arguments.
+	unsigned char *buf;
+} qva_list;
+
+
+// Copy from from to to size bytes just like memcpy
+// and also increment the pointer pointed to by pntpnt by size.
+static inline
+void _qva_meminccpy(unsigned char **pntpnt, void *to, const void *from, size_t size) {
+	memcpy(to, from, size);
+	*pntpnt += size;
+}
+
+{%- set N = 5 -%}
+{%- macro MARGS(n) %}_{{ range(1, n + 1) | join(",_") }}{% endmacro %}
+{%- macro MARGSPOS(n) %}{{ range(1, n) | reverse | join(",") }}{% endmacro %}
+{%- macro VARMACRO(NAME, CNT=N, PRE="", JOIN="") %}
+	{%- for n in range(1, CNT) %}
+#define {{NAME}}_{{n}}({{PRE}} _{{ range(1, n + 1) | join(",_") }}) \
+		{% for i in range(1, n+1) -%}
+			{{- caller("_" ~ i) -}}
+			{{- JOIN if not loop.last else "" -}}
+		{%- endfor %}
+	{%- endfor %}
+#define {{NAME}}_N(_{{ range(1, CNT) | join(",_") }}, N, ...) \
+		{{NAME}}_##N
+#define {{NAME}}({{ PRE }}...)  \
+		{{NAME}}_N(__VA_ARGS__, {{ range(1, CNT) | reverse | join(",") }})({{ PRE }}__VA_ARGS__)
+{%- endmacro -%}
+{% call(i) VARMACRO(NAME="_qva_new_size", JOIN="+") -%}
+		sizeof({{ i }})_qva_ifcheck(+sizeof(size_t))
+{%- endcall %}
+{% call(i) VARMACRO(NAME="_qva_init_sizes", JOIN=",") -%}
+		sizeof({{ i }})
+{%- endcall %}
+
+static inline
+qva_list _qva_init_in(unsigned char *buf, size_t bufsize, const void *const refs[], const size_t sizes[]) {
+	qva_list l = {buf};
+	const void *const * iref = refs;
+	const size_t *isize = sizes;
+	unsigned char *pnt = l.buf;
+	for (; *isize; iref++, isize++) {
+		_qva_dbg("%s: put %d bytes to %p with bufsize=%d\n", __func__, (int)*isize, (void*)pnt, (int)bufsize);
+		_qva_ifcheck(
+				_qva_meminccpy(&pnt, pnt, isize, sizeof(*isize));
+		)
+		_qva_meminccpy(&pnt, pnt, *iref, *isize);
+	}
+	return l;
+}
+
+#ifndef __GNUC__
+{% call(i) VARMACRO(NAME="_qva_init_ref", JOIN=",") -%}
+		&({{i}})
+{%- endcall %}
+// Build arguments on stack.
+#define _qva_init(buf, size, ...) \
+		_qva_init_in(buf, size, (const void *const[]){_qva_init_ref(__VA_ARGS__)}, (const size_t[]){_qva_init_sizes(__VA_ARGS__), 0})
+#else /* __GNUC__ */
+{% call(i) VARMACRO(NAME="_qva_init_def_ref", JOIN=" \\\n\t\t") -%}
+		const __typeof__({{ i }}) _tmp_{{i}} = ( {{i}} );
+{%- endcall %}
+{% call(i) VARMACRO(NAME="_qva_init_ref", JOIN=",") -%}
+		&(_tmp_{{i}})
+{%- endcall %}
+// Create a function that uses __typeof__(arg) vat = arg and passes that to _qva_init_in.
+// Why a function? Because the lifetime of compund literals is within ({ .. }) block, so 
+// the compund literal has to be defined _outside_ of a block, while the rest has to be 
+// inside.
+#define _qva_init(_buf, size, ...) \
+		({ \
+			qva_list _qva_call(unsigned char *buf) { \
+					_qva_init_def_ref(__VA_ARGS__); \
+					return _qva_init_in(buf, size, (const void *const[]){_qva_init_ref(__VA_ARGS__)}, (const size_t[]){_qva_init_sizes(__VA_ARGS__), 0}); \
+			} \
+			_qva_call; \
+		})(_buf)
+#endif /* __GNUC__ */
+
+/**
+ * @define qva_new
+ *
+ * Constructs a qva_list variable using compund literal on stack.
+ * If GNU C compiler extensions are available, then all arguments are interpreted as expressions
+ * and assigned using `__typeof__(expr) var = (expr);` and then `&var` is taken and its value is
+ * copied onto the buffer.
+ * If GNU C compiler is not used, all arguments have to be variables, so that `&param` is possible.
+ **/
+#define qva_new(...) \
+		_qva_init((unsigned char[_qva_new_size(__VA_ARGS__)]){0}, _qva_new_size(__VA_ARGS__), __VA_ARGS__)
+
+/**
+ * @define QVA_DEF_NEW
+ * @brief Defines a temporary buffer and a qva_list variable with specified name.
+ **/
+#define QVA_DEF_NEW(variable, ...) \
+		unsigned char _qva_##variable##_buffer[_qva_new_size(__VA_ARGS__)]; \
+		qva_list variable = _qva_init(_qva_##variable##_buffer, sizeof(_qva_##variable##_buffer), __VA_ARGS__);
+
+/* ------------------------------------------------------------------------- */
+
+/**
+ * @define qva_copy
+ * @brief Copies from qva_list to another.
+ **/
+#define qva_copy(to, from)  ((to) = (from))
+
+/**
+ * Get's size bytes from the qva_list and places them in buf.
+ * @returns buf
+ **/
+static inline
+void *qva_argv(qva_list *l, void *buf, size_t size) {
+	_qva_dbg("%s: getting %d bytes from %p\n", __func__, (int)size, (void*)l->buf);
+	_qva_ifcheck(
+			size_t s;
+			_qva_meminccpy(&l->buf, &s, l->buf, sizeof(s));
+			assert(s == size);
+	)
+	_qva_meminccpy(&l->buf, buf, l->buf, size);
+	return buf;
+}
+
+/**
+ * @define qva_arg
+ * @brief Just like va_arg.
+ **/
+#define qva_arg(list, type) \
+		*(type*)qva_argv(&list, (type[1]){0}, sizeof(type))
+
+/**
+ * @define qva_end
+ * @brief To be compatible with va_end.
+ **/
+#define qva_end(list)
+
+/* ------------------------------------------------------------------------- */
+
+#if QVA_EXT
+
+static inline
+int qva_qfprintf(FILE *out, const char *fmt, qva_list qva) {
+	char c;
+	int percent = 0;
+	int sizeness = 0;
+	int ret = -1;
+	while ((c = *fmt++)) {
+		if (percent) {
+			switch(c) {
+			case 'h':
+				sizeness--;
+				continue;
+			case 'l':
+				sizeness++;
+				continue;
+			case 'L':
+				sizeness += 10;
+				continue;
+			case 'c':
+				fprintf(out, "%d", qva_arg(qva, char));
+				break;
+			case 'd':
+				fprintf(out, "%d", qva_arg(qva, int));
+				break;
+			case 'u':
+				switch(sizeness) {
+				case -2: fprintf(out, "%hhu", qva_arg(qva, unsigned char)); break;
+				case -1: fprintf(out, "%hu", qva_arg(qva, unsigned short)); break;
+				case 0: fprintf(out, "%u", qva_arg(qva, unsigned int)); break;
+				case 1: fprintf(out, "%lu", qva_arg(qva, unsigned long)); break;
+				case 2: fprintf(out, "%llu", qva_arg(qva, unsigned long long)); break;
+				default: goto ERR;
+				}
+				break;
+			case 'f':
+				fprintf(out, "%f", qva_arg(qva, float));
+				break;
+			case 's':
+				fprintf(out, "%s", qva_arg(qva, char *));
+				break;
+			case '%':
+				fprintf(out, "%%");
+				break;
+			default:
+				goto ERR;
+			}
+		}
+		if (percent) {
+			percent = 0;
+			sizeness = 0;
+			continue;
+		}
+		switch (c) {
+		case '%':
+			percent = 1;
+			break;
+		default:
+			fprintf(out, "%c", c);
+		}
+	}
+	ret = 0;
+ERR:
+	qva_end(qva);
+	return ret;
+}
+
+#define qva_qprintf(fmt, qva_list)  qva_qfprintf(stdout, fmt, qva_list)
+#define qva_fprintf(file, fmt, ...)  qva_qfprintf(stdout, fmt, qva_new(__VA_ARGS__))
+#define qva_printf(fmt, ...)  qva_fprintf(stdout, fmt, __VA_ARGS__)
+
+#endif /* QVA_EXT */
+
+#endif /* LIB_QVALIST_H_ */
+// vim: ft=c
+
