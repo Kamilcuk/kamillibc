@@ -47,29 +47,31 @@ void _qva_meminccpy(unsigned char **pntpnt, void *to, const void *from, size_t s
 	memcpy(to, from, size);
 	*pntpnt += size;
 }
+#define _qva_new_size_1( _1) \
+		sizeof(_1)_qva_ifcheck(+sizeof(size_t))
+#define _qva_new_size_2( _1,_2) \
+		sizeof(_1)_qva_ifcheck(+sizeof(size_t))+sizeof(_2)_qva_ifcheck(+sizeof(size_t))
+#define _qva_new_size_3( _1,_2,_3) \
+		sizeof(_1)_qva_ifcheck(+sizeof(size_t))+sizeof(_2)_qva_ifcheck(+sizeof(size_t))+sizeof(_3)_qva_ifcheck(+sizeof(size_t))
+#define _qva_new_size_4( _1,_2,_3,_4) \
+		sizeof(_1)_qva_ifcheck(+sizeof(size_t))+sizeof(_2)_qva_ifcheck(+sizeof(size_t))+sizeof(_3)_qva_ifcheck(+sizeof(size_t))+sizeof(_4)_qva_ifcheck(+sizeof(size_t))
+#define _qva_new_size_N(_1,_2,_3,_4, N, ...) \
+		_qva_new_size_##N
+#define _qva_new_size(...)  \
+		_qva_new_size_N(__VA_ARGS__, 4,3,2,1)(__VA_ARGS__)
 
-{%- set N = 5 -%}
-{%- macro MARGS(n) %}_{{ range(1, n + 1) | join(",_") }}{% endmacro %}
-{%- macro MARGSPOS(n) %}{{ range(1, n) | reverse | join(",") }}{% endmacro %}
-{%- macro VARMACRO(NAME, CNT=N, PRE="", JOIN="") %}
-	{%- for n in range(1, CNT) %}
-#define {{NAME}}_{{n}}({{PRE}} _{{ range(1, n + 1) | join(",_") }}) \
-		{% for i in range(1, n+1) -%}
-			{{- caller("_" ~ i) -}}
-			{{- JOIN if not loop.last else "" -}}
-		{%- endfor %}
-	{%- endfor %}
-#define {{NAME}}_N(_{{ range(1, CNT) | join(",_") }}, N, ...) \
-		{{NAME}}_##N
-#define {{NAME}}({{ PRE }}...)  \
-		{{NAME}}_N(__VA_ARGS__, {{ range(1, CNT) | reverse | join(",") }})({{ PRE }}__VA_ARGS__)
-{%- endmacro -%}
-{% call(i) VARMACRO(NAME="_qva_new_size", JOIN="+") -%}
-		sizeof({{ i }})_qva_ifcheck(+sizeof(size_t))
-{%- endcall %}
-{% call(i) VARMACRO(NAME="_qva_init_sizes", JOIN=",") -%}
-		sizeof({{ i }})
-{%- endcall %}
+#define _qva_init_sizes_1( _1) \
+		sizeof(_1)
+#define _qva_init_sizes_2( _1,_2) \
+		sizeof(_1),sizeof(_2)
+#define _qva_init_sizes_3( _1,_2,_3) \
+		sizeof(_1),sizeof(_2),sizeof(_3)
+#define _qva_init_sizes_4( _1,_2,_3,_4) \
+		sizeof(_1),sizeof(_2),sizeof(_3),sizeof(_4)
+#define _qva_init_sizes_N(_1,_2,_3,_4, N, ...) \
+		_qva_init_sizes_##N
+#define _qva_init_sizes(...)  \
+		_qva_init_sizes_N(__VA_ARGS__, 4,3,2,1)(__VA_ARGS__)
 
 static inline
 qva_list _qva_init_in(unsigned char *buf, size_t bufsize, const void *const refs[], const size_t sizes[]) {
@@ -88,19 +90,55 @@ qva_list _qva_init_in(unsigned char *buf, size_t bufsize, const void *const refs
 }
 
 #ifndef __GNUC__
-{% call(i) VARMACRO(NAME="_qva_init_ref", JOIN=",") -%}
-		&({{i}})
-{%- endcall %}
+
+#define _qva_init_ref_1( _1) \
+		&(_1)
+#define _qva_init_ref_2( _1,_2) \
+		&(_1),&(_2)
+#define _qva_init_ref_3( _1,_2,_3) \
+		&(_1),&(_2),&(_3)
+#define _qva_init_ref_4( _1,_2,_3,_4) \
+		&(_1),&(_2),&(_3),&(_4)
+#define _qva_init_ref_N(_1,_2,_3,_4, N, ...) \
+		_qva_init_ref_##N
+#define _qva_init_ref(...)  \
+		_qva_init_ref_N(__VA_ARGS__, 4,3,2,1)(__VA_ARGS__)
 // Build arguments on stack.
 #define _qva_init(buf, size, ...) \
 		_qva_init_in(buf, size, (const void *const[]){_qva_init_ref(__VA_ARGS__)}, (const size_t[]){_qva_init_sizes(__VA_ARGS__), 0})
 #else /* __GNUC__ */
-{% call(i) VARMACRO(NAME="_qva_init_def_ref", JOIN=" \\\n\t\t") -%}
-		const __typeof__({{ i }}) _tmp_{{i}} = ( {{i}} );
-{%- endcall %}
-{% call(i) VARMACRO(NAME="_qva_init_ref", JOIN=",") -%}
-		&(_tmp_{{i}})
-{%- endcall %}
+
+#define _qva_init_def_ref_1( _1) \
+		const __typeof__(_1) _tmp__1 = ( _1 );
+#define _qva_init_def_ref_2( _1,_2) \
+		const __typeof__(_1) _tmp__1 = ( _1 ); \
+		const __typeof__(_2) _tmp__2 = ( _2 );
+#define _qva_init_def_ref_3( _1,_2,_3) \
+		const __typeof__(_1) _tmp__1 = ( _1 ); \
+		const __typeof__(_2) _tmp__2 = ( _2 ); \
+		const __typeof__(_3) _tmp__3 = ( _3 );
+#define _qva_init_def_ref_4( _1,_2,_3,_4) \
+		const __typeof__(_1) _tmp__1 = ( _1 ); \
+		const __typeof__(_2) _tmp__2 = ( _2 ); \
+		const __typeof__(_3) _tmp__3 = ( _3 ); \
+		const __typeof__(_4) _tmp__4 = ( _4 );
+#define _qva_init_def_ref_N(_1,_2,_3,_4, N, ...) \
+		_qva_init_def_ref_##N
+#define _qva_init_def_ref(...)  \
+		_qva_init_def_ref_N(__VA_ARGS__, 4,3,2,1)(__VA_ARGS__)
+
+#define _qva_init_ref_1( _1) \
+		&(_tmp__1)
+#define _qva_init_ref_2( _1,_2) \
+		&(_tmp__1),&(_tmp__2)
+#define _qva_init_ref_3( _1,_2,_3) \
+		&(_tmp__1),&(_tmp__2),&(_tmp__3)
+#define _qva_init_ref_4( _1,_2,_3,_4) \
+		&(_tmp__1),&(_tmp__2),&(_tmp__3),&(_tmp__4)
+#define _qva_init_ref_N(_1,_2,_3,_4, N, ...) \
+		_qva_init_ref_##N
+#define _qva_init_ref(...)  \
+		_qva_init_ref_N(__VA_ARGS__, 4,3,2,1)(__VA_ARGS__)
 // Create a function that uses __typeof__(arg) vat = arg and passes that to _qva_init_in.
 // Why a function? Because the lifetime of compund literals is within ({ .. }) block, so 
 // the compund literal has to be defined _outside_ of a block, while the rest has to be 
