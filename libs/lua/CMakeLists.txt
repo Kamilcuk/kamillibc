@@ -41,10 +41,11 @@ function(makegetsrc var resultvar)
 	set("${resultvar}" "${tmp2}" PARENT_SCOPE)
 endfunction()
 makegetsrc(CORE_O coresources)
-add_library(lua_core ${coresources} ${lua_SOURCE_DIR}/lua.c ${lua_SOURCE_DIR}/lauxlib.c)
+add_library(lua_core EXCLUDE_FROM_ALL
+  ${coresources} ${lua_SOURCE_DIR}/lua.c ${lua_SOURCE_DIR}/lauxlib.c)
 target_include_directories(lua_core PUBLIC ${lua_SOURCE_DIR})
 makegetsrc(LIB_O libsources)
-add_library(lua_lib ${libsources})
+add_library(lua_lib EXCLUDE_FROM_ALL ${libsources})
 target_include_directories(lua_lib PUBLIC ${lua_SOURCE_DIR})
 target_link_libraries(lua_lib PUBLIC lua_core)
 

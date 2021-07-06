@@ -7,3 +7,6 @@
 [submodule "third_party/invoke.hpp"]
 	path = third_party/invoke.hpp
 	url = https://github.com/BlackMATov/invoke.hpp
+[submodule "kcmakelib"]
+	path = kcmakelib
+	url = git@gitlab.com:Kamcuk/kcmakelib.git

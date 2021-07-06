@@ -1,4 +1,4 @@
-include(${CMAKE_CURRENT_SOURCE_DIR}/../cmake/subdirlist.cmake)
+include(k/subdirlist)
 
 subdirlist(dirs ${CMAKE_CURRENT_SOURCE_DIR})
 list(FILTER dirs EXCLUDE REGEX "AAA_template")

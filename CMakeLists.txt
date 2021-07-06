@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.11)
 project(kamcuk C)
+add_subdirectory(./kcmakelib)
 
 if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
 add_compile_options(
@@ -14,4 +15,4 @@ add_compile_options(
 endif()
 
 include(CTest)
-add_subdirectory(libs)
+add_subdirectory(./libs)
