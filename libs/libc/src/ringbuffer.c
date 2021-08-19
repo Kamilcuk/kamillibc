@@ -246,11 +246,15 @@ int rb_unittest()
 			rb_write_commit(rb, nbyte2);
 
 			size_t readsize;
-			const char * const readpnt = rb_read_pointer(rb, 0, &readsize);
-			size_t nbyte3 = MIN(readsize, nbyte2);
-			memcpy(tmp, readpnt, nbyte3);
-			if(memcmp(data, tmp, nbyte3)) { return -__LINE__; }
-			rb_read_commit(rb, nbyte3);
+			const char *const readpnt = rb_read_pointer(rb, 0, &readsize);
+			if (readsize == 0) {
+				if (readpnt != NULL) { return -__LINE__; }
+			} else {
+				size_t nbyte3 = MIN(readsize, nbyte2);
+				memcpy(tmp, readpnt, nbyte3);
+				if(memcmp(data, tmp, nbyte3)) { return -__LINE__; }
+				rb_read_commit(rb, nbyte3);
+			}
 
 			if(!rb_is_empty(rb)) { return -__LINE__; }
 		}
