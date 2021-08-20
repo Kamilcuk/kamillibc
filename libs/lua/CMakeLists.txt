@@ -1,3 +1,7 @@
+cmake_minimum_required(VERSION 3.1)
+project(kamillibc_lua LANGUAGES C)
+
+include(../../../kcmakelib/k/test_extract_properties_from_file.cmake)
 
 #ExternalProject_Add(lua
 #GIT_REPOSITORY https://github.com/lua/lua
@@ -47,5 +51,15 @@ target_include_directories(lua_core PUBLIC ${lua_SOURCE_DIR})
 makegetsrc(LIB_O libsources)
 add_library(lua_lib EXCLUDE_FROM_ALL ${libsources})
 target_include_directories(lua_lib PUBLIC ${lua_SOURCE_DIR})
-target_link_libraries(lua_lib PUBLIC lua_core)
+target_link_libraries(lua_lib PUBLIC m lua_core)
+
+include(CTest)
+if(NOT BUILD_TESTING)
+  return()
+endif()
+
+add_executable(first_example tests/first_example.c)
+target_link_libraries(first_example PUBLIC lua_lib)
+add_test(NAME kamillibc_lua_first_example COMMAND first_example)
+test_extract_properties_from_file(first_example kamillibc_lua_first_example tests/first_example.c)
 
