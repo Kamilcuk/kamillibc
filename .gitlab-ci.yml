@@ -1,3 +1,4 @@
+---
 variables:
   GIT_SUBMODULE_STRATEGY: recursive
 
@@ -7,7 +8,6 @@ on_gcc:
   - apt-get update -y
   - apt-get install -y cmake make gcc cppcheck valgrind m4 ninja-build gcovr
   - make gitlab-ci
-
 
 pages:
   image: alpine

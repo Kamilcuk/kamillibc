@@ -9,4 +9,4 @@
 	url = https://github.com/BlackMATov/invoke.hpp
 [submodule "kcmakelib"]
 	path = kcmakelib
-	url = git@gitlab.com:Kamcuk/kcmakelib.git
+	url = ../kcmakelib
