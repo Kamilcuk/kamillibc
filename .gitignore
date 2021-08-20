@@ -5,6 +5,8 @@ _build
 .tracecompass
 .settings
 vgcore*
+compile_commands.json
+.cache
 
 ## defaults
 # Prerequisites
