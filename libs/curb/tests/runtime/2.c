@@ -5,7 +5,6 @@
  *      Author: kamil
  */
 #include <curb.h>
-
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -23,12 +22,10 @@ int main() {
 	curb(a != NULL);
 	free(a);
 
-	(void)curb(1);
+	curb(1);
 
-	curb_handler_t curb_handler = curb_set_handler(curb_handler_ignore);
 	func(5);
-	(void)curb((printf("a"), 1));
-	curb_set_handler(curb_handler);
+	curbh(curbh_ignore, (printf("a"), 1));
 
 	curb(printf("b") > 0);
 

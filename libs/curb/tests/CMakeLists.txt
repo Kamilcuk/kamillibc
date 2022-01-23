@@ -1,46 +1,55 @@
 
-# runtime test fail with exit so they don't abort
-# abort is hard to handle for ctest aparently
-set(n ${PROJECT_NAME}_exit)
-add_library(${n} ${srcs})
-set_target_properties(${n} PROPERTIES C_EXTENSIONS YES)
-target_include_directories(${n} PUBLIC
-	$<TARGET_PROPERTY:${PROJECT_NAME},INTERFACE_INCLUDE_DIRECTORIES>
-)
-target_compile_definitions(${n} PUBLIC
-	CURB_DEFAULT_HANDLER=curb_handler_exit
-)
+if (CMAKE_COMPILER_IS_GNUCC)
+  add_compile_options(
+    -Wno-unused-value
+    -O
+  )
+endif()
 
-file(GLOB tests *.c)
-foreach(testf IN LISTS tests)
-	get_filename_component(test ${testf} NAME_WE)
-	
-	set(n ${PROJECT_NAME}_runtime_${test})
-	add_executable(${n} ${testf})
-	target_compile_options(${n} PUBLIC $<${CMAKE_COMPILER_IS_GNUCC}:-O0>)
-	add_test(NAME ${n} COMMAND ${n}) 
-	if(${testf} MATCHES "fail" OR ${testf} MATCHES "warn")
-		target_link_libraries(${n} PUBLIC ${PROJECT_NAME}_exit)
-		set_tests_properties(${n} PROPERTIES WILL_FAIL TRUE)
-	else()
-		target_link_libraries(${n} PUBLIC ${PROJECT_NAME})
-	endif()
-	
-	set(n ${PROJECT_NAME}_build_${test})
-    add_executable(${n} EXCLUDE_FROM_ALL ${testf})
-    target_compile_options(${n} PUBLIC $<${CMAKE_COMPILER_IS_GNUCC}:-O>)
-	target_link_libraries(${n} PUBLIC ${PROJECT_NAME})
-    add_test(NAME ${n}
-        COMMAND ${CMAKE_COMMAND} --build . --target ${n} --config $<CONFIGURATION>
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}) 
-	if(${testf} MATCHES "fail")
-		set_tests_properties(${n} PROPERTIES WILL_FAIL TRUE)
-	elseif(${testf} MATCHES "warn")
-	endif()
-
+file(GLOB tests runtime/*.c)
+foreach(ff IN LISTS tests)
+	get_filename_component(test ${ff} NAME_WE)
+	set(nn ${PROJECT_NAME}_ok_${test})
+  #
+	add_executable(${nn} ${ff})
+  target_link_libraries(${nn} PUBLIC ${PROJECT_NAME})
+  #
+	add_test(NAME ${nn} COMMAND ${nn})
+  if(${ff} MATCHES "fail")
+    set_tests_properties(${nn} PROPERTIES WILL_FAIL TRUE)
+  endif()
 endforeach()
 
-#set_tests_properties(${PROJECT_NAME}_build_curb_1 PROPERTIES PASS_REGULAR_EXPRESSION
-#	"error: curb(a >= 0) will fail")
-#set_tests_properties(${PROJECT_NAME}_build_curb_warn PROPERTIES PASS_REGULAR_EXPRESSION
-#	"warning: curb(a == 2) will fail")
+file(GLOB tests build/*.c)
+foreach(ff IN LISTS tests)
+	get_filename_component(test ${ff} NAME_WE)
+	set(nn ${PROJECT_NAME}_builderror_${test})
+  #
+  add_executable(${nn} EXCLUDE_FROM_ALL ${ff})
+	target_link_libraries(${nn} PUBLIC ${PROJECT_NAME})
+  #
+  set(args
+    COMMAND sh -c
+      "$1 -E touch_nocreate $2 && $1 --build $3 --target $4 2>&1"
+      _ ${CMAKE_COMMAND} ${ff} ${CMAKE_BINARY_DIR} ${nn}
+     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+  add_test(NAME ${nn} ${args})
+  add_test(NAME ${nn}_regex ${args})
+  set_tests_properties(${nn} ${nn}_regex PROPERTIES RUN_SERIAL TRUE)
+  if(${ff} MATCHES "fail")
+    set_tests_properties(${nn} PROPERTIES WILL_FAIL TRUE)
+    set_tests_properties(${nn}_regex PROPERTIES PASS_REGULAR_EXPRESSION
+      "error: .* will fail"
+    )
+  elseif(${ff} MATCHES "warn")
+    set_tests_properties(${nn}_regex PROPERTIES PASS_REGULAR_EXPRESSION
+      "warning: .* will fail"
+    )
+  else()
+    set_tests_properties(${nn}_regex PROPERTIES FAIL_REGULAR_EXPRESSION
+       "curb .* will fail"
+    )
+  endif()
+endforeach()
+

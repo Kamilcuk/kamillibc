@@ -152,6 +152,22 @@ static inline struct timespec timespec_add(struct timespec a, struct timespec b)
 	return a;
 }
 
+
+static inline bool timespec_ckd_add(struct timespec *r, struct timespec a, struct timespec b)
+{
+	assert(a.tv_nsec < 1000000000);
+	assert(b.tv_nsec < 1000000000);
+	a.tv_sec += b.tv_sec;
+	a.tv_nsec += b.tv_nsec;
+	if (a.tv_nsec >= 1000000000) {
+		a.tv_nsec -= 1000000000;
+		if (ckd_add(&a.tv_sec, a.tv_sec, 1)) {
+			return 1;
+		}
+	}
+	*r = a;
+	return 0;
+}
 static inline struct timespec timespec_sub(struct timespec a, struct timespec b)
 {
 	assert(timespec_isValid(a));
@@ -184,6 +200,7 @@ static inline struct timespec timespec_mul(struct timespec a, int i)
 
 static inline struct timespec timespec_div(struct timespec a, int i)
 {
+	assert(i);
 	a.tv_nsec += (a.tv_sec % i) * 1000000000;
 	a.tv_sec /= i;
 	a.tv_nsec /= i;

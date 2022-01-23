@@ -18,13 +18,13 @@ void spi_select(spi_t fd)
 {
 	struct spi_ioc_transfer transfer = { .cs_change = 1, };
 	const int ret = ioctl(fd, SPI_IOC_MESSAGE(1), &transfer);
-	curb(ret != 0);
+	curb_exit(ret != 0);
 }
 void spi_unselect(spi_t fd)
 {
 	struct spi_ioc_transfer transfer = { .cs_change = 1, };
 	const int ret = ioctl(fd, SPI_IOC_MESSAGE(1), &transfer);
-	curb(ret != 0);
+	curb_exit(ret != 0);
 }
 void spi_send(spi_t fd, const void *tx_buf, size_t len)
 {
@@ -42,5 +42,5 @@ void spi_exchange(spi_t fd, const void *tx_buf, void *rx_buf, size_t len)
 			.len = len,
 	};
 	const int ret = ioctl(fd, SPI_IOC_MESSAGE(1), &transfer);
-	curb(ret != 0);
+	curb_exit(ret != 0);
 }

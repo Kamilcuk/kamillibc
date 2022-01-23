@@ -1,19 +1,15 @@
-/*
- * curb.c
- *
- *  Created on: 19 mar 2018
- *      Author: kamil
+/**
+ * @file
+ * @copyright Kamil Cukrowski
  */
+#define _GNU_SOURCE  1
 #define _POSIX_C_SOURCE  200112L
 #define __STDC_WANT_LIB_EXT1__  1
 #include "curb.h"
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-
-/* Private Variables ---------------------------------------------------------- */
-
-_curb_thread_local curb_handler_t _curb_handler;
+#include <errno.h>
 
 /* Private Functions ---------------------------------------------------------- */
 
@@ -32,22 +28,24 @@ static inline const char *_curb_strerror_in(char errnostr[128], int error) {
 #else
 
 static inline const char *_curb_strerror(int error) {
-	const char *errnostr = NULL;
-	if (error != 0) {
-		errnostr = strerror(error);
-	}
-	return errnostr;
+	return error ? strerror(error) : NULL;
 }
 
 #endif
 
 /* Exported Functions --------------------------------------------------------- */
 
-void curb_handler_print(struct curb_handler_ctx_s ctx) {
+void curbh_print(struct curbh_ctx ctx) {
 	const char *errnostr = _curb_strerror(ctx.error);
 	(void)fprintf(stderr,
-			"%s:%u: %s: curb: constraint `%s' failed%s%s%s%s\n"
+#if HAS_PROGRAM_INVOCATION_SHORT_NAME
+			"%s: "
+#endif
+			"%s:%u: %s: constraint `%s' failed%s%s%s%s\n"
 			,
+#if HAS_PROGRAM_INVOCATION_SHORT_NAME
+			program_invocation_short_name,
+#endif
 			ctx.file,
 			ctx.line,
 			ctx.function,
@@ -59,17 +57,17 @@ void curb_handler_print(struct curb_handler_ctx_s ctx) {
 	);
 }
 
-void curb_handler_abort(struct curb_handler_ctx_s ctx) {
-	curb_handler_print(ctx);
+void curbh_abort(struct curbh_ctx ctx) {
+	curbh_print(ctx);
 	abort();
 }
 
-void curb_handler_exit(struct curb_handler_ctx_s ctx) {
-	curb_handler_print(ctx);
+void curbh_exit(struct curbh_ctx ctx) {
+	curbh_print(ctx);
 	exit(EXIT_FAILURE);
 }
 
-void _curb_handler_print_in(struct curb_handler_ctx_s ctx, const char *func) {
+void _curbh_printlong_in(struct curbh_ctx ctx, const char *func) {
 	const char *errnostr = _curb_strerror(ctx.error);
 	(void)fprintf(stderr,
 			"%s was called in response to a runtime-constraint violation.\n"
@@ -92,12 +90,12 @@ void _curb_handler_print_in(struct curb_handler_ctx_s ctx, const char *func) {
 	);
 }
 
-void curb_handler_print_long(struct curb_handler_ctx_s ctx) {
-	_curb_handler_print_in(ctx, __func__);
+void curbh_printlong(struct curbh_ctx ctx) {
+	_curbh_printlong_in(ctx, __func__);
 }
 
 static inline
-void _curb_handler_terminatednode(void) {
+void _curbh_terminatednote(void) {
 	(void)fprintf(stderr,
 			"Note to end users: This program was terminated as a result\n"
 			"of a bug present in the software. Please reach out to your\n"
@@ -105,30 +103,15 @@ void _curb_handler_terminatednode(void) {
 	);
 }
 
-void curb_handler_abort_long(struct curb_handler_ctx_s ctx) {
-	_curb_handler_print_in(ctx, __func__);
-	_curb_handler_terminatednode();
+void curbh_abortlong(struct curbh_ctx ctx) {
+	_curbh_printlong_in(ctx, __func__);
+	_curbh_terminatednote();
 	abort();
 }
 
-void curb_handler_exit_long(struct curb_handler_ctx_s ctx) {
-	_curb_handler_print_in(ctx, __func__);
-	_curb_handler_terminatednode();
+void curbh_exitlong(struct curbh_ctx ctx) {
+	_curbh_printlong_in(ctx, __func__);
+	_curbh_terminatednote();
 	exit(EXIT_FAILURE);
 }
 
-void curb_handler_ignore(struct curb_handler_ctx_s ctx) {
-	(void)ctx;
-}
-
-curb_handler_t curb_get_handler(void)
-{
-	return _curb_handler != NULL ? _curb_handler : CURB_DEFAULT_HANDLER;
-}
-
-curb_handler_t curb_set_handler(curb_handler_t handler)
-{
-	const curb_handler_t ret = _curb_handler;
-	_curb_handler = handler;
-	return ret;
-}

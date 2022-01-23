@@ -36,17 +36,17 @@ static void tempfiles_cleanup(void) {
 static int create_tmpfile(char content[], size_t size)
 {
 	FILE * const file = tmpfile();
-	curb(file != NULL);
-	curb(fwrite(content, 1, size, file) == size);
-	curb(fseek(file,  0, SEEK_SET) == 0);
+	curb_exit(file != NULL);
+	curb_exit(fwrite(content, 1, size, file) == size);
+	curb_exit(fseek(file,  0, SEEK_SET) == 0);
 	const int fd = fileno(file);
-	curb(fd > 0);
+	curb_exit(fd > 0);
 
 	if (tempfilescnt == 0) {
 		atexit(tempfiles_cleanup);
 	}
 	tempfiles = realloc(tempfiles, sizeof(*tempfiles) * ++tempfilescnt);
-	curb(tempfiles != NULL);
+	curb_exit(tempfiles != NULL);
 	tempfiles[tempfilescnt - 1] = file;
 
 	return fd;

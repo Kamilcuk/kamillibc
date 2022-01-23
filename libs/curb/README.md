@@ -79,9 +79,9 @@ You can add a custom message and errno message:
 ```
 int main() {
    int *a = malloc(sizeof(int));
-   curb_msg(a != NULL, "allocating for a failed");
-   curb_errno(a != NULL, ENOMEM);
-   curb_msgerrno(a != NULL, "allocating for a failed", ENOMEM);
+   curb(a != NULL, "allocating for a failed");
+   curb(a != NULL, "", ENOMEM);
+   curb(a != NULL, "allocating for a failed", ENOMEM);
 }
 ```
 
