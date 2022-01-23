@@ -11,8 +11,8 @@
 #include <limits.h>
 #include <stdint.h>
 
-char *printbinary(unsigned width, uintmax_t v, char result[width + 1]);
-#define PRINTBINARY(width, v)  printbinary((width), (v), (char[(width) + 1]){0})
+char *printbinary(unsigned width, uintmax_t v, char *result/*[width + 1]*/);
+#define PRINTBINARY(width, v)   printbinary((width), (v), (char[(width) + 1]){0})
 #define PRINTBINARY_t(v)        PRINTBINARY(sizeof(v) * CHAR_BIT, (v))
 
 char *printuint64(uint64_t v, char result[21]);

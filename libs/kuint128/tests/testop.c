@@ -1,9 +1,10 @@
 #pragma GCC diagnostic ignored "-Wmultichar"
 #define KUINT128_WANT_OP  1
 #include "test.t.h"
+#include <curb.h>
 #include <stdio.h>
 
-#define TES(a, b)  assert(kuint128_eq(kuint128_op(kuint128_op a), kuint128_op b))
+#define TES(a, b)  curb_exit(kuint128_eq(kuint128_op(kuint128_op a), kuint128_op b))
 static inline void _kuint128_op_example_usage(void) {
 	kuint128 v = kuint128_op("1000");
 	TES( ('++', &v), (1001) );

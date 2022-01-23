@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 project(kamillibc_lua LANGUAGES C)
 
-include(../../../kcmakelib/k/test_extract_properties_from_file.cmake)
+include(${CMAKE_CURRENT_SOURCE_DIR}/../../kcmakelib/k/test_extract_properties_from_file.cmake)
 
 #ExternalProject_Add(lua
 #GIT_REPOSITORY https://github.com/lua/lua

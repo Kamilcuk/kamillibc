@@ -32,7 +32,9 @@ TEST(External, shift_left) {
 	kuint128 u64 = kuint128_init_u(0xffffffffffffffffULL);
 
 	const kuint128 zero = kuint128_0;
+	(void)zero;
 	const kuint128 one = kuint128_1;
+	(void)one;
 
 	EXPECT_EQ(kuint128_lshift(t, 0), t);
 	EXPECT_EQ(kuint128_lshift(f, 0), f);

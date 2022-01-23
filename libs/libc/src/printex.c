@@ -16,14 +16,14 @@
 #include <assert.h>
 
 static inline
-void printbinary_in_char(unsigned width, const char *v, char *result[-width]) {
+void printbinary_in_char(unsigned width, const char *v, char **result) {
 	for(unsigned i = 0; i < width; ++i) {
 		const char res = ( ( *v >> i ) & 1 ) + '0';
 		(--(*result))[0] = res;
 	}
 }
 
-static char *printbinary_in(unsigned width, const char *v, char result[width + 1])
+static char *printbinary_in(unsigned width, const char *v, char *result)
 {
 	result = &result[width];
 	result[0] = '\0';
@@ -34,7 +34,7 @@ static char *printbinary_in(unsigned width, const char *v, char result[width + 1
     return result;
 }
 
-char *printbinary(unsigned width, uintmax_t v, char result[width + 1])
+char *printbinary(unsigned width, uintmax_t v, char *result)
 {
 	assert(result != NULL);
 	return printbinary_in(width, (const char *)&v, result);

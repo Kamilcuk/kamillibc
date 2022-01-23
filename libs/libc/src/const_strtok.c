@@ -55,7 +55,7 @@ const char *const_strtok(const char *restrict str, const char **restrict strendp
 int _const_strtok_test(void) {
 	const char str[] = "  str1      str2   \t\nstr3";
 	const char delim[] = " \t\n";
-	const char *token, *end, *save;
+	const char *token, *end = NULL, *save;
 	token = const_strtok(str, &end, delim, &save);
 	if (memcmp(token, "str1", end - token)) return __LINE__;
 	token = const_strtok(NULL, &end, delim, &save);

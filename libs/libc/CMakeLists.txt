@@ -24,8 +24,10 @@ target_include_directories(${PROJECT_NAME}
 if(NOT TARGET kamcuk_curb)
   add_subdirectory(../curb curb)
 endif()
-target_link_libraries(${PROJECT_NAME}
-  PUBLIC kamcuk_curb rt
+target_link_libraries(${PROJECT_NAME} PUBLIC
+  kamcuk_curb
+  rt
+  ckd
 )
 
 include(CTest)

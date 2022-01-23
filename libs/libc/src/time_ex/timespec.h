@@ -11,6 +11,7 @@
 #include <time_ex/internal.h>
 #include <time_ex/types.h>
 
+#include <ckdint.h>
 #include <sys/time.h>
 #include <stdbool.h>
 #include <math.h>

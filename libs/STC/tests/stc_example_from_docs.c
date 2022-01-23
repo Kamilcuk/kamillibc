@@ -1,32 +1,15 @@
-#include <stc/cvec.h>
+#define i_type FVec    // if not defined, vector type would be cvec_float
+#define i_val float    // element type
+#include <stc/cvec.h>  // defines the FVec type
 #include <stdio.h>
 
-using_cvec(i, int);
+int main(void) {
+    FVec vec = FVec_init();
+    FVec_push_back(&vec, 10.f);
+    FVec_push_back(&vec, 20.f);
+    FVec_push_back(&vec, 30.f);
 
-int main()
-{
-    // Create a vector containing integers
-    cvec_i vec = cvec_i_init();
-
-    // Add two integers to vector
-    cvec_i_push_back(&vec, 25);
-    cvec_i_push_back(&vec, 13);
-
-    // Append a set of numbers
-    c_emplace(cvec_i, vec, {7, 5, 16, 8});
-
-    printf("initial:");
-    c_foreach (k, cvec_i, vec) {
-        printf(" %d", *k.ref);
-    }
-
-    // Sort the vector
-    cvec_i_sort(&vec);
-
-    printf("\nsorted:");
-    c_foreach (k, cvec_i, vec) {
-        printf(" %d", *k.ref);
-    }
-
-    cvec_i_del(&vec);
+    for (size_t i = 0; i < FVec_size(vec); ++i)
+        printf(" %g", vec.data[i]);
+    FVec_drop(&vec); // free memory
 }

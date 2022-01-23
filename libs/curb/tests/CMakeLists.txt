@@ -36,7 +36,10 @@ foreach(ff IN LISTS tests)
   )
   add_test(NAME ${nn} ${args})
   add_test(NAME ${nn}_regex ${args})
-  set_tests_properties(${nn} ${nn}_regex PROPERTIES RUN_SERIAL TRUE)
+  set_tests_properties(${nn} ${nn}_regex PROPERTIES
+    RUN_SERIAL TRUE
+    LABELS noMemcheck
+  )
   if(${ff} MATCHES "fail")
     set_tests_properties(${nn} PROPERTIES WILL_FAIL TRUE)
     set_tests_properties(${nn}_regex PROPERTIES PASS_REGULAR_EXPRESSION

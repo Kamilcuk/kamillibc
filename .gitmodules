@@ -10,3 +10,8 @@
 [submodule "kcmakelib"]
 	path = kcmakelib
 	url = ../kcmakelib
+	branch = master
+[submodule "ckd"]
+	path = third_party/ckd
+	url = ../ckd
+	branch = master
