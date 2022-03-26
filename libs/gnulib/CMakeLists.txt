@@ -22,12 +22,12 @@ file(MAKE_DIRECTORY ${gnulib_headers})
 include(ExternalProject)
 ExternalProject_Add(gnulibrepo
 	GIT_REPOSITORY "https://git.savannah.gnu.org/git/gnulib.git"
-    UPDATE_COMMAND ""
-    BUILD_IN_SOURCE 1
-    CONFIGURE_COMMAND
+  UPDATE_COMMAND ""
+  BUILD_IN_SOURCE 1
+  CONFIGURE_COMMAND
 		rm -rf _build &&
 		yes | ./gnulib-tool --create-testdir --dir=_build ${GNULIB_MODULES} &&
-		cd _build && yes | ./configure 
+		cd _build && yes | ./configure
 			"CC=${CMAKE_C_COMPILER} ${CMAKE_C_FLAGS}"
 			"CXX=${CMAKE_CXX_COMPILER} ${CMAKE_CXX_FLAGS}"
 			"--prefix=${gnulibdir}/install"

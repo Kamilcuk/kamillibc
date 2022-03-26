@@ -13,7 +13,7 @@ function(test_add_supersimple name file)
 	test_extract_properties_from_file(${name} ${name} tests/onetest.c)
 endfunction()
 
-gen_jinja2(
+jinja2_render(
 	${CMAKE_CURRENT_SOURCE_DIR}/src/qvalist.h.jinja
 	${CMAKE_CURRENT_SOURCE_DIR}/src/qvalist.h
 )
