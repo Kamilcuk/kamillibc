@@ -14,6 +14,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
   )
 endif()
 
-add_subdirectory(./third_party/ckd)
+add_subdirectory(./third_party)
 include(CTest)
 add_subdirectory(./libs)
