@@ -1,29 +1,10 @@
-#include "bitpack.h"
-
 #define BITPACK_DEBUG 1
 #define BITPACK_TEST 1
 
-#define BITPACK_N 8
-#include "bitpack_impl.h"
-
-#define BITPACK_N 16
-#include "bitpack_impl.h"
-
-#define BITPACK_N 32
-#include "bitpack_impl.h"
-
-#if 0
-#define BITPACK_N 64
-#include "bitpack_impl.h"
-
-#if defined(__SIZEOF_INT128__) && defined(__GNUC__)
-#define uint128_t __uint128_t
-#define BITPACK_N 128
-#include "bitpack_impl.h"
-#endif
-#endif
+#include "bitpack.h"
 
 #if BITPACK_TEST
+
 #include <assert.h>
 #include <stdio.h>
 
@@ -52,7 +33,7 @@ static inline void buf_println(size_t size, void *v, unsigned sep) {
 }
 
 int main() {
-	if (0) {
+	if (1) {
 		uint8_t buf[5] = {0};
 		struct bitpack8 *t = &(struct bitpack8){buf, sizeof(buf)/sizeof(buf[0]), 7};
 		for (size_t i = 0; i < bitpack8_size(t); ++i) {
@@ -68,14 +49,10 @@ int main() {
 				int val = 1 << bit;
 				uint16_t buf[5] = {0};
 				struct bitpack16 *t = &(struct bitpack16){buf, sizeof(buf)/sizeof(buf[0]), move};
-				buf_println(sizeof(buf), buf, 13);
 				for (size_t i = 0; i < bitpack16_size(t); ++i) {
 					bitpack16_set(t, i, val);
-					buf_println(sizeof(buf), buf,13);
-					assert(bitpack16_get(t, i) == val);
+					buf_println(sizeof(buf), buf, move);
 				}
-				bitpack16_set(t, 3, 0);
-				buf_println(sizeof(buf), (unsigned char *)buf, 13);
 			}
 		}
 	}
